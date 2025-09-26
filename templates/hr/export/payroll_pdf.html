@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ title }}</title>
+    <style>
+         @page {
+        size: letter portrait;
+        @frame content_frame { left: 25pt; width: 562pt; top: 25pt; height: 742pt; }
+        }
+
+        body { font-family: Arial, sans-serif; font-size: 12px; }
+        table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+        th, td { border: 1px solid #333; padding: 6px; text-align: left; }
+        th { background-color: #f2f2f2; }
+        h2, h4 { margin: 0; padding: 0; }
+        .summary { margin-top: 20px; }
+        .logo { height: 50px; }
+        .header { text-align: center; margin-bottom: 20px; }
+        .footer { text-align: right; font-size: 10px; margin-top: 30px; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        {% if logo %}
+            <img src="{{ logo }}" class="logo" width="210">
+        {% endif %}
+        <h2>{{ organization.name|default:'NA'}}</h2>
+        <h4>{{ title }}</h4>
+        <p>Export Date: {{ export_date|date:"Y-m-d H:i" }}</p>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                {% for col in columns %}
+                    <th style="width:{{ col.width }}">{{ col.name }}</th>
+                {% endfor %}
+            </tr>
+        </thead>
+        <tbody>
+            {% for payroll in payrolls %}
+            <tr>
+                <td>{{ payroll.employee_id }}</td>
+                <td>{{ payroll.staff_name }}</td>
+                <td>{{ payroll.month }}/{{ payroll.year }}</td>
+                <td>{{ payroll.basic_salary }}</td>
+                <td>{{ payroll.total_earnings }}</td>
+                <td>{{ payroll.total_deductions }}</td>
+                <td>{{ payroll.net_salary }}</td>
+                <td>{{ payroll.payment_status }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <div class="summary">
+        <p><strong>Total Records:</strong> {{ total_count }}</p>
+        <p><strong>Total Earnings:</strong> {{ total_earnings }}</p>
+        <p><strong>Total Deductions:</strong> {{ total_deductions }}</p>
+        <p><strong>Total Net Salary:</strong> {{ total_net_salary }}</p>
+    </div>
+
+    
+        <tfoot>
+        <tr>
+            <td>
+                <div class="footer">
+                    Generated on {{ export_date }} | Page <pdf:pagenumber> of <pdf:pagecount>
+                </div>
+            </td>
+        </tr>
+    </tfoot>
+  
+</body>
+</html>

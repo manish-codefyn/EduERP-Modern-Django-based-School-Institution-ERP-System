@@ -1,0 +1,253 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+{% load static %}
+
+{% block title %}{{ view.object.id|default:"Add Payment" }} - {{ organization.name|default:"ERP System" }}{% endblock %}
+
+{% block extra_css %}
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 mb-0">{{ view.object.id|default:"Add Payment" }}</h1>
+        <a href="{% url 'finance:payment_list' %}" class="btn btn-outline-secondary back-btn">
+            <i class="bi bi-arrow-left me-1"></i> Back
+        </a>
+    </div>
+
+    <div class="card card-custom shadow-sm">
+        <div class="card-header detail-card-header">
+            <i class="bi bi-cash-coin me-2"></i>
+            {% if view.object %}Edit Payment{% else %}Create New Payment{% endif %}
+        </div>
+        <div class="card-body">
+            <form method="post" novalidate>
+                {% csrf_token %}
+
+                {% if messages %}
+                    {% for message in messages %}
+                        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+
+                <div class="row">
+                    {% for field in form %}
+                        <div class="col-md-6 mb-3">
+                            {{ field|as_crispy_field }}
+
+                            {% if field.errors %}
+                                <div class="text-danger small mt-1">
+                                    {{ field.errors|striptags }}
+                                </div>
+                            {% endif %}
+
+                            {% if field.help_text %}
+                                <small class="text-custom">{{ field.help_text }}</small>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                </div>
+                <div class="d-flex justify-content-end mt-4">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-check-circle me-1"></i>
+                        {% if view.object %}Update{% else %}Create{% endif %}
+                    </button>
+                    <a href="{{ back_url }}" class="btn btn-outline-secondary ms-2">
+                        <i class="bi bi-x-circle me-1"></i> Cancel
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+
+<script>
+// Function to show notification
+function showNotification(icon, title, text, timer = 3000) {
+    Swal.fire({
+        icon: icon,
+        title: title,
+        text: text,
+        timer: timer,
+        timerProgressBar: true,
+        showConfirmButton: false,
+        toast: true,
+        position: 'top-end'
+    });
+}
+
+// Function to fetch invoices for a selected student
+function fetchStudentInvoices(studentId) {
+    const invoiceSelect = document.getElementById('id_invoice');
+    const studentSelect = document.getElementById('id_student');
+    const studentName = studentSelect.options[studentSelect.selectedIndex].text;
+    
+    if (studentId) {
+        // Show loading state
+        invoiceSelect.disabled = true;
+        invoiceSelect.innerHTML = '<option value="">Loading invoices...</option>';
+        
+        // Fetch invoices for this student via AJAX
+        fetch(`/finance/ajax/student/${studentId}/invoices/`)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                invoiceSelect.disabled = false;
+                
+                if (data.success) {
+                    if (data.invoices.length > 0) {
+                        // Clear and add default option
+                        invoiceSelect.innerHTML = '<option value="">Select an invoice</option>';
+                        
+                        // Add invoice options
+                        data.invoices.forEach(invoice => {
+                            const option = document.createElement('option');
+                            option.value = invoice.id;
+                            option.textContent = `#${invoice.invoice_number} - ₹${invoice.total_amount} (Balance: ₹${invoice.balance})`;
+                            option.dataset.balance = invoice.balance;
+                            invoiceSelect.appendChild(option);
+                        });
+                        
+                        // Auto-select the first invoice and update amounts
+                        if (invoiceSelect.options.length > 1) {
+                            invoiceSelect.value = data.invoices[0].id;
+                            updateInvoiceAmounts(data.invoices[0].balance);
+                            
+                            showNotification('success', 'Invoices Loaded', 
+                                `Found ${data.invoices.length} invoice(s) for ${studentName}`);
+                        }
+                    } else {
+                        invoiceSelect.innerHTML = '<option value="">No invoices available</option>';
+                        showNotification('info', 'No Invoices', 
+                            `${studentName} has no invoices with outstanding balance`);
+                        
+                        // Clear amount fields
+                        updateInvoiceAmounts(0);
+                    }
+                } else {
+                    showNotification('error', 'Error', data.error || 'Failed to load invoices');
+                    invoiceSelect.innerHTML = '<option value="">Error loading invoices</option>';
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching student invoices:', error);
+                invoiceSelect.disabled = false;
+                invoiceSelect.innerHTML = '<option value="">Error loading invoices</option>';
+                showNotification('error', 'Connection Error', 
+                    'Unable to fetch invoices. Please check your connection and try again.');
+            });
+    }
+}
+
+// Function to update amount fields based on invoice balance
+function updateInvoiceAmounts(balance) {
+    const amountInput = document.getElementById('id_amount');
+    const amountPaidInput = document.getElementById('id_amount_paid');
+    
+    if (balance !== undefined) {
+        amountInput.value = parseFloat(balance).toFixed(2);
+        amountPaidInput.value = parseFloat(balance).toFixed(2);
+    }
+}
+
+// Function to handle invoice selection change
+function handleInvoiceChange() {
+    const invoiceSelect = document.getElementById('id_invoice');
+    
+    if (invoiceSelect.value) {
+        // Get balance from selected option's data attribute
+        const selectedOption = invoiceSelect.options[invoiceSelect.selectedIndex];
+        const balance = selectedOption.dataset.balance;
+        const invoiceText = selectedOption.textContent;
+        
+        if (balance) {
+            updateInvoiceAmounts(balance);
+            showNotification('success', 'Invoice Selected', 
+                `Amount updated to ₹${balance} for ${invoiceText.split(' - ')[0]}`, 2000);
+        } else {
+            // Show loading notification
+            showNotification('info', 'Loading', 'Fetching invoice details...', 1500);
+            
+            // Fallback: Fetch invoice details via AJAX
+            fetch(`/finance/ajax/invoice/${invoiceSelect.value}/`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.success) {
+                        updateInvoiceAmounts(data.balance);
+                        showNotification('success', 'Invoice Loaded', 
+                            `Amount updated to ₹${data.balance}`, 2000);
+                    } else {
+                        showNotification('error', 'Error', data.error || 'Failed to load invoice details');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching invoice details:', error);
+                    showNotification('error', 'Connection Error', 
+                        'Unable to fetch invoice details. Please try again.');
+                });
+        }
+    } else {
+        // Clear amount fields if no invoice selected
+        updateInvoiceAmounts(0);
+    }
+}
+
+// Initialize when document is ready
+document.addEventListener('DOMContentLoaded', function() {
+    const studentSelect = document.getElementById('id_student');
+    const invoiceSelect = document.getElementById('id_invoice');
+    
+    // Set up student change event
+    if (studentSelect) {
+        studentSelect.addEventListener('change', function() {
+            if (this.value) {
+                fetchStudentInvoices(this.value);
+            } else {
+                // Clear invoice dropdown if no student selected
+                invoiceSelect.innerHTML = '<option value="">Select a student first</option>';
+                updateInvoiceAmounts(0);
+            }
+        });
+        
+        // Trigger on page load if student is already selected
+        if (studentSelect.value) {
+            fetchStudentInvoices(studentSelect.value);
+        }
+    }
+    
+    // Set up invoice change event
+    if (invoiceSelect) {
+        invoiceSelect.addEventListener('change', handleInvoiceChange);
+        
+        // Trigger on page load if invoice is already selected
+        if (invoiceSelect.value) {
+            handleInvoiceChange();
+        }
+    }
+    
+    // Show initial instruction if no student selected
+    if (studentSelect && !studentSelect.value) {
+        showNotification('info', 'Instructions', 
+            'Please select a student to view their available invoices', 4000);
+    }
+});
+</script>
+{% endblock %}
+
+

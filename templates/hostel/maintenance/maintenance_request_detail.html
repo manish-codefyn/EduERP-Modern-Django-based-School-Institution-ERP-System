@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+
+{% block title %}Request Details{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="card">
+        <div class="card-header">
+            <h3>{{ request.title }}</h3>
+        </div>
+        <div class="card-body">
+            <p><strong>Hostel:</strong> {{ request.hostel.name }}</p>
+            {% if request.room %}<p><strong>Room:</strong> {{ request.room.room_number }}</p>{% endif %}
+            <p><strong>Status:</strong> {{ request.get_status_display }}</p>
+            <p><strong>Priority:</strong> {{ request.get_priority_display }}</p>
+            <hr>
+            <p><strong>Description:</strong></p>
+            <p>{{ request.description|linebreaks }}</p>
+            <hr>
+            <p><strong>Requested By:</strong> {{ request.requested_by.user.get_full_name }} on {{ request.requested_date|date:"d M Y, H:i" }}</p>
+            <p><strong>Assigned To:</strong> {{ request.assigned_to.user.get_full_name|default:"Not Assigned" }}</p>
+            <p><strong>Completed On:</strong> {{ request.completed_date|date:"d M Y, H:i"|default:"N/A" }}</p>
+            <p><strong>Cost:</strong> ${{ request.cost|default:"0.00" }}</p>
+        </div>
+        <div class="card-footer text-end">
+            <a href="{% url 'maintenance-list' %}" class="btn btn-secondary">Back to List</a>
+            <a href="{% url 'maintenance-update' request.id %}" class="btn btn-primary">Update</a>
+            <a href="{% url 'maintenance-delete' request.id %}" class="btn btn-danger">Delete</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

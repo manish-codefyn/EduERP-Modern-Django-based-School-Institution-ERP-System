@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Payment Receipt</title>
+   <style>
+        @page {
+            size: A4 portrait;
+            margin: 1in;
+        }
+
+        body {
+            font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+            font-size: 11pt;
+            color: #333;
+            background-color: #fff;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        /* --- Main Receipt Container --- */
+        .receipt-container {
+            width: 100%;
+            margin: 0 auto;
+            background-color: #ffffff;
+        }
+
+        .receipt-section {
+            width: 100%;
+            padding: 10px 0;
+        }
+
+        .divider {
+            border-top: 2px dashed #888;
+            margin: 20px 0;
+        }
+
+        /* --- Table Styles --- */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 8px 0;
+            text-align: left;
+            vertical-align: top;
+        }
+
+        .header-table .logo {
+            width: 150px;
+            height: auto;
+        }
+
+        .header-table .receipt-title {
+            font-size: 20pt;
+            font-weight: bold;
+            text-align: right;
+            color: #1a1a1a;
+        }
+
+        .header-table .receipt-info {
+            font-size: 10pt;
+            text-align: right;
+            color: #777;
+        }
+
+        .info-table th {
+            font-size: 9pt;
+            font-weight: bold;
+            text-transform: uppercase;
+            color: #888;
+            padding-bottom: 4px;
+            border-bottom: 1px solid #eaeaea;
+        }
+
+        .info-table td {
+            padding-top: 6px;
+            line-height: 1.4;
+            color: #555;
+        }
+
+        .items-table thead th {
+            font-size: 9pt;
+            font-weight: bold;
+            text-transform: uppercase;
+            color: #888;
+            padding-bottom: 6px;
+            border-bottom: 2px solid #e3e3e3;
+        }
+
+        .items-table tbody tr td {
+             padding-top: 8px;
+             padding-bottom: 8px;
+             border-bottom: 1px solid #eaeaea;
+        }
+
+        .items-table tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        .items-table .item-key {
+            font-weight: 500;
+            color: #333;
+        }
+
+        .total-table td {
+            padding: 10px;
+            background-color: #f5f5f5;
+            border-top: 2px solid #e3e3e3;
+        }
+
+        .total-table .total-label {
+            font-size: 12pt;
+            font-weight: bold;
+            text-align: left;
+        }
+
+        .total-table .total-value {
+            font-size: 14pt;
+            font-weight: bold;
+            text-align: right;
+            color: #000;
+        }
+
+        .footer-table {
+            margin-top: 15px;
+            font-size: 8pt;
+            color: #888;
+            text-align: center;
+        }
+        .footer-table td {
+             border-top: 1px solid #eaeaea;
+             padding-top: 10px;
+        }
+
+    </style>
+</head>
+<body>
+    <table class="receipt-container" cellpadding="0" cellspacing="0">
+        <!-- Main container table row -->
+        <tr>
+            <td>
+                <!-- 1. Header with Logo and Receipt Title -->
+                <table class="header-table">
+                    <tr>
+                        <td>
+                            <!-- Replace with your company's logo URL -->
+                           {% if logo %}
+                            <img src="{{ logo }}" alt="{{ organization.name }} Logo" class="logo" > 
+                           {% endif %}
+                        </td>
+                        <td class="receipt-title">
+                            PAYMENT RECEIPT
+                            <div class="receipt-info">
+                                Receipt #: {{ reference_number }} <br>
+                                Generated: {{ generated_date|date:"d/m/y H:i" }}
+                            </div>
+                        </td>
+                    </tr>
+                </table>
+
+                <!-- 2. Billing From/To Information -->
+                <table class="info-table">
+                    <thead>
+                        <tr>
+                            <th>Billed To</th>
+                            <th>Payee Information</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>
+                               
+                                <strong>{{ student_father }}</strong><br>
+                                Address:{{ student_address|default:"" }}
+                            </td>
+                            <td>
+                                <strong>{{ organization.name }}</strong><br>
+                                Phone: {{ organization.contact_phone }}<br>
+                                Email: {{ organization.contact_email }}<br>
+                                Website: {{ organization.website }}<br>
+                                Address:{{ organization.address }}
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <!-- 3. Payment Details (Dynamic Loop) -->
+                <table class="items-table">
+                    <thead>
+                        <tr>
+                            <th>Description</th>
+                            <th>Details</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for key, value in payment.items %}
+                        {% if key != 'total_amount' and key != 'receipt_id' and key != 'customer_name' and key != 'customer_email' and key != 'customer_address' %}
+                        <tr>
+                            <td class="item-key">{{ key|title|cut:"_" }}</td>
+                            <td>{{ value }}</td>
+                        </tr>
+                        {% endif %}
+                        {% endfor %}
+                    </tbody>
+                </table>
+
+                <!-- 4. Grand Total -->
+                <table class="total-table">
+                    <tr>
+                        <td class="total-label">Amount Paid</td>
+                        <!-- Assuming you have a 'total_amount' key in your payment dictionary -->
+                        <td class="total-value">Rs.{{ amount_paid|default:"0.00" }}</td>
+                    </tr>
+                </table>
+
+                <!-- 5. Footer -->
+                <table class="footer-table">
+                    <tr>
+                        <td>
+                            Thank you for your business! If you have any questions, please contact our support team.
+                            <br>
+                            <div class="footer">
+                                Page <pdf:pagenumber> of <pdf:pagecount> | 
+                                &copy; {{ organization.name|default:"ERP System" }} - Payments Report
+                            </div>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+    
+</body>
+</html>
+

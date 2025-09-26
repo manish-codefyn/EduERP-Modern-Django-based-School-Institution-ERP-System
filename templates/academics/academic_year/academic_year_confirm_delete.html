@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+
+{% block title %}DeleteDelete {{ verbose_name|capfirst }} -{{ organization.name|default:"School ERP System" }}
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="card border-danger shadow-sm">
+        <div class="card-header bg-danger text-white">
+            <h5><i class="bi bi-exclamation-triangle"></i> Confirm Delete</h5>
+        </div>
+        <div class="card-body">
+            <p>
+                Are you sure you want to delete the academic year 
+                <strong>{{ object.name }}</strong> ({{ object.start_date|date:"M d, Y" }} - {{ object.end_date|date:"M d, Y" }})?
+            </p>
+            <form method="post">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-danger">
+                    <i class="bi bi-trash"></i> Yes, Delete
+                </button>
+                <a href="{% url 'academics:academic_year_list' %}" class="btn btn-secondary">
+                    <i class="bi bi-arrow-left"></i> Cancel
+                </a>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

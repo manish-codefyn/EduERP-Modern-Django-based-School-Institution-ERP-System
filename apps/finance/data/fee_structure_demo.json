@@ -1,0 +1,102 @@
+{
+  "fee_structures": [
+    {
+      "name": "Primary School Fee",
+      "academic_year": "2024-2025",
+      "class_name": "Class 1",
+      "amount": 12000.00,
+      "is_active": true
+    },
+    {
+      "name": "Primary School Fee",
+      "academic_year": "2024-2025",
+      "class_name": "Class 2",
+      "amount": 12500.00,
+      "is_active": true
+    },
+    {
+      "name": "Primary School Fee",
+      "academic_year": "2024-2025",
+      "class_name": "Class 3",
+      "amount": 13000.00,
+      "is_active": true
+    },
+    {
+      "name": "Primary School Fee",
+      "academic_year": "2024-2025",
+      "class_name": "Class 4",
+      "amount": 13500.00,
+      "is_active": true
+    },
+    {
+      "name": "Primary School Fee",
+      "academic_year": "2024-2025",
+      "class_name": "Class 5",
+      "amount": 14000.00,
+      "is_active": true
+    },
+    {
+      "name": "Middle School Fee",
+      "academic_year": "2024-2025",
+      "class_name": "Class 6",
+      "amount": 15000.00,
+      "is_active": true
+    },
+    {
+      "name": "Middle School Fee",
+      "academic_year": "2024-2025",
+      "class_name": "Class 7",
+      "amount": 15500.00,
+      "is_active": true
+    },
+    {
+      "name": "Middle School Fee",
+      "academic_year": "2024-2025",
+      "class_name": "Class 8",
+      "amount": 16000.00,
+      "is_active": true
+    },
+    {
+      "name": "High School Fee",
+      "academic_year": "2024-2025",
+      "class_name": "Class 9",
+      "amount": 18000.00,
+      "is_active": true
+    },
+    {
+      "name": "High School Fee",
+      "academic_year": "2024-2025",
+      "class_name": "Class 10",
+      "amount": 20000.00,
+      "is_active": true
+    },
+    {
+      "name": "Transportation Fee",
+      "academic_year": "2024-2025",
+      "class_name": "All Classes",
+      "amount": 5000.00,
+      "is_active": true
+    },
+    {
+      "name": "Computer Lab Fee",
+      "academic_year": "2024-2025",
+      "class_name": "Class 6-10",
+      "amount": 2000.00,
+      "is_active": true
+    },
+    {
+      "name": "Sports Fee",
+      "academic_year": "2024-2025",
+      "class_name": "All Classes",
+      "amount": 1500.00,
+      "is_active": true
+    },
+    {
+      "name": "Library Fee",
+      "academic_year": "2024-2025",
+      "class_name": "All Classes",
+      "amount": 1000.00,
+      "is_active": true
+    }
+  ]
+}

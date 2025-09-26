@@ -1,0 +1,264 @@
+       let salesTrendChartInstance;
+        let trafficSourceChartInstance; // Store traffic chart instance for potential theme updates
+        let particlesInstance; // Store particles.js instance
+
+        // Function to update chart colors for theme changes
+        function updateChartTheme(chartInstance, newTextColor, newGridColor, newLegendColor) {
+            if (!chartInstance) return;
+            // Update scales
+            if (chartInstance.options.scales.x) {
+                chartInstance.options.scales.x.ticks.color = newTextColor;
+                chartInstance.options.scales.x.grid.color = newGridColor;
+            }
+            if (chartInstance.options.scales.y) {
+                chartInstance.options.scales.y.ticks.color = newTextColor;
+                chartInstance.options.scales.y.grid.color = newGridColor;
+            }
+            // Update legend
+            if (chartInstance.options.plugins.legend) {
+                chartInstance.options.plugins.legend.labels.color = newLegendColor;
+            }
+            // Update title for doughnut chart
+            if (chartInstance.config.type === 'doughnut' && chartInstance.options.plugins.title) {
+                 chartInstance.options.plugins.title.color = newLegendColor;
+            }
+            chartInstance.update();
+        }
+        
+        // Function to update particles.js theme
+        function updateParticlesTheme(isLightMode) {
+            if (particlesInstance && particlesInstance.pJS) {
+                 const newParticleColor = isLightMode ? getComputedStyle(document.documentElement).getPropertyValue('--particles-color').trim().replace(/"/g, '') : getComputedStyle(document.documentElement).getPropertyValue('--particles-color').trim().replace(/"/g, '');
+                 const newLineColor = isLightMode ? getComputedStyle(document.documentElement).getPropertyValue('--particles-line-color').trim().replace(/"/g, '') : getComputedStyle(document.documentElement).getPropertyValue('--particles-line-color').trim().replace(/"/g, '');
+                 const newOpacity = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--particles-opacity'));
+
+                particlesInstance.pJS.particles.color.value = newParticleColor;
+                particlesInstance.pJS.particles.line_linked.color = newLineColor;
+                particlesInstance.pJS.particles.opacity.value = newOpacity;
+                particlesInstance.pJS.particles.line_linked.opacity = newOpacity;
+                
+                // Refresh particles
+                particlesJS('particles-js', particlesInstance.pJS); 
+            }
+        }
+
+
+        document.addEventListener('DOMContentLoaded', function () {
+            AOS.init({ duration: 800, once: true });
+
+            // Initialize Particles.js and store instance
+            const particleColor = getComputedStyle(document.documentElement).getPropertyValue('--particles-color').trim().replace(/"/g, '');
+            const particleLineColor = getComputedStyle(document.documentElement).getPropertyValue('--particles-line-color').trim().replace(/"/g, '');
+            const particleOpacity = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--particles-opacity'));
+
+            particlesJS('particles-js', {
+                "particles": {
+                    "number": {"value": 80, "density": {"enable": true, "value_area": 800}},
+                    "color": {"value": particleColor }, // Use CSS var
+                    "shape": {"type": "circle"},
+                    "opacity": {"value": particleOpacity, "random": false}, // Use CSS var
+                    "size": {"value": 3, "random": true},
+                    "line_linked": {"enable": true, "distance": 150, "color": particleLineColor, "opacity": particleOpacity, "width": 1}, // Use CSS var
+                    "move": {"enable": true, "speed": 2, "direction": "none", "out_mode": "out"}
+                },
+                "interactivity": {
+                    "events": {"onhover": {"enable": true, "mode": "repulse"}, "onclick": {"enable": true, "mode": "push"}},
+                    "modes": {"repulse": {"distance": 100}, "push": {"particles_nb": 4}}
+                },
+                "retina_detect": true
+            }, function(instance) {
+                particlesInstance = instance; // Store the instance
+            });
+
+
+            const sidebar = document.getElementById('sidebar');
+            const content = document.getElementById('content');
+            const sidebarToggleBtn = document.getElementById('sidebarToggle');
+            const sidebarCloseBtn = document.getElementById('sidebarCloseBtn'); // new close button
+
+            // Function to adjust sidebar on window resize
+            function adjustSidebar() {
+                if (window.innerWidth <= 768) {
+                    sidebar.classList.add('collapsed'); // hide sidebar on small screens
+                    content.classList.add('sidebar-collapsed');
+                    content.classList.remove('sidebar-not-collapsed');
+                } else {
+                    sidebar.classList.remove('collapsed'); // show collapsed sidebar with icons
+                    content.classList.remove('sidebar-collapsed');
+                    content.classList.remove('sidebar-not-collapsed');
+                }
+            }
+
+            // Initial adjustment
+            adjustSidebar();
+
+            // Toggle sidebar on main toggle button click
+            sidebarToggleBtn.addEventListener('click', function () {
+                if (window.innerWidth <= 768) {
+                    // Mobile: fully expand/collapse sidebar
+                    sidebar.classList.toggle('collapsed');
+                    content.classList.toggle('sidebar-collapsed');
+                    if (!sidebar.classList.contains('collapsed')) {
+                        content.classList.add('sidebar-not-collapsed');
+                    } else {
+                        content.classList.remove('sidebar-not-collapsed');
+                    }
+                } else {
+                    // Large screens: collapse to icons / expand to full
+                    sidebar.classList.toggle('collapsed');
+                    content.classList.toggle('sidebar-collapsed');
+                }
+            });
+
+            // Mobile close button inside sidebar
+            sidebarCloseBtn.addEventListener('click', function () {
+                if (window.innerWidth <= 768) {
+                    sidebar.classList.add('collapsed');
+                    content.classList.add('sidebar-collapsed');
+                    content.classList.remove('sidebar-not-collapsed');
+                }
+            });
+
+            // Adjust sidebar on window resize
+            window.addEventListener('resize', adjustSidebar);
+
+
+            // Theme Toggler
+            const themeToggleCheckbox = document.getElementById('themeToggleCheckbox');
+            const currentTheme = localStorage.getItem('theme');
+            const sunIcon = document.getElementById('theme-icon-sun');
+            const moonIcon = document.getElementById('theme-icon-moon');
+
+            function applyTheme(theme) {
+                if (theme === 'light-mode') {
+                    document.body.classList.add('light-mode');
+                    themeToggleCheckbox.checked = true;
+                    sunIcon.style.color = 'var(--accent-color)'; // Active icon color
+                    moonIcon.style.color = 'var(--text-muted-color)';
+                } else {
+                    document.body.classList.remove('light-mode');
+                    themeToggleCheckbox.checked = false;
+                    moonIcon.style.color = 'var(--accent-color)'; // Active icon color
+                    sunIcon.style.color = 'var(--text-muted-color)';
+                }
+                // Update chart and particle themes after DOM applies new CSS vars
+                setTimeout(() => {
+                    const isLight = document.body.classList.contains('light-mode');
+                    const newTextColor = getComputedStyle(document.documentElement).getPropertyValue('--text-muted-color').trim();
+                    const newGridColor = getComputedStyle(document.documentElement).getPropertyValue('--sidebar-border-color').trim(); // Using a subtle grid color
+                    const newLegendColor = getComputedStyle(document.documentElement).getPropertyValue('--text-color').trim();
+                    
+                    updateChartTheme(salesTrendChartInstance, newTextColor, newGridColor, newLegendColor);
+                    updateChartTheme(trafficSourceChartInstance, newTextColor, newGridColor, newLegendColor);
+                    updateParticlesTheme(isLight);
+                }, 50); // Small delay to ensure CSS vars are updated
+            }
+
+            if (currentTheme) {
+                applyTheme(currentTheme);
+            } else { // Default to dark if no preference saved
+                applyTheme('dark-mode');
+            }
+
+            themeToggleCheckbox.addEventListener('change', function() {
+                let theme = 'dark-mode';
+                if (this.checked) {
+                    theme = 'light-mode';
+                }
+                localStorage.setItem('theme', theme);
+                applyTheme(theme);
+            });
+
+
+            // Chart.js - Sales Trend Chart (Line)
+            const salesCtx = document.getElementById('salesTrendChart').getContext('2d');
+            const salesData = {
+                labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul'],
+                datasets: [{
+                    label: 'Sales Trend', data: [65, 59, 80, 81, 56, 55, 70], fill: true,
+                    borderColor: getComputedStyle(document.documentElement).getPropertyValue('--accent-color').trim(),
+                    backgroundColor: getComputedStyle(document.documentElement).getPropertyValue('--accent-color').trim() + '1A', // ~10% opacity
+                    tension: 0.3,
+                    pointBackgroundColor: getComputedStyle(document.documentElement).getPropertyValue('--accent-color').trim(),
+                    pointBorderColor: getComputedStyle(document.documentElement).getPropertyValue('--card-bg').trim(), // Match card bg for point border
+                    pointHoverBackgroundColor: getComputedStyle(document.documentElement).getPropertyValue('--card-bg').trim(),
+                    pointHoverBorderColor: getComputedStyle(document.documentElement).getPropertyValue('--accent-color').trim()
+                }]
+            };
+            salesTrendChartInstance = new Chart(salesCtx, {
+                type: 'line', data: salesData,
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    scales: {
+                        y: {beginAtZero: true, ticks: {color: getComputedStyle(document.documentElement).getPropertyValue('--text-muted-color').trim()}, grid: {color: getComputedStyle(document.documentElement).getPropertyValue('--sidebar-border-color').trim()}},
+                        x: {ticks: {color: getComputedStyle(document.documentElement).getPropertyValue('--text-muted-color').trim()}, grid: {color: getComputedStyle(document.documentElement).getPropertyValue('--sidebar-border-color').trim()}}
+                    },
+                    plugins: {legend: {labels: {color: getComputedStyle(document.documentElement).getPropertyValue('--text-color').trim()}}}
+                }
+            });
+
+            // Chart.js - Traffic Source Chart (Doughnut)
+            const trafficCtx = document.getElementById('trafficSourceChart').getContext('2d');
+            trafficSourceChartInstance = new Chart(trafficCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Organic', 'Direct', 'Referral', 'Social'],
+                    datasets: [{
+                        label: 'Traffic Sources', data: [300, 150, 100, 50],
+                        backgroundColor: ['#1cc88a', '#4e73df', '#36b9cc', '#f6c23e'], // These colors are distinct enough for both themes
+                        hoverOffset: 4, borderColor: getComputedStyle(document.documentElement).getPropertyValue('--card-bg').trim(), borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: {
+                        legend: {position: 'bottom', labels: {color: getComputedStyle(document.documentElement).getPropertyValue('--text-color').trim()}},
+                        title: {display: true, text: 'Traffic Sources', color: getComputedStyle(document.documentElement).getPropertyValue('--text-color').trim(), font: {size: 16}}
+                    }
+                }
+            });
+            
+            // Apply initial theme to charts after they are created
+            applyTheme(localStorage.getItem('theme') || 'dark-mode');
+
+
+            // SweetAlert2 Notification Trigger
+            const notificationButton = document.getElementById('showNotification');
+            if(notificationButton) {
+                notificationButton.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    Swal.fire({title: 'New Notifications!', text: 'You have 3 new messages and 1 pending task.', icon: 'info', confirmButtonText: 'Got it!'});
+                });
+            }
+            const testAlertButton = document.getElementById('testSweetAlert');
+            if(testAlertButton) {
+                testAlertButton.addEventListener('click', function() {
+                    Swal.fire({title: 'Standard Alert', text: 'This is a standard SweetAlert2 notification!', icon: 'success', confirmButtonText: 'Awesome!'});
+                });
+            }
+
+   
+            const generateSummaryBtn = document.getElementById('generateDashboardSummary');
+            if (generateSummaryBtn) {
+                generateSummaryBtn.addEventListener('click', async function() {
+                    const sales = document.getElementById('summarySales')?.textContent || 'N/A';
+                    const revenue = document.getElementById('summaryRevenue')?.textContent || 'N/A';
+                    const newUsers = document.getElementById('summaryNewUsers')?.textContent || 'N/A';
+                    const pendingOrders = document.getElementById('summaryPendingOrders')?.textContent || 'N/A';
+                    const prompt = `Generate a concise summary and key insights for a business dashboard with the following current metrics:\n- Total Sales: ${sales}\n- Total Revenue: ${revenue}\n- New Users: ${newUsers}\n- Pending Orders: ${pendingOrders}\n\nHighlight any notable points, potential areas of concern, or positive trends. Keep the summary brief and actionable.`;
+                    await callGeminiAPI(prompt, this);
+                });
+            }
+
+            const salesInsightsBtn = document.getElementById('getSalesTrendInsights');
+            if (salesInsightsBtn) {
+                salesInsightsBtn.addEventListener('click', async function() {
+                    if (!salesTrendChartInstance) { Swal.fire('Error', 'Sales chart data is not available.', 'error'); return; }
+                    const labels = salesTrendChartInstance.data.labels;
+                    const dataPoints = salesTrendChartInstance.data.datasets[0].data;
+                    let salesDataString = "Monthly Sales Data:\n"; labels.forEach((label, index) => { salesDataString += `- ${label}: ${dataPoints[index]}\n`; });
+                    const prompt = `Analyze the following sales trend data and provide insights:\n${salesDataString}\nWhat are the key trends (e.g., growth, decline, seasonality)? Are there any specific months that stand out? Provide a brief analysis and potential recommendations based on this data.`;
+                    await callGeminiAPI(prompt, this);
+                });
+            }
+        });

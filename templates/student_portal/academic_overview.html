@@ -1,0 +1,72 @@
+{% extends "student_portal/base.html" %}
+
+{% block title %}Academic Overview - {{ organization.name|default:"Codefyn" }}{% endblock %}
+{% block header_name %}{{ student.full_name }}{% endblock %}
+{% block header_avatar %}{{ student.avatar_url|default:"https://i.pravatar.cc/60?img=32" }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+
+    <!-- Timetable -->
+    <div class="dashboard-card p-3 mb-4 shadow-sm rounded-4">
+        <h5 class="mb-3">Class Schedule</h5>
+        {% if timetable %}
+            {% for cls in timetable %}
+            <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
+                <div>
+                    <div class="fw-bold">{{ cls.subject.name }}</div>
+                    <small class="text-muted">{{ cls.teacher.full_name }}</small>
+                </div>
+                <div class="text-end">
+                    <small>{{ cls.start_time|time:"H:i" }} - {{ cls.end_time|time:"H:i" }}</small>
+                    {% if cls.room %}
+                        <br><small>Room: {{ cls.room }}</small>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <p class="text-muted">No timetable available.</p>
+        {% endif %}
+    </div>
+
+    <!-- Subjects -->
+    <div class="dashboard-card p-3 mb-4 shadow-sm rounded-4">
+        <h5 class="mb-3">Subjects</h5>
+        {% if subjects %}
+            <ul class="list-group">
+                {% for sub in subjects %}
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    {{ sub.name }}
+                    <span class="badge bg-secondary rounded-pill">{{ sub.subject_type|title }}</span>
+                </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p class="text-muted">No subjects assigned yet.</p>
+        {% endif %}
+    </div>
+
+    <!-- Recent Exam Results -->
+    <div class="dashboard-card p-3 mb-4 shadow-sm rounded-4">
+        <h5 class="mb-3">Recent Exam Results</h5>
+        {% if recent_results %}
+            {% for res in recent_results %}
+            <div class="d-flex justify-content-between align-items-center py-2 {% if not forloop.last %}border-bottom{% endif %}">
+                <div>
+                    <div class="fw-bold">{{ res.exam_subject.subject.name }}</div>
+                    <small class="text-muted">{{ res.exam_subject.exam.name }} - {{ res.exam_subject.exam.academic_year.name }}</small>
+                </div>
+                <div class="text-end">
+                    <div class="badge bg-primary rounded-pill px-3 py-1">{{ res.grade }}</div>
+                    <small class="d-block text-muted">{{ res.status }}</small>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <p class="text-muted">No exam results available.</p>
+        {% endif %}
+    </div>
+
+</div>
+{% endblock %}

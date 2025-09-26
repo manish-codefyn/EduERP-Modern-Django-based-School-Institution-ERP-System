@@ -1,0 +1,60 @@
+<ul class="sidebar-nav nav flex-column">
+
+    <!-- Dashboard -->
+    <li class="nav-item">
+        <a class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}" href="{% url 'dashboard' %}">
+            <i class="bi bi-speedometer2 me-2"></i>
+            <span class="nav-text">Dashboard</span>
+        </a>
+    </li>
+
+    {% if user.is_staff or user.is_exam_manager %}
+
+    <!-- Exam Types -->
+    <li class="nav-item">
+        <a class="nav-link {% if request.resolver_match.url_name == 'exam_type_list' %}active{% endif %}" href="{% url 'examination:exam_type_list' %}">
+            <i class="bi bi-tags me-2"></i>
+            <span class="nav-text">Exam Types</span>
+        </a>
+    </li>
+
+    <!-- Exams -->
+    <li class="nav-item">
+        <a class="nav-link {% if request.resolver_match.url_name == 'exam_list' %}active{% endif %}" href="{% url 'examination:exam_list' %}">
+            <i class="bi bi-journal-check me-2"></i>
+            <span class="nav-text">Exams</span>
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link {% if request.resolver_match.url_name == 'exam_subject_list' %}active{% endif %}" href="{% url 'examination:exam_subject_list' %}">
+            <i class="bi bi-book me-2"></i>
+            <span class="nav-text">Subjects</span>
+        </a>
+    </li>
+
+    <!-- Results -->
+    <li class="nav-item">
+        <a class="nav-link {% if request.resolver_match.url_name == 'exam_result_list' %}active{% endif %}" href="{% url 'examination:exam_result_list' %}">
+            <i class="bi bi-graph-up me-2"></i>
+            <span class="nav-text">Results</span>
+        </a>
+    </li>
+
+    {% if user.is_superuser %}
+    <!-- Settings (for admins only) -->
+    <li class="nav-item">
+        <a class="nav-link" href="#">
+            <i class="bi bi-gear-fill me-2"></i>
+            <span class="nav-text">Settings</span>
+        </a>
+    </li>
+    {% endif %}
+
+    {% endif %}
+
+    <!-- Footer -->
+    <div class="sidebar-footer mt-5 p-3 bg-light text-center">
+        <small class="text-muted">Examination Module v1.0.0</small>
+    </div>
+
+</ul>

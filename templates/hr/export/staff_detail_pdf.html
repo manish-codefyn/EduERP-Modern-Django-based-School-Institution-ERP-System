@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Staff Detail</title>
+<style>
+    @page {
+        size: letter portrait;
+        @frame content_frame { left: 25pt; width: 562pt; top: 25pt; height: 742pt; }
+    }
+
+    body {
+        font-family: Helvetica, Arial, sans-serif;
+        font-size: 11px;
+        line-height: 1.5;
+        color: #333;
+    }
+
+    /* --- Main Layout Table --- */
+    .main-container {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    /* --- Header --- */
+    .header-table {
+        width: 100%;
+        border-bottom: 2px solid #e0e0e0;
+        padding-bottom: 10px;
+        margin-bottom: 15px;
+    }
+    .staff-photo {
+        width: 100px;
+        height: 100px;
+        border: 1px solid #ddd;
+    }
+    .org-details {
+        text-align: center;
+        line-height: 1.4;
+    }
+    .org-name {
+        font-size: 16px;
+        font-weight: bold;
+        color: #2c3e50;
+    }
+
+    /* --- Page Title --- */
+    .page-title {
+        font-size: 22px;
+        text-align: center;
+        color: #2c3e50;
+        padding: 15px 0;
+    }
+
+    /* --- Info Section "Cards" --- */
+    .info-section-wrapper {
+        vertical-align: top;
+        padding: 0 8px; /* Gutter between cards */
+    }
+
+    .info-section {
+        width: 100%;
+        border: 1px solid #e0e0e0;
+        border-collapse: collapse;
+        margin-bottom: 15px; /* Space between rows of cards */
+    }
+
+    .section-title {
+        background-color: #34495e;
+        color: #ffffff;
+        padding: 8px 10px;
+        font-size: 13px;
+        font-weight: bold;
+        text-align: left;
+    }
+
+    /* --- Key-Value Data Tables --- */
+    .details-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    .details-table td {
+        padding: 6px 10px;
+        border-top: 1px solid #f5f5f5;
+    }
+    .label {
+        font-weight: bold;
+        color: #555;
+        width: 40%;
+    }
+    .data {
+        color: #333;
+    }
+    .data-bold {
+        font-weight: bold;
+    }
+
+    /* --- Footer --- */
+    .footer {
+        width: 100%;
+        text-align: center;
+        font-size: 9px;
+        color: #888;
+        padding-top: 10px;
+        border-top: 1px solid #e0e0e0;
+    }
+
+    /* --- Status Badge --- */
+    .status-active {
+        background-color: #27ae60;
+        color: white;
+        padding: 3px 8px;
+        font-weight: bold;
+        font-size: 10px;
+    }
+    .status-inactive {
+        background-color: #c0392b;
+        color: white;
+        padding: 3px 8px;
+        font-weight: bold;
+        font-size: 10px;
+    }
+
+</style>
+</head>
+<body>
+
+<table class="main-container">
+
+    <thead>
+        <tr>
+            <td>
+                <table class="header-table">
+                    <tr>
+                        <td width="20%" align="center">
+                            {% if photo %}
+                                <img src="{{ photo }}" class="staff-photo" alt="Staff Photo">
+                            {% endif %}
+                        </td>
+                        <td width="60%" class="org-details">
+                            {% if logo %}
+                                <img src="{{ logo }}" alt="Logo" style="max-height: 50px; margin-bottom: 5px;" width="210"><br>
+                            {% endif %}
+                            <span class="org-name">{{ organization.name }}</span><br>
+                            <span style="font-size:10px;">
+                                {% if organization.email %}Email: {{ organization.email }}{% endif %}
+                                {% if organization.email and organization.mobile %} | {% endif %}
+                                {% if organization.mobile %}Mobile: {{ organization.mobile }}{% endif %}<br>
+                                {{ organization.address }}
+                            </span>
+                        </td>
+                        <td width="20%" align="center">
+                            {% if qr_code %}
+                                <img src="{{ qr_code }}" style="max-width:90px; height:auto;" alt="QR Code">
+                            {% endif %}
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </thead>
+
+    <tbody>
+        <tr>
+            <td>
+                <h2 class="page-title">Staff Profile</h2>
+
+                <table style="width: 100%; border-collapse: collapse;">
+                    <tr>
+                        <td class="info-section-wrapper">
+                            <table class="info-section">
+                                <thead>
+                                    <tr><th class="section-title" colspan="2">Personal Information</th></tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td colspan="2">
+                                            <table class="details-table">
+                                                <tr><td class="label">Full Name:</td><td class="data data-bold">{{ staff.user.get_full_name|default:"N/A" }}</td></tr>
+                                                <tr><td class="label">Employee ID:</td><td class="data data-bold">{{ staff.employee_id|default:"N/A" }}</td></tr>
+                                                <tr><td class="label">Gender:</td><td class="data">{{ staff.get_gender_display|default:"N/A" }}</td></tr>
+                                                <tr><td class="label">Date of Birth:</td><td class="data">{{ staff.date_of_birth|date:"F j, Y"|default:"N/A" }}</td></tr>
+                                                <tr><td class="label">Blood Group:</td><td class="data">{{ staff.get_blood_group_display|default:"N/A" }}</td></tr>
+                                                <tr><td class="label">Marital Status:</td><td class="data">{{ staff.marital_status|title|default:"N/A" }}</td></tr>
+                                                <tr><td class="label">Personal Email:</td><td class="data">{{ staff.personal_email|default:"N/A" }}</td></tr>
+                                                <tr><td class="label">Personal Phone:</td><td class="data">{{ staff.personal_phone|default:"N/A" }}</td></tr>
+                                            </table>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </td>
+                        <td class="info-section-wrapper">
+                            <table class="info-section">
+                                <thead>
+                                    <tr><th class="section-title" colspan="2">Professional Information</th></tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td colspan="2">
+                                            <table class="details-table">
+                                                <tr><td class="label">Department:</td><td class="data data-bold">{{ staff.department.name|default:"N/A" }}</td></tr>
+                                                <tr><td class="label">Designation:</td><td class="data data-bold">{{ staff.designation.name|default:"N/A" }}</td></tr>
+                                                <tr><td class="label">Staff Type:</td><td class="data">{{ staff.get_staff_type_display|default:"N/A" }}</td></tr>
+                                                <tr><td class="label">Employment Type:</td><td class="data">{{ staff.get_employment_type_display|default:"N/A" }}</td></tr>
+                                                <tr><td class="label">Joining Date:</td><td class="data">{{ staff.joining_date|date:"F j, Y"|default:"N/A" }}</td></tr>
+                                                <tr><td class="label">Contract End:</td><td class="data">{{ staff.contract_end_date|date:"F j, Y"|default:"N/A" }}</td></tr>
+                                                <tr><td class="label">Salary:</td><td class="data data-bold">₹{{ staff.salary|default:"N/A" }}</td></tr>
+                                                <tr><td class="label">Status:</td>
+                                                    <td class="data">
+                                                        {% if staff.is_active %}
+                                                            <span class="status-active">Active</span>
+                                                        {% else %}
+                                                            <span class="status-inactive">Inactive</span>
+                                                        {% endif %}
+                                                    </td>
+                                                </tr>
+                                            </table>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="info-section-wrapper">
+                            <table class="info-section">
+                                <thead>
+                                    <tr><th class="section-title" colspan="2">Emergency Contact</th></tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td colspan="2">
+                                            <table class="details-table">
+                                                <tr><td class="label">Contact Name:</td><td class="data data-bold">{{ staff.emergency_contact_name|default:"N/A" }}</td></tr>
+                                                <tr><td class="label">Phone Number:</td><td class="data">{{ staff.emergency_contact_phone|default:"N/A" }}</td></tr>
+                                                <tr><td class="label">Relationship:</td><td class="data">{{ staff.emergency_contact_relation|default:"N/A" }}</td></tr>
+                                            </table>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </td>
+                        <td class="info-section-wrapper">
+                            <table class="info-section">
+                                <thead>
+                                    <tr><th class="section-title" colspan="2">Financial Information</th></tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td colspan="2">
+                                            <table class="details-table">
+                                                <tr><td class="label">Bank Name:</td><td class="data">{{ staff.bank_name|default:"N/A" }}</td></tr>
+                                                <tr><td class="label">Account Number:</td><td class="data data-bold">{{ staff.bank_account|default:"N/A" }}</td></tr>
+                                                <tr><td class="label">IFSC Code:</td><td class="data">{{ staff.ifsc_code|default:"N/A" }}</td></tr>
+                                                <tr><td class="label">PAN Number:</td><td class="data data-bold">{{ staff.pan_number|default:"N/A" }}</td></tr>
+                                                <tr><td class="label">Aadhaar Number:</td><td class="data data-bold">{{ staff.aadhaar_number|default:"N/A" }}</td></tr>
+                                            </table>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </tbody>
+
+    <tfoot>
+        <tr>
+            <td>
+                <div class="footer">
+                    Generated on {{ export_date }} | Page <pdf:pagenumber> of <pdf:pagecount>
+                </div>
+            </td>
+        </tr>
+    </tfoot>
+</table>
+
+</body>
+</html>

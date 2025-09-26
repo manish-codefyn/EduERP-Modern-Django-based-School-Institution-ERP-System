@@ -1,0 +1,250 @@
+{% extends 'inventory/base.html' %}
+{% load static %}
+
+{% block title %}Inventory Items - {{ organization.name|default:"codefyn" }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+
+    <!-- Header -->
+    <div class="header-section mb-4">
+        <div class="row align-items-center">
+            <div class="col-md-7 d-flex align-items-center">
+                <div class="header-icon me-3">
+                    <i class="bi bi-box-seam display-6 text-primary"></i>
+                </div>
+                <div>
+                    <h1 class="h3 fw-bold mb-1">Inventory Items</h1>
+                    <p class="text-custom mb-0">Manage all inventory items and stock levels</p>
+                </div>
+            </div>
+            <div class="col-md-5">
+                {% if request.user.is_superadmin or request.user.is_institution_admin %}
+                <div class="d-flex justify-content-end align-items-center gap-2">
+                    <a href="{% url 'inventory:item_create' %}" class="btn btn-primary">
+                        <i class="bi bi-plus-circle me-1"></i> New Item
+                    </a>
+                    <div class="dropdown">
+                        <button class="btn btn-secondary dropdown-toggle" type="button" id="exportDropdown"
+                            data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="bi bi-download me-1"></i> Export
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="exportDropdown">
+                            <li class="dropdown-header">Export Inventory Data</li>
+                            <li><a class="dropdown-item" href="{% url 'inventory:export' %}?{{ request.GET.urlencode }}&format=csv">
+                                <i class="bi bi-filetype-csv me-2"></i> Export CSV</a></li>
+                            <li><a class="dropdown-item" href="{% url 'inventory:export' %}?{{ request.GET.urlencode }}&format=excel">
+                                <i class="bi bi-file-earmark-excel me-2"></i> Export Excel</a></li>
+                            <li><a class="dropdown-item" href="{% url 'inventory:export' %}?{{ request.GET.urlencode }}&format=pdf">
+                                <i class="bi bi-file-earmark-pdf me-2"></i> Export PDF</a></li>
+                        </ul>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Filter Form -->
+    <div class="card card-custom p-3 mb-4">
+        <form id="filterForm" method="get" class="row g-3">
+            <div class="col-md-3">
+                <label class="form-label">Search</label>
+                <input type="text" name="search" class="form-control"
+                       placeholder="Search items..." value="{{ request.GET.search }}">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Category</label>
+                {{ filter_form.category }}
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Status</label>
+                {{ filter_form.status }}
+            </div>
+            <div class="col-md-3 d-flex align-items-end gap-2">
+                <button type="submit" class="btn btn-primary w-50">
+                    <i class="bi bi-search me-1"></i> 
+                </button>
+                <a href="{% url 'inventory:item_list' %}" class="btn btn-outline-secondary w-50">
+                    <i class="bi bi-x me-1"></i> 
+                </a>
+            </div>
+        </form>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="row g-4 mb-4">
+        <div class="col-xl-3 col-md-6">
+            <div class="card stats-card text-white h-100" style="background: var(--primary-gradient);">
+                <div class="card-body">
+                    <h6 class="card-title mb-1 small opacity-75">TOTAL ITEMS</h6>
+                    <h3 class="mb-0 fw-bold">{{ total_items|default:"0" }}</h3>
+                    <p class="mb-0 small opacity-75"><i class="bi bi-box me-1"></i>All inventory items</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card stats-card text-white h-100" style="background: var(--success-gradient);">
+                <div class="card-body">
+                    <h6 class="card-title mb-1 small opacity-75">IN STOCK</h6>
+                    <h3 class="mb-0 fw-bold">{{ in_stock_count|default:"0" }}</h3>
+                    <p class="mb-0 small opacity-75"><i class="bi bi-check-circle me-1"></i>Adequately stocked</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card stats-card text-white h-100" style="background: var(--warning-gradient);">
+                <div class="card-body">
+                    <h6 class="card-title mb-1 small opacity-75">LOW STOCK</h6>
+                    <h3 class="mb-0 fw-bold">{{ low_stock|default:"0" }}</h3>
+                    <p class="mb-0 small opacity-75"><i class="bi bi-exclamation-triangle me-1"></i>Need replenishment</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card stats-card text-white h-100" style="background: var(--danger-gradient);">
+                <div class="card-body">
+                    <h6 class="card-title mb-1 small opacity-75">OUT OF STOCK</h6>
+                    <h3 class="mb-0 fw-bold">{{ out_of_stock|default:"0" }}</h3>
+                    <p class="mb-0 small opacity-75"><i class="bi bi-x-circle me-1"></i>Immediate attention needed</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Items Table -->
+    <div class="card card-custom">
+        <div class="card-header bg-transparent border-0 pt-4 px-4">
+            <h5 class="card-title mb-0 fw-bold text-custom">All Inventory Items</h5>
+            <p class="text-custom mb-0">Manage and monitor stock levels</p>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                {% if items %}
+                <table id="itemsTable" class="w-100 table-custom table-hover align-middle">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Category</th>
+                            <th>Quantity</th>
+                            <th>Min Quantity</th>
+                            <th>Unit</th>
+                            <th>Price</th>
+                            <th>Location</th>
+                            <th>Status</th>
+                            {% if request.user.is_superadmin or request.user.is_institution_admin %}
+                            <th class="text-center">Actions</th>
+                            {% endif %}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in items %}
+                        <tr>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <i class="bi bi-box me-2 text-primary"></i>
+                                    <strong>{{ item.name }}</strong>
+                                </div>
+                                {% if item.description %}
+                                <small class="text-custom d-block">{{ item.description|truncatewords:5 }}</small>
+                                {% endif %}
+                            </td>
+                            <td>{{ item.category.name }}</td>
+                            <td>
+                                <span class="fw-bold {% if item.status == 'out_of_stock' %}text-danger{% elif item.status == 'low_stock' %}text-warning{% else %}text-success{% endif %}">
+                                    {{ item.quantity }}
+                                </span>
+                            </td>
+                            <td>{{ item.min_quantity }}</td>
+                            <td>{{ item.unit }}</td>
+                            <td>
+                                {% if item.price %}
+                                ₹{{ item.price }}
+                                {% else %}
+                                <span class="text-custom">-</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if item.location %}
+                                <span class="badge bg-light text-dark">{{ item.location }}</span>
+                                {% else %}
+                                <span class="text-custom">-</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if item.status == 'in_stock' %}
+                                <span class="badge bg-success bg-opacity-10 text-success">
+                                    <i class="bi bi-check-circle me-1"></i>In Stock
+                                </span>
+                                {% elif item.status == 'low_stock' %}
+                                <span class="badge bg-warning bg-opacity-10 text-warning">
+                                    <i class="bi bi-exclamation-triangle me-1"></i>Low Stock
+                                </span>
+                                {% else %}
+                                <span class="badge bg-danger bg-opacity-10 text-danger">
+                                    <i class="bi bi-x-circle me-1"></i>Out of Stock
+                                </span>
+                                {% endif %}
+                            </td>
+                            {% if request.user.is_superadmin or request.user.is_institution_admin %}
+                            <td class="text-center">
+                                <a href="{% url 'inventory:item_detail' item.pk %}" class="btn btn-sm btn-outline-primary me-1" title="View">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                                <a href="{% url 'inventory:item_update' item.pk %}" class="btn btn-sm btn-outline-secondary me-1" title="Edit">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                <a href="{% url 'inventory:transaction_create' %}?item={{ item.pk }}" class="btn btn-sm btn-outline-success" title="Stock Transaction">
+                                    <i class="bi bi-arrow-left-right"></i>
+                                </a>
+                            </td>
+                            {% endif %}
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% else %}
+                <div class="empty-state text-center py-5">
+                    <i class="bi bi-box-seam fs-1"></i>
+                    <h4 class="mt-3 mb-2">No Inventory Items Found</h4>
+                    <p class="text-custom mb-4">Start by adding your first inventory item</p>
+                    {% if request.user.is_superadmin or request.user.is_institution_admin %}
+                    <a href="{% url 'inventory:item_create' %}" class="btn btn-primary">
+                        <i class="bi bi-plus-circle me-2"></i> Add First Item
+                    </a>
+                    {% endif %}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    $('#itemsTable').DataTable({
+        "pageLength": 10,
+        "order": [[0, 'asc']],
+        "language": {
+            "search": "<i class='bi bi-search me-2'></i>Search:",
+            "lengthMenu": "Show _MENU_ entries",
+            "info": "Showing _START_ to _END_ of _TOTAL_ entries",
+            "paginate": {
+                "previous": "<i class='bi bi-chevron-left'></i>",
+                "next": "<i class='bi bi-chevron-right'></i>"
+            }
+        },
+        "columnDefs": [
+            { "targets": [-1], "orderable": false, "className": "dt-center" }
+        ],
+        "responsive": true
+    });
+
+    // Initialize Select2
+    $('select').select2({ theme: 'bootstrap-5', width: '100%' });
+});
+</script>
+{% endblock %}

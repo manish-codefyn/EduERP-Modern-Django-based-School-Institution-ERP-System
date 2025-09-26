@@ -1,0 +1,453 @@
+<!-- templates/teachers/teacher_list.html -->
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1><i class="fas fa-chalkboard-teacher me-2"></i>Teachers List</h1>
+    <div>
+        <a href="{% url 'export_teachers_csv' %}?{{ request.GET.urlencode }}" class="btn btn-success">
+            <i class="fas fa-file-csv"></i> Export CSV
+        </a>
+        <a href="{% url 'export_teachers_pdf' %}?{{ request.GET.urlencode }}" class="btn btn-danger">
+            <i class="fas fa-file-pdf"></i> Export PDF
+        </a>
+        <a href="{% url 'teacher_add' %}" class="btn btn-primary">
+            <i class="fas fa-plus"></i> Add Teacher
+        </a>
+    </div>
+</div>
+
+<!-- Stats Cards -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card bg-primary text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h6 class="card-title">Total Teachers</h6>
+                        <h3>{{ total_count }}</h3>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-users fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-success text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h6 class="card-title">Active Teachers</h6>
+                        <h3>{{ active_count }}</h3>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-user-check fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-warning text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h6 class="card-title">Class Teachers</h6>
+                        <h3>{{ class_teacher_count }}</h3>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-crown fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-info text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h6 class="card-title">Avg Experience</h6>
+                        <h3>{{ average_experience|floatformat:1 }} yrs</h3>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-graduation-cap fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Filters Card -->
+<div class="card mb-4">
+    <div class="card-header">
+        <h5 class="card-title mb-0">
+            <i class="fas fa-filter me-2"></i>Filters
+        </h5>
+    </div>
+    <div class="card-body">
+        <form method="get" id="filterForm">
+            <div class="row">
+                <div class="col-md-3">
+                    <div class="form-group">
+                        <label for="search" class="form-label">Search</label>
+                        <input type="text" name="search" id="search" class="form-control" 
+                               placeholder="Search by name, email, or ID" value="{{ request.GET.search }}">
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="form-group">
+                        <label for="status" class="form-label">Status</label>
+                        <select name="status" id="status" class="form-select">
+                            <option value="">All Status</option>
+                            <option value="active" {% if request.GET.status == 'active' %}selected{% endif %}>Active</option>
+                            <option value="inactive" {% if request.GET.status == 'inactive' %}selected{% endif %}>Inactive</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="form-group">
+                        <label for="qualification" class="form-label">Qualification</label>
+                        <select name="qualification" id="qualification" class="form-select">
+                            <option value="">All Qualifications</option>
+                            <option value="phd" {% if request.GET.qualification == 'phd' %}selected{% endif %}>PhD</option>
+                            <option value="masters" {% if request.GET.qualification == 'masters' %}selected{% endif %}>Masters</option>
+                            <option value="bachelors" {% if request.GET.qualification == 'bachelors' %}selected{% endif %}>Bachelors</option>
+                            <option value="diploma" {% if request.GET.qualification == 'diploma' %}selected{% endif %}>Diploma</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="form-group">
+                        <label for="gender" class="form-label">Gender</label>
+                        <select name="gender" id="gender" class="form-select">
+                            <option value="">All Genders</option>
+                            <option value="male" {% if request.GET.gender == 'male' %}selected{% endif %}>Male</option>
+                            <option value="female" {% if request.GET.gender == 'female' %}selected{% endif %}>Female</option>
+                            <option value="other" {% if request.GET.gender == 'other' %}selected{% endif %}>Other</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="form-group">
+                        <label class="form-label">&nbsp;</label>
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-search me-1"></i> Apply Filters
+                            </button>
+                            <a href="{% url 'teacher_list' %}" class="btn btn-outline-secondary">
+                                <i class="fas fa-times me-1"></i> Clear Filters
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Teachers Table Card -->
+<div class="card">
+    <div class="card-header">
+        <h5 class="card-title mb-0">
+            <i class="fas fa-list me-2"></i>Teachers
+            <span class="badge bg-secondary ms-2">{{ teachers.paginator.count }}</span>
+        </h5>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table id="teachersTable" class="table table-striped table-hover">
+                <thead>
+                    <tr>
+                      
+                        <th>Employee ID</th>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Mobile</th>
+                        <th>Qualification</th>
+                        <th>Experience</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for teacher in teachers %}
+                    <tr>
+                       
+                        <td>
+                            <span class="fw-bold">{{ teacher.employee_id }}</span>
+                        </td>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                {% if teacher.photo %}
+                                <img src="{{ teacher.photo.url }}" alt="{{ teacher.get_full_name }}" 
+                                     class="rounded-circle me-2" width="32" height="32" style="object-fit: cover;">
+                                {% else %}
+                                <div class="rounded-circle bg-secondary text-white d-flex align-items-center justify-content-center me-2" 
+                                     style="width: 32px; height: 32px;">
+                                    <i class="fas fa-user"></i>
+                                </div>
+                                {% endif %}
+                                <div>
+                                    <div class="fw-bold">{{ teacher.get_full_name }}</div>
+                                    {% if teacher.is_class_teacher %}
+                                    <small class="text-success">
+                                        <i class="fas fa-crown"></i> Class Teacher
+                                    </small>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            {% if teacher.email %}
+                            <a href="mailto:{{ teacher.email }}" class="text-decoration-none">
+                                {{ teacher.email }}
+                            </a>
+                            {% else %}
+                            <span class="text-muted">-</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if teacher.mobile %}
+                            <a href="tel:{{ teacher.mobile }}" class="text-decoration-none">
+                                {{ teacher.mobile }}
+                            </a>
+                            {% else %}
+                            <span class="text-muted">-</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <span class="badge bg-info">
+                                {{ teacher.get_qualification_display }}
+                            </span>
+                        </td>
+                        <td>
+                            <span class="fw-bold">{{ teacher.experience }}</span> years
+                        </td>
+                        <td>
+                            <span class="badge {% if teacher.is_active %}bg-success{% else %}bg-secondary{% endif %}">
+                                {{ teacher.is_active|yesno:"Active,Inactive" }}
+                            </span>
+                        </td>
+                        <td>
+                            <div class="btn-group" role="group">
+                                <a href="{% url 'teacher_detail' teacher.pk %}" class="btn btn-sm btn-info" 
+                                   data-bs-toggle="tooltip" title="View Details">
+                                    <i class="bi bi-eye"></i>
+
+                                </a>
+                                <a href="{% url 'export_teacher_resume' teacher.pk %}" class="btn btn-sm btn-warning" 
+                                   data-bs-toggle="tooltip" title="Download Resume">
+                                   <i class="bi bi-download"></i>
+
+                                </a>
+                                {% if perms.teachers.change_teacher %}
+                                <a href="{% url 'teacher_edit' teacher.pk %}" class="btn btn-sm btn-primary" 
+                                   data-bs-toggle="tooltip" title="Edit Teacher">
+                                  <i class="bi bi-pencil-square"></i>
+
+                                </a>
+                                {% endif %}
+                                {% if perms.teachers.delete_teacher %}
+                                <button type="button" class="btn btn-sm btn-danger" 
+                                        data-bs-toggle="modal" data-bs-target="#deleteModal{{ teacher.pk }}"
+                                        data-bs-tooltip="tooltip" title="Delete Teacher">
+                                  <i class="bi bi-trash"></i>
+                                </button>
+                                {% endif %}
+                            </div>
+
+                            <!-- Delete Modal -->
+                            {% if perms.teachers.delete_teacher %}
+                            <div class="modal fade" id="deleteModal{{ teacher.pk }}" tabindex="-1" aria-hidden="true">
+                                <div class="modal-dialog">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <h5 class="modal-title">Confirm Delete</h5>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                        </div>
+                                        <div class="modal-body">
+                                            Are you sure you want to delete teacher <strong>{{ teacher.get_full_name }}</strong>?
+                                            This action cannot be undone.
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                            <form action="{% url 'teacher_delete' teacher.pk %}" method="post" style="display: inline;">
+                                                {% csrf_token %}
+                                                <button type="submit" class="btn btn-danger">Delete</button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="9" class="text-center py-4">
+                            <div class="text-muted">
+                                <i class="fas fa-users fa-3x mb-3"></i>
+                                <h5>No teachers found</h5>
+                                <p>Try adjusting your search filters or add a new teacher.</p>
+                                <a href="{% url 'teacher_add' %}" class="btn btn-primary">
+                                    <i class="fas fa-plus me-1"></i> Add Teacher
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination -->
+        {% if teachers.paginator.num_pages > 1 %}
+        <nav aria-label="Page navigation" class="mt-4">
+            <ul class="pagination justify-content-center">
+                {% if teachers.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page=1{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+                        <i class="fas fa-angle-double-left"></i>
+                    </a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ teachers.previous_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+                        <i class="fas fa-angle-left"></i>
+                    </a>
+                </li>
+                {% endif %}
+
+                {% for num in teachers.paginator.page_range %}
+                    {% if teachers.number == num %}
+                    <li class="page-item active">
+                        <span class="page-link">{{ num }}</span>
+                    </li>
+                    {% elif num > teachers.number|add:'-3' and num < teachers.number|add:'3' %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ num }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">{{ num }}</a>
+                    </li>
+                    {% endif %}
+                {% endfor %}
+
+                {% if teachers.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ teachers.next_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+                        <i class="fas fa-angle-right"></i>
+                    </a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ teachers.paginator.num_pages }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+                        <i class="fas fa-angle-double-right"></i>
+                    </a>
+                </li>
+                {% endif %}
+            </ul>
+            <div class="text-center text-muted">
+                Showing {{ teachers.start_index }} to {{ teachers.end_index }} of {{ teachers.paginator.count }} entries
+            </div>
+        </nav>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.1/css/dataTables.bootstrap5.min.css">
+<link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.3.3/css/buttons.bootstrap5.min.css">
+<link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.4.0/css/responsive.bootstrap5.min.css">
+<style>
+    .card {
+        box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+        border: 1px solid rgba(0, 0, 0, 0.125);
+    }
+    .card-header {
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    }
+    .table th {
+        border-top: none;
+        font-weight: 600;
+        color: #495057;
+    }
+    .btn-group .btn {
+        border-radius: 0.25rem;
+        margin-right: 0.25rem;
+    }
+    .badge {
+        font-size: 0.75em;
+    }
+    #teachersTable tbody tr:hover {
+        background-color: rgba(0, 123, 255, 0.05);
+        cursor: pointer;
+    }
+    .pagination .page-item.active .page-link {
+        background-color: #0d6efd;
+        border-color: #0d6efd;
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.1/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.1/js/dataTables.bootstrap5.min.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.3.3/js/dataTables.buttons.min.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.3.3/js/buttons.bootstrap5.min.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.3.3/js/buttons.html5.min.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.3.3/js/buttons.print.min.js"></script>
+<script src="https://cdn.datatables.net/responsive/2.4.0/js/dataTables.responsive.min.js"></script>
+<script src="https://cdn.datatables.net/responsive/2.4.0/js/responsive.bootstrap5.min.js"></script>
+
+<script>
+    $(document).ready(function() {
+        // Initialize tooltips
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl)
+        });
+
+        // Initialize DataTable
+        $('#teachersTable').DataTable({
+            responsive: true,
+            dom: '<"row"<"col-sm-12 col-md-6"l><"col-sm-12 col-md-6"f>>rt<"row"<"col-sm-12 col-md-5"i><"col-sm-12 col-md-7"p>>',
+            language: {
+                search: "_INPUT_",
+                searchPlaceholder: "Search teachers...",
+                lengthMenu: "_MENU_ records per page",
+                info: "Showing _START_ to _END_ of _TOTAL_ entries",
+                infoEmpty: "Showing 0 to 0 of 0 entries",
+                infoFiltered: "(filtered from _MAX_ total entries)"
+            },
+            columnDefs: [
+                { orderable: false, targets: [0, 8] }, // Disable sorting for # and Actions columns
+                { searchable: false, targets: [0, 8] } // Disable searching for # and Actions columns
+            ],
+            order: [[2, 'asc']] // Sort by Name column initially
+        });
+
+        // Make rows clickable
+        $('#teachersTable tbody').on('click', 'tr', function() {
+            var viewUrl = $(this).find('a.btn-info').attr('href');
+            if (viewUrl) {
+                window.location.href = viewUrl;
+            }
+        });
+
+        // Export buttons
+        $('.btn-export').click(function() {
+            var format = $(this).data('format');
+            var url = $(this).data('url');
+            window.location.href = url;
+        });
+
+        // Auto-submit form on filter change
+        $('#status, #qualification, #gender').change(function() {
+            $('#filterForm').submit();
+        });
+    });
+</script>
+{% endblock %}

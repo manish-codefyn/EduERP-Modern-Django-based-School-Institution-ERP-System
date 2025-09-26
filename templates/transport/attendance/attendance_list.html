@@ -1,0 +1,110 @@
+{% extends 'transport/base.html' %}
+{% load static %}
+
+{% block title %}Transport Attendance - {{ organization.name|default:"ERP System" }}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css">
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+
+    <!-- Header -->
+    <div class="header-section mb-4 d-flex justify-content-between align-items-center">
+        <div class="d-flex align-items-center gap-2">
+            <i class="bi bi-person-check display-6 text-primary"></i>
+            <div>
+                <h1 class="h3 fw-bold mb-1">Transport Attendance</h1>
+                <p class="text-custom mb-0">Record and manage student transport attendance</p>
+            </div>
+        </div>
+        {% if request.user.is_superadmin or request.user.is_institution_admin %}
+        <a href="{% url 'transport:attendance_create' %}" class="btn btn-primary">
+            <i class="bi bi-plus-circle me-1"></i> Add Attendance
+        </a>
+        {% endif %}
+    </div>
+
+    <!-- Attendance Table -->
+    <div class="card card-custom">
+        <div class="card-body">
+            <div class="table-responsive">
+                {% if attendances %}
+                <table id="attendanceTable" class="w-100 table table-hover align-middle">
+                    <thead>
+                        <tr>
+                            <th>Student</th>
+                            <th>Date</th>
+                            <th>Pickup Status</th>
+                            <th>Drop Status</th>
+                            <th>Pickup Time</th>
+                            <th>Drop Time</th>
+                            <th>Recorded By</th>
+                            {% if request.user.is_superadmin or request.user.is_institution_admin %}
+                            <th class="text-center">Actions</th>
+                            {% endif %}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for attendance in attendances %}
+                        <tr>
+                            <td>{{ attendance.student_transport.student.name }}</td>
+                            <td>{{ attendance.date }}</td>
+                            <td>{{ attendance.get_pickup_status_display }}</td>
+                            <td>{{ attendance.get_drop_status_display }}</td>
+                            <td>{{ attendance.pickup_time|default:"-" }}</td>
+                            <td>{{ attendance.drop_time|default:"-" }}</td>
+                            <td>{{ attendance.recorded_by.get_full_name }}</td>
+                            {% if request.user.is_superadmin or request.user.is_institution_admin %}
+                            <td class="text-center">
+                                <a href="{% url 'transport:attendance_update' attendance.pk %}" class="btn btn-sm btn-outline-secondary me-1">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                <a href="{% url 'transport:attendance_delete' attendance.pk %}" class="btn btn-sm btn-outline-danger">
+                                    <i class="bi bi-trash"></i>
+                                </a>
+                            </td>
+                            {% endif %}
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% else %}
+                <div class="text-center py-5">
+                    <i class="bi bi-person-check fs-1 text-muted"></i>
+                    <h4 class="mt-3 mb-2">No Attendance Records</h4>
+                    <p class="text-custom mb-4">Add attendance for students to get started</p>
+                    {% if request.user.is_superadmin or request.user.is_institution_admin %}
+                    <a href="{% url 'transport:attendance_create' %}" class="btn btn-primary">
+                        <i class="bi bi-plus-circle me-2"></i> Add Attendance
+                    </a>
+                    {% endif %}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    $('#attendanceTable').DataTable({
+        "pageLength": 10,
+        "order": [[1, 'desc']],
+        "language": {
+            "search": "<i class='bi bi-search me-2'></i>Search:",
+            "lengthMenu": "Show _MENU_ entries",
+            "info": "Showing _START_ to _END_ of _TOTAL_ entries"
+        }
+    });
+});
+</script>
+{% endblock %}

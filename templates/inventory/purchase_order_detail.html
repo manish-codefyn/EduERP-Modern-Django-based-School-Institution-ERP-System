@@ -1,0 +1,593 @@
+{% extends "inventory/base.html" %}
+{% load static %}
+
+{% block title %}Purchase Order: {{ purchase_order.po_number }} - {{ organization.name|default:"Inventory System" }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+
+    <!-- Header Section -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div class="d-flex align-items-center">
+            <a href="{% url 'inventory:purchase_order_list' %}" class="btn btn-outline-secondary btn-sm me-3">
+                <i class="bi bi-arrow-left me-1"></i> Back to POs
+            </a>
+            <div>
+                <h1 class="h3 mb-1 fw-bold text-primary">Purchase Order: {{ purchase_order.po_number }}</h1>
+                <p class="text-custom mb-0">Complete details and item breakdown</p>
+            </div>
+        </div>
+        <div class="dropdown">
+            <button class="btn btn-primary dropdown-toggle" type="button" id="actionDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                <i class="bi bi-gear me-1"></i> Actions
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="actionDropdown">
+                <li><h6 class="dropdown-header">PO Actions</h6></li>
+                <li><a class="dropdown-item" href="{% url 'inventory:purchase_order_update' purchase_order.pk %}">
+                    <i class="bi bi-pencil me-2"></i> Edit PO
+                </a></li>
+                {% if purchase_order.status in 'draft,submitted,rejected' %}
+                <li><a class="dropdown-item" href="{% url 'inventory:purchase_order_status_update' purchase_order.pk %}">
+                    <i class="bi bi-arrow-up-circle me-2"></i> Update Status
+                </a></li>
+                {% endif %}
+                <li><hr class="dropdown-divider"></li>
+                <li><a class="dropdown-item" href="?export=pdf" target="_blank">
+                    <i class="bi bi-file-earmark-pdf me-2"></i> Export PDF
+                </a></li>
+                <li><a class="dropdown-item" href="?export=print" onclick="window.print()">
+                    <i class="bi bi-printer me-2"></i> Print PO
+                </a></li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Status Alert -->
+    <div class="alert alert-{% if purchase_order.status == 'approved' %}success
+                          {% elif purchase_order.status == 'rejected' %}danger
+                          {% elif purchase_order.status == 'submitted' %}warning
+                          {% elif purchase_order.status == 'ordered' %}info
+                          {% elif purchase_order.status == 'received' %}primary
+                          {% elif purchase_order.status == 'cancelled' %}dark
+                          {% else %}secondary{% endif %} alert-dismissible fade show" role="alert">
+        <div class="d-flex align-items-center">
+            <i class="bi 
+                {% if purchase_order.status == 'approved' %}bi-check-circle
+                {% elif purchase_order.status == 'rejected' %}bi-x-circle
+                {% elif purchase_order.status == 'submitted' %}bi-clock
+                {% elif purchase_order.status == 'ordered' %}bi-truck
+                {% elif purchase_order.status == 'received' %}bi-check-lg
+                {% elif purchase_order.status == 'cancelled' %}bi-slash-circle
+                {% else %}bi-pencil{% endif %} me-2 fs-4">
+            </i>
+            <div class="flex-grow-1">
+                <strong>Current Status: {{ purchase_order.get_status_display }}</strong>
+                {% if purchase_order.status == 'submitted' and purchase_order.approved_by %}
+                - Approved by {{ purchase_order.approved_by.get_full_name }} on {{ purchase_order.updated_at|date:"M d, Y" }}
+                {% elif purchase_order.expected_delivery %}
+                - Expected delivery: {{ purchase_order.expected_delivery|date:"M d, Y" }}
+                {% endif %}
+            </div>
+            {% if purchase_order.status == 'draft' %}
+            <a href="{% url 'inventory:purchase_order_update' purchase_order.pk %}" class="btn btn-sm btn-outline-light">
+                Edit PO
+            </a>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Main Information Cards -->
+    <div class="row mb-4">
+        <!-- PO Summary -->
+        <div class="col-lg-8">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-header bg-transparent border-0 py-3">
+                    <h5 class="card-title mb-0 fw-bold">
+                        <i class="bi bi-receipt me-2 text-primary"></i>PO Summary
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <table class="table table-borderless table-sm">
+                                <tr>
+                                    <td class="fw-bold text-custom" width="40%">PO Number:</td>
+                                    <td class="fw-bold">{{ purchase_order.po_number }}</td>
+                                </tr>
+                                <tr>
+                                    <td class="fw-bold text-custom">Supplier:</td>
+                                    <td>
+                                        <span class="fw-bold">{{ purchase_order.supplier }}</span>
+                                        {% if purchase_order.notes %}
+                                        <button class="btn btn-sm btn-outline-secondary ms-2" type="button" 
+                                                data-bs-toggle="collapse" data-bs-target="#supplierNotes">
+                                            <i class="bi bi-chat-text"></i> Notes
+                                        </button>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="fw-bold text-custom">Order Date:</td>
+                                    <td>
+                                        {% if purchase_order.order_date %}
+                                        {{ purchase_order.order_date|date:"M d, Y" }}
+                                        {% else %}
+                                        <span class="text-custom">Not set</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="fw-bold text-custom">Created:</td>
+                                    <td>{{ purchase_order.created_at|date:"M d, Y H:i" }}</td>
+                                </tr>
+                            </table>
+                        </div>
+                        <div class="col-md-6">
+                            <table class="table table-borderless table-sm">
+                                <tr>
+                                    <td class="fw-bold text-custom" width="40%">Status:</td>
+                                    <td>
+                                        <span class="badge fs-6 
+                                            {% if purchase_order.status == 'draft' %}bg-info
+                                            {% elif purchase_order.status == 'submitted' %}bg-warning text-dark
+                                            {% elif purchase_order.status == 'approved' %}bg-success
+                                            {% elif purchase_order.status == 'rejected' %}bg-danger
+                                            {% elif purchase_order.status == 'ordered' %}bg-secondary
+                                            {% elif purchase_order.status == 'received' %}bg-primary
+                                            {% elif purchase_order.status == 'cancelled' %}bg-dark
+                                            {% endif %}">
+                                            {{ purchase_order.get_status_display }}
+                                        </span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="fw-bold text-custom">Expected Delivery:</td>
+                                    <td>
+                                        {% if purchase_order.expected_delivery %}
+                                        {{ purchase_order.expected_delivery|date:"M d, Y" }}
+                                        {% if purchase_order.expected_delivery < today %}
+                                        <span class="badge bg-danger ms-1">Overdue</span>
+                                        {% elif purchase_order.expected_delivery <= soon_date %}
+                                        <span class="badge bg-warning ms-1">Due Soon</span>
+                                        {% endif %}
+                                        {% else %}
+                                        <span class="text-custom">Not set</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="fw-bold text-custom">Received Date:</td>
+                                    <td>
+                                        {% if purchase_order.received_date %}
+                                        {{ purchase_order.received_date|date:"M d, Y" }}
+                                        {% else %}
+                                        <span class="text-custom">Not received</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="fw-bold text-custom">Last Updated:</td>
+                                    <td>{{ purchase_order.updated_at|date:"M d, Y H:i" }}</td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Supplier Notes Collapse -->
+                    {% if purchase_order.notes %}
+                    <div class="collapse mt-3" id="supplierNotes">
+                        <div class="card card-body bg-light">
+                            <h6 class="fw-bold mb-2">Supplier Notes:</h6>
+                            <p class="mb-0">{{ purchase_order.notes }}</p>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Amount Summary -->
+        <div class="col-lg-4">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-header bg-transparent border-0 py-3">
+                    <h5 class="card-title mb-0 fw-bold">
+                        <i class="bi bi-currency-dollar me-2 text-success"></i>Amount Summary
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="text-center mb-4">
+                        <h2 class="text-success fw-bold">₹{{ purchase_order.total_amount|floatformat:2 }}</h2>
+                        <p class="text-custom mb-0">Total PO Value</p>
+                    </div>
+                    
+                    <table class="table table-sm table-borderless">
+                        <tr>
+                            <td class="fw-bold text-custom">Items Count:</td>
+                            <td class="text-end">{{ purchase_order.items.count }}</td>
+                        </tr>
+                        <tr>
+                            <td class="fw-bold text-custom">Total Quantity:</td>
+                            <td class="text-end">{{ total_quantity|default:0 }}</td>
+                        </tr>
+                        <tr>
+                            <td class="fw-bold text-custom">Average Item Price:</td>
+                            <td class="text-end">₹{{ average_price|floatformat:2 }}</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Line Items Card -->
+    <div class="card shadow-sm border-0 mb-4">
+        <div class="card-header bg-transparent border-0 py-3 d-flex justify-content-between align-items-center">
+            <h5 class="card-title mb-0 fw-bold">
+                <i class="bi bi-list-check me-2 text-primary"></i>Order Items ({{ purchase_order.items.count }})
+            </h5>
+            <span class="badge bg-primary">Total: ₹{{ purchase_order.total_amount|floatformat:2 }}</span>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="ps-4">Item</th>
+                            <th>Quantity</th>
+                            <th>Unit Price</th>
+                            <th>Total Price</th>
+                            <th>Current Stock</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in purchase_order.items.all %}
+                        <tr>
+                            <td class="ps-4">
+                                <div class="d-flex align-items-center">
+                                    <i class="bi bi-box me-3 text-primary"></i>
+                                    <div>
+                                        <strong class="d-block">{{ item.item.name }}</strong>
+                                        <small class="text-custom">{{ item.item.category.name|default:"Uncategorized" }}</small>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <span class="fw-bold">{{ item.quantity }}</span>
+                                <small class="text-custom d-block">{{ item.item.unit }}</small>
+                            </td>
+                            <td>
+                                <span class="fw-bold">₹{{ item.unit_price|floatformat:2 }}</span>
+                            </td>
+                            <td>
+                                <span class="fw-bold text-success">₹{{ item.total_price|floatformat:2 }}</span>
+                            </td>
+                            <td>
+                                <span class="badge 
+                                    {% if item.item.quantity > item.item.min_quantity %}bg-success
+                                    {% elif item.item.quantity == 0 %}bg-danger
+                                    {% else %}bg-warning text-dark{% endif %}">
+                                    {{ item.item.quantity }} in stock
+                                </span>
+                                <small class="text-custom d-block">Min: {{ item.item.min_quantity }}</small>
+                            </td>
+                            <td>
+                                {% if purchase_order.status == 'received' %}
+                                <span class="badge bg-success bg-opacity-10 text-success">
+                                    <i class="bi bi-check-circle me-1"></i>Received
+                                </span>
+                                {% elif purchase_order.status == 'ordered' %}
+                                <span class="badge bg-secondary bg-opacity-10 text-secondary">
+                                    <i class="bi bi-truck me-1"></i>Ordered
+                                </span>
+                                {% else %}
+                                <span class="badge bg-light text-dark">
+                                    <i class="bi bi-clock me-1"></i>Pending
+                                </span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="6" class="text-center py-4">
+                                <i class="bi bi-inbox display-4 text-custom"></i>
+                                <h5 class="mt-3 text-custom">No items in this purchase order</h5>
+                                <p class="text-custom">Add items to this purchase order to see them here.</p>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                    <tfoot class="table-active">
+                        <tr>
+                            <td colspan="3" class="fw-bold text-end ps-4">Grand Total:</td>
+                            <td colspan="3" class="fw-bold fs-5 text-success">
+                                ₹{{ purchase_order.total_amount|floatformat:2 }}
+                            </td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Timeline and Activity -->
+    <div class="row">
+        <!-- Timeline -->
+        <div class="col-lg-6 mb-4">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-header bg-transparent border-0 py-3">
+                    <h5 class="card-title mb-0 fw-bold">
+                        <i class="bi bi-clock-history me-2 text-info"></i>PO Timeline
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="timeline">
+                        <div class="timeline-item {% if purchase_order.status != 'draft' %}completed{% endif %}">
+                            <div class="timeline-marker bg-primary"></div>
+                            <div class="timeline-content">
+                                <h6 class="fw-bold">Draft Created</h6>
+                                <p class="text-custom mb-1">{{ purchase_order.created_at|date:"M d, Y H:i" }}</p>
+                                <small>By {{ purchase_order.created_by.get_full_name|default:purchase_order.created_by.username }}</small>
+                            </div>
+                        </div>
+
+                        {% if purchase_order.status in 'submitted,approved,rejected,ordered,received,cancelled' %}
+                        <div class="timeline-item {% if purchase_order.status != 'submitted' %}completed{% endif %}">
+                            <div class="timeline-marker bg-warning"></div>
+                            <div class="timeline-content">
+                                <h6 class="fw-bold">Submitted for Approval</h6>
+                                <p class="text-custom mb-1">{{ purchase_order.updated_at|date:"M d, Y H:i" }}</p>
+                                <small>Awaiting approval</small>
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        {% if purchase_order.status in 'approved,ordered,received' %}
+                        <div class="timeline-item {% if purchase_order.status != 'approved' %}completed{% endif %}">
+                            <div class="timeline-marker bg-success"></div>
+                            <div class="timeline-content">
+                                <h6 class="fw-bold">Approved</h6>
+                                <p class="text-custom mb-1">
+                                    {% if purchase_order.approved_by %}
+                                    By {{ purchase_order.approved_by.get_full_name|default:purchase_order.approved_by.username }}
+                                    {% endif %}
+                                </p>
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        {% if purchase_order.status in 'ordered,received' %}
+                        <div class="timeline-item {% if purchase_order.status != 'ordered' %}completed{% endif %}">
+                            <div class="timeline-marker bg-secondary"></div>
+                            <div class="timeline-content">
+                                <h6 class="fw-bold">Ordered</h6>
+                                {% if purchase_order.order_date %}
+                                <p class="text-custom mb-1">Order date: {{ purchase_order.order_date|date:"M d, Y" }}</p>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        {% if purchase_order.status == 'received' %}
+                        <div class="timeline-item completed">
+                            <div class="timeline-marker bg-success"></div>
+                            <div class="timeline-content">
+                                <h6 class="fw-bold">Received</h6>
+                                {% if purchase_order.received_date %}
+                                <p class="text-custom mb-1">Received on: {{ purchase_order.received_date|date:"M d, Y" }}</p>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        {% if purchase_order.status == 'rejected' %}
+                        <div class="timeline-item completed">
+                            <div class="timeline-marker bg-danger"></div>
+                            <div class="timeline-content">
+                                <h6 class="fw-bold">Rejected</h6>
+                                <p class="text-custom mb-1">{{ purchase_order.updated_at|date:"M d, Y H:i" }}</p>
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        {% if purchase_order.status == 'cancelled' %}
+                        <div class="timeline-item completed">
+                            <div class="timeline-marker bg-dark"></div>
+                            <div class="timeline-content">
+                                <h6 class="fw-bold">Cancelled</h6>
+                                <p class="text-custom mb-1">{{ purchase_order.updated_at|date:"M d, Y H:i" }}</p>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- People Involved -->
+        <div class="col-lg-6 mb-4">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-header bg-transparent border-0 py-3">
+                    <h5 class="card-title mb-0 fw-bold">
+                        <i class="bi bi-people me-2 text-purple"></i>People Involved
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-4 p-3 bg-light rounded">
+                        <div class="avatar bg-primary bg-opacity-10 text-primary rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 50px; height: 50px;">
+                            <i class="bi bi-person fs-4"></i>
+                        </div>
+                        <div class="flex-grow-1">
+                            <h6 class="mb-1 fw-bold">Created By</h6>
+                            <p class="mb-1">{{ purchase_order.created_by.get_full_name|default:purchase_order.created_by.username }}</p>
+                            <small class="text-custom">{{ purchase_order.created_by.email }}</small>
+                        </div>
+                    </div>
+
+                    {% if purchase_order.approved_by %}
+                    <div class="d-flex align-items-center mb-4 p-3 bg-light rounded">
+                        <div class="avatar bg-success bg-opacity-10 text-success rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 50px; height: 50px;">
+                            <i class="bi bi-person-check fs-4"></i>
+                        </div>
+                        <div class="flex-grow-1">
+                            <h6 class="mb-1 fw-bold">Approved By</h6>
+                            <p class="mb-1">{{ purchase_order.approved_by.get_full_name|default:purchase_order.approved_by.username }}</p>
+                            <small class="text-custom">{{ purchase_order.approved_by.email }}</small>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Next Actions -->
+                    <div class="p-3 bg-info bg-opacity-10 rounded border-start border-info border-4">
+                        <h6 class="fw-bold text-info mb-2">Next Steps</h6>
+                        {% if purchase_order.status == 'draft' %}
+                        <p class="mb-2">This PO is in draft mode. Submit it for approval when ready.</p>
+                        <a href="{% url 'inventory:purchase_order_update' purchase_order.pk %}" class="btn btn-sm btn-info">
+                            Edit & Submit
+                        </a>
+                        {% elif purchase_order.status == 'submitted' %}
+                        <p class="mb-2">This PO is awaiting approval. An administrator needs to review it.</p>
+                        {% elif purchase_order.status == 'approved' %}
+                        <p class="mb-2">This PO is approved and ready to be ordered.</p>
+                        <a href="{% url 'inventory:purchase_order_status_update' purchase_order.pk %}" class="btn btn-sm btn-success">
+                            Mark as Ordered
+                        </a>
+                        {% elif purchase_order.status == 'ordered' %}
+                        <p class="mb-2">This PO has been ordered. Update when items are received.</p>
+                        <a href="{% url 'inventory:purchase_order_status_update' purchase_order.pk %}" class="btn btn-sm btn-primary">
+                            Mark as Received
+                        </a>
+                        {% elif purchase_order.status == 'received' %}
+                        <p class="mb-2">All items from this PO have been received and added to inventory.</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <a href="{% url 'inventory:purchase_order_list' %}" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left me-1"></i> Back to All POs
+                </a>
+                
+                <div class="btn-group">
+                    {% if purchase_order.status == 'draft' %}
+                    <a href="{% url 'inventory:purchase_order_update' purchase_order.pk %}" class="btn btn-primary">
+                        <i class="bi bi-pencil me-1"></i> Edit PO
+                    </a>
+                    {% endif %}
+                    
+                    {% if purchase_order.status in 'draft,submitted,rejected' %}
+                    <a href="{% url 'inventory:purchase_order_status_update' purchase_order.pk %}" class="btn btn-success">
+                        <i class="bi bi-arrow-up-circle me-1"></i> Update Status
+                    </a>
+                    {% endif %}
+                    
+                    <a href="?export=pdf" target="_blank" class="btn btn-outline-primary">
+                        <i class="bi bi-file-earmark-pdf me-1"></i> Export PDF
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.timeline {
+    position: relative;
+    padding-left: 30px;
+}
+
+.timeline-item {
+    position: relative;
+    margin-bottom: 25px;
+}
+
+.timeline-marker {
+    position: absolute;
+    left: -30px;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    z-index: 2;
+}
+
+.timeline-content {
+    padding: 10px 0;
+}
+
+.timeline-item.completed .timeline-content {
+    opacity: 1;
+}
+
+.timeline-item:not(.completed) .timeline-content {
+    opacity: 0.7;
+}
+
+.timeline::before {
+    content: '';
+    position: absolute;
+    left: -21px;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: #e9ecef;
+}
+
+.avatar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.bg-purple {
+    background-color: #6f42c1 !important;
+}
+
+.text-purple {
+    color: #6f42c1 !important;
+}
+
+.table th {
+    border-top: none;
+    font-weight: 600;
+    font-size: 0.875rem;
+    text-transform: uppercase;
+    color: #6c757d;
+}
+
+.table td {
+    vertical-align: middle;
+}
+
+.card {
+    border-radius: 12px;
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Print functionality
+    if (window.location.search.includes('export=print')) {
+        window.print();
+    }
+
+    // Auto-refresh page every 30 seconds if PO is in pending state
+    const pendingStatuses = ['submitted', 'approved', 'ordered'];
+    if (pendingStatuses.includes('{{ purchase_order.status }}')) {
+        setTimeout(() => {
+            window.location.reload();
+        }, 30000);
+    }
+});
+</script>
+{% endblock %}

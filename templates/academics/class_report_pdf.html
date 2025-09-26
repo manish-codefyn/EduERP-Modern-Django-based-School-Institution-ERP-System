@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Class Report - {{ class_obj.name }}</title>
+    <style>
+
+        @page {
+    size: letter portrait;
+
+    @frame header_frame {
+        -pdf-frame-content: header_content;
+        left: 10pt; width: 592pt; top: 2pt; height: 50pt;
+    }
+
+    @frame content_frame {
+        left: 10pt; width: 592pt; top: 2pt; height: 660pt;
+    }
+
+    @frame footer_frame {
+        -pdf-frame-content: footer_content;
+        left: 10pt; width: 592pt; top: 750pt; height: 20pt;
+    }
+}
+        body {
+            font-family: DejaVu Sans, Arial, Helvetica, sans-serif;
+            font-size: 12px;
+            color: #333;
+        }
+        .header, .footer {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .footer {
+            margin-top: 40px;
+            font-size: 10px;
+            color: #777;
+        }
+        h1, h2, h3, h4 {
+            margin: 5px 0;
+            color: #2c3e50;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 15px;
+        }
+        table th, table td {
+            border: 1px solid #999;
+            padding: 6px;
+            text-align: left;
+        }
+        table th {
+            background: #f0f0f0;
+        }
+        .stamp {
+            text-align: right;
+            margin-top: 40px;
+        }
+        .stamp img {
+            height: 100px;
+        }
+        .logo img {
+            height: 80px;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="footer_content" style="text-align:center; font-size:10px; color:#666;">
+    Generated on {{ export_date }} | Page <pdf:pagenumber> of <pdf:pagecount>
+</div>
+    <!-- Header -->
+    <div class="header">
+        {% if logo %}
+            <div class="logo">
+                <img src="{{ logo }}" alt="Logo">
+            </div>
+        {% endif %}
+        <h1>Class Report</h1>
+        <h3>{{ class_obj.name }} ({{ class_obj.code }})</h3>
+        <p>{{ organization.name|default:"ERP System" }}</p>
+        <p><small>Generated on {{ generated_date|date:"F j, Y \\a\\t H:i" }}</small></p>
+    </div>
+
+    <!-- Class Details -->
+    <h3>Class Details</h3>
+    <table>
+        <tr><th>Name</th><td>{{ class_obj.name }}</td></tr>
+        <tr><th>Code</th><td>{{ class_obj.code }}</td></tr>
+        <tr><th>Capacity</th><td>{{ class_obj.capacity }} students</td></tr>
+        <tr><th>Room</th><td>{{ class_obj.room_number|default:"Not assigned" }}</td></tr>
+        <tr><th>Status</th><td>{{ class_obj.is_active|yesno:"Active,Inactive" }}</td></tr>
+    </table>
+
+    <!-- Academic Year -->
+    <h3>Academic Year</h3>
+    {% if current_year %}
+    <table>
+        <tr><th>Year</th><td>{{ current_year.name }}</td></tr>
+        <tr><th>Period</th><td>{{ current_year.start_date|date:"M d, Y" }} - {{ current_year.end_date|date:"M d, Y" }}</td></tr>
+        <tr><th>Status</th><td>{{ current_year.is_current|yesno:"Current,Not Current" }}</td></tr>
+    </table>
+    {% else %}
+    <p><em>No academic year configured</em></p>
+    {% endif %}
+
+    <!-- Sections -->
+    <h3>Sections ({{ sections.count }})</h3>
+    {% if sections %}
+    <table>
+        <thead>
+            <tr>
+                <th>Section Name</th>
+                <th>Capacity</th>
+                <th>Status</th>
+                <th>Created</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for section in sections %}
+            <tr>
+                <td>{{ section.name }}</td>
+                <td>{{ section.capacity }} students</td>
+                <td>{{ section.is_active|yesno:"Active,Inactive" }}</td>
+                <td>{{ section.created_at|date:"M d, Y" }}</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p><em>No sections found for this class</em></p>
+    {% endif %}
+
+    <!-- Timetable -->
+    <h3>Timetable Summary</h3>
+    {% if timetable_entries %}
+    <table>
+        <thead>
+            <tr>
+                <th>Day</th>
+                <th>Periods</th>
+                <th>Subjects</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for day in days %}
+            {% with day_entries=timetable_entries|dictsort:"day" %}
+            {% if timetable_entries %}
+            <tr>
+                <td>{{ day|title }}</td>
+                <td>{{ timetable_entries.count }}</td>
+                <td>
+                    {% for entry in timetable_entries|slice:":3" %}
+                        {{ entry.subject.name }}{% if not forloop.last %}, {% endif %}
+                    {% endfor %}
+                    {% if timetable_entries.count > 3 %}...{% endif %}
+                </td>
+            </tr>
+            {% endif %}
+            {% endwith %}
+        {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p><em>No timetable entries found for this class</em></p>
+    {% endif %}
+
+    <!-- Stamp -->
+    <div class="stamp">
+        {% if stamp %}
+            <img src="{{ stamp }}" alt="Stamp"><br>
+            <strong>Authorized Sign</strong>
+        {% endif %}
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+        <p>&copy; {{ organization.name|default:"ERP System" }} - Class Report</p>
+    </div>
+</body>
+</html>

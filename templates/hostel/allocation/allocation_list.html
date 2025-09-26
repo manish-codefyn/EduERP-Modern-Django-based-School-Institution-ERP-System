@@ -1,0 +1,474 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load custom_filters %}
+
+{% block title %}Allocation Management - {{ organization.name|default:"ERP System" }}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+
+    <!-- Header -->
+<div class="header-section">
+    <div class="row align-items-center">
+        <div class="col-md-8">
+            <div class="d-flex align-items-center">
+                <div class="header-icon me-3">
+                   <i class="bi bi-people display-6 text-primary"></i> 
+                </div>
+                <div>
+                    <h1 class="h3 fw-bold mb-1">Allocation Management</h1>
+                    <p class="text-custom mb-0">Manage student room allocations and assignments</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            {% if request.user.is_superadmin or request.user.is_institution_admin or request.user.is_principal %}
+            <div class="d-flex gap-2 justify-content-md-end flex-wrap">
+                <!-- Quick Actions -->
+                <div class="btn-group w-100" role="group">
+                    <a href="{% url 'hostel:allocation_add' %}" class="btn btn-primary">
+                        <i class="bi bi-plus-circle me-1"></i> New Allocation
+                    </a>
+                    <button type="button" class="btn btn-primary dropdown-toggle dropdown-toggle-split" 
+                            data-bs-toggle="dropdown" aria-expanded="false">
+                        <span class="visually-hidden">Toggle Dropdown</span>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <li>
+                            <button type="button" class="dropdown-item" data-bs-toggle="modal" data-bs-target="#exportModal">
+                                <i class="bi bi-download me-2"></i> Export Data
+                            </button>
+                        </li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li>
+                            <a class="dropdown-item" href="{% url 'hostel:hostel_list' %}">
+                                <i class="bi bi-buildings me-2"></i> View Hostels
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item" href="{% url 'hostel:room_list' %}">
+                                <i class="bi bi-door-open me-2"></i> View Rooms
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item" href="{% url 'hostel:feestructure_list' %}">
+                                <i class="bi bi-cash-coin me-2"></i> View Fee Structures
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Stats Cards -->
+<div class="row g-4 mb-4">
+    <div class="col-xl-3 col-md-6">
+        <div class="card stats-card text-white h-100" style="background: var(--primary-gradient);">
+            <div class="card-body d-flex flex-column justify-content-between">
+                <div class="row align-items-center">
+                    <div class="col-8">
+                        <h6 class="card-title mb-1 small opacity-75">TOTAL ALLOCATIONS</h6>
+                        <h3 class="mb-0 fw-bold">{{ total_allocations|default:"0" }}</h3>
+                        <p class="mb-0 small opacity-75">All allocations</p>
+                    </div>
+                    <div class="col-4 text-end">
+                        <div class="stats-icon">
+                            <i class="bi bi-people fs-2"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6">
+        <div class="card stats-card text-white h-100" style="background: var(--success-gradient);">
+            <div class="card-body d-flex flex-column justify-content-between">
+                <div class="row align-items-center">
+                    <div class="col-8">
+                        <h6 class="card-title mb-1 small opacity-75">ACTIVE ALLOCATIONS</h6>
+                        <h3 class="mb-0 fw-bold">{{ active_allocations|default:"0" }}</h3>
+                        <p class="mb-0 small opacity-75">Currently active</p>
+                    </div>
+                    <div class="col-4 text-end">
+                        <div class="stats-icon">
+                            <i class="bi bi-check-circle fs-2"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6">
+        <div class="card stats-card text-white h-100" style="background: var(--info-gradient);">
+            <div class="card-body d-flex flex-column justify-content-between">
+                <div class="row align-items-center">
+                    <div class="col-8">
+                        <h6 class="card-title mb-1 small opacity-75">UPCOMING EXPIRY</h6>
+                        <h3 class="mb-0 fw-bold">{{ expiring_soon|default:"0" }}</h3>
+                        <p class="mb-0 small opacity-75">Expiring in 30 days</p>
+                    </div>
+                    <div class="col-4 text-end">
+                        <div class="stats-icon">
+                            <i class="bi bi-calendar-event fs-2"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6">
+        <div class="card stats-card text-white h-100" style="background: var(--danger-gradient);">
+            <div class="card-body d-flex flex-column justify-content-between">
+                <div class="row align-items-center">
+                    <div class="col-8">
+                        <h6 class="card-title mb-1 small opacity-75">EXPIRED ALLOCATIONS</h6>
+                        <h3 class="mb-0 fw-bold">{{ expired_allocations|default:"0" }}</h3>
+                        <p class="mb-0 small opacity-75">Need attention</p>
+                    </div>
+                    <div class="col-4 text-end">
+                        <div class="stats-icon">
+                            <i class="bi bi-x-circle fs-2"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+    <!-- Filter Section -->
+    <div class="card card-custom mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-3">
+                    <label class="form-label fw-semibold">Hostel</label>
+                    <select class="form-select" name="hostel">
+                        <option value="">All Hostels</option>
+                        {% for hostel in hostels %}
+                        <option value="{{ hostel.id }}" {% if request.GET.hostel == hostel.id|stringformat:"s" %}selected{% endif %}>
+                            {{ hostel.name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label fw-semibold">Status</label>
+                    <select class="form-select" name="status">
+                        <option value="">All Statuses</option>
+                        <option value="active" {% if request.GET.status == 'active' %}selected{% endif %}>Active</option>
+                        <option value="expired" {% if request.GET.status == 'expired' %}selected{% endif %}>Expired</option>
+                        <option value="expiring" {% if request.GET.status == 'expiring' %}selected{% endif %}>Expiring Soon</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label fw-semibold">Room Type</label>
+                    <select class="form-select" name="room_type">
+                        <option value="">All Types</option>
+                        <option value="single" {% if request.GET.room_type == 'single' %}selected{% endif %}>Single</option>
+                        <option value="double" {% if request.GET.room_type == 'double' %}selected{% endif %}>Double</option>
+                        <option value="triple" {% if request.GET.room_type == 'triple' %}selected{% endif %}>Triple</option>
+                        <option value="dormitory" {% if request.GET.room_type == 'dormitory' %}selected{% endif %}>Dormitory</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label fw-semibold">&nbsp;</label>
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="bi bi-filter me-1"></i> Apply Filters
+                        </button>
+                        <a href="{% url 'hostel:allocation_list' %}" class="btn btn-outline-secondary">
+                            <i class="bi bi-arrow-repeat"></i>
+                        </a>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Table Section -->
+    <div class="card card-custom">
+        <div class="card-header bg-transparent border-0 pt-4 px-4">
+            <h5 class="card-title mb-0 fw-bold text-custom">All Allocations</h5>
+            <p class="text-custom mb-0">Manage and review student room allocations</p>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                {% if allocations %}
+                <table id="allocationTable" class=" w-100 table-custom table-hover align-middle">
+                    <thead>
+                        <tr>
+                            <th>Student/Roll No</th>
+                            <th>Room Details</th>
+                            <th>Hostel</th>
+                            <th>Allocation Period</th>
+                            <th>Status</th>
+                            {% if request.user.is_superadmin or request.user.is_institution_admin or request.user.is_principal %}
+                            <th class="text-center">Actions</th>
+                            {% endif %}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for allocation in allocations %}
+                        <tr>
+                           <td>
+                   
+                            <div class="d-flex align-items-center">
+                                <div class="flex-shrink-0">
+                                     <div class="flex-grow-1 ms-3">
+                                    {% with photo=allocation.student.get_photo %}           
+                                    {% if photo %}
+                                    <img src="{{ photo.file.url }}" alt="{{ student.full_name }}" 
+                                        class="student-profile-img rounded-circle me-0" width="50" height="50">
+                                     <small class="text-custom">{{ allocation.student.full_name }}</small>
+                                     <small class="text-custom">{{ allocation.student.roll_number }}</small>
+                                    {% endif %}
+                                    {% endwith %}
+                                </div>
+                                </div>
+                               
+                
+                            </div>
+                        </td>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                <div class="flex-shrink-0">
+                                    <i class="bi bi-door-closed text-primary fs-5"></i>
+                                </div>
+                                <div class="flex-grow-1 ms-3">
+                                    <h6 class="mb-0">Room {{ allocation.room.room_number }}</h6>
+                                    <small class="text-custom">
+                                        {{ allocation.room.get_room_type_display }} • Floor {{ allocation.room.floor }}
+                                    </small>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="badge bg-light text-dark">
+                                <i class="bi bi-building me-1 text-primary"></i>
+                                {{ allocation.room.hostel.name }}
+                            </span>
+                        </td>
+                        <td>
+                            <div class="d-flex flex-column">
+                                <span class="date-badge bg-primary bg-opacity-10 text-primary mb-1">
+                                    <i class="bi bi-calendar-plus me-1"></i>{{ allocation.date_from|date:"M d, Y" }}
+                                </span>
+                                {% if allocation.date_to %}
+                                <span class="date-badge bg-info bg-opacity-10 text-info">
+                                    <i class="bi bi-calendar-minus me-1"></i>{{ allocation.date_to|date:"M d, Y" }}
+                                </span>
+                                {% else %}
+                                <span class="date-badge bg-success bg-opacity-10 text-success">
+                                    <i class="bi bi-infinity me-1"></i>No end date
+                                </span>
+                                {% endif %}
+                            </div>
+                        </td>
+                        <td>
+                            {% if allocation.is_active %}
+                                {% if allocation.is_expiring_soon %}
+                                <span class="allocation-status bg-warning bg-opacity-10 text-warning">
+                                    <i class="bi bi-exclamation-triangle me-1"></i>Expiring Soon
+                                </span>
+                                {% else %}
+                                <span class="allocation-status bg-success bg-opacity-10 text-success">
+                                    <i class="bi bi-check-circle me-1"></i>Active
+                                </span>
+                                {% endif %}
+                            {% else %}
+                                <span class="allocation-status bg-danger bg-opacity-10 text-danger">
+                                    <i class="bi bi-x-circle me-1"></i>Expired
+                                </span>
+                            {% endif %}
+                        </td>
+                        {% if request.user.is_superadmin or request.user.is_institution_admin or request.user.is_principal %}
+                        <td>
+                            <div class="d-flex justify-content-center">
+                                <!-- <a href="#" class="btn btn-sm btn-outline-primary me-1" title="View Details" data-bs-toggle="tooltip">
+                                    <i class="bi bi-eye"></i>
+                                </a> -->
+                                <a href="{% url 'hostel:allocation_edit' allocation.id %}" class="btn btn-sm btn-outline-secondary me-1" title="Edit" data-bs-toggle="tooltip">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                <a href="{% url 'hostel:allocation_delete' allocation.id %}" class="btn btn-sm btn-outline-danger" title="Delete" data-bs-toggle="tooltip">
+                                    <i class="bi bi-trash"></i>
+                                </a>
+                            </div>
+                        </td>
+                        {% endif %}
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% else %}
+                <div class="empty-state">
+                    <i class="fas fa-bed"></i>
+                    <h4 class="mt-3 mb-2">No Allocations Found</h4>
+                    <p class="text-custom mb-4">Get started by creating your first room allocation</p>
+                    {% if request.user.is_superadmin or request.user.is_institution_admin or request.user.is_principal %}
+                    <a href="{% url 'hostel:allocation_add' %}" class="btn btn-primary">
+                        <i class="fas fa-plus-circle me-2"></i> Add First Allocation
+                    </a>
+                    {% endif %}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Export Modal -->
+<div class="modal fade" id="exportModal" tabindex="-1" aria-labelledby="exportModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title fw-bold">Export Allocations</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="get" action="#">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Export Format</label>
+                        <select class="form-select" name="format" required>
+                            <option value="csv">CSV Format</option>
+                            <option value="pdf">PDF Document</option>
+                            <option value="excel">Excel Spreadsheet</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Hostel</label>
+                        <select class="form-select" name="hostel_id">
+                            <option value="">All Hostels</option>
+                            {% for hostel in hostels %}
+                            <option value="{{ hostel.id }}">{{ hostel.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Status</label>
+                        <select class="form-select" name="status">
+                            <option value="">All Statuses</option>
+                            <option value="active">Active Only</option>
+                            <option value="expired">Expired Only</option>
+                            <option value="expiring">Expiring Soon</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Time Period</label>
+                        <select class="form-select" name="time_period">
+                            <option value="">All Time</option>
+                            <option value="current">Current Allocations</option>
+                            <option value="month">This Month</option>
+                            <option value="quarter">This Quarter</option>
+                            <option value="year">This Year</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-download me-2"></i>Export Data
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize DataTable
+    $('#allocationTable').DataTable({
+        "pageLength": 10,
+        "order": [[3, 'desc']],
+        "language": {
+            "search": "<i class='fas fa-search me-2'></i>Search:",
+            "lengthMenu": "Show _MENU_ entries",
+            "info": "Showing _START_ to _END_ of _TOTAL_ entries",
+            "paginate": {
+                "previous": "<i class='bi bi-chevron-left'></i>",
+                "next": "<i class='bi bi-chevron-right'></i>"
+            }
+        },
+        "columnDefs": [
+            { 
+                "targets": [-1], 
+                "orderable": false,
+                "className": "dt-center"
+            }
+        ],
+        "responsive": true,
+        "dom": '<"row"<"col-md-6"l><"col-md-6"f>>rt<"row"<"col-md-6"i><"col-md-6"p>>'
+    });
+    
+    // Initialize tooltips
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl)
+    });
+
+    // Modal cleanup handlers
+    document.querySelectorAll('.modal').forEach(modalEl => {
+        modalEl.addEventListener('show.bs.modal', function () {
+            document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+        });
+
+        modalEl.addEventListener('hidden.bs.modal', function () {
+            document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+            document.body.classList.remove('modal-open');
+            document.body.style.overflow = '';
+            document.body.style.paddingRight = '';
+        });
+    });
+
+    // Safety net for modal backdrops
+    const observer = new MutationObserver(() => {
+        const backdrop = document.querySelector('.modal-backdrop');
+        const anyShown = !!document.querySelector('.modal.show');
+        if (backdrop && !anyShown) {
+            backdrop.remove();
+            document.body.classList.remove('modal-open');
+            document.body.style.overflow = '';
+            document.body.style.paddingRight = '';
+        }
+    });
+    observer.observe(document.body, { childList: true, subtree: true });
+
+    // Allow manual cleanup by pressing Esc
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+            document.body.classList.remove('modal-open');
+            document.body.style.overflow = '';
+            document.body.style.paddingRight = '';
+            document.querySelectorAll('.modal.show').forEach(m => {
+                try { bootstrap.Modal.getInstance(m)?.hide(); } catch(e) {}
+            });
+        }
+    });
+
+    // Final cleanup
+    setTimeout(() => {
+        document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+        document.body.classList.remove('modal-open');
+        document.body.style.overflow = '';
+        document.body.style.paddingRight = '';
+    }, 500);
+});
+</script>
+{% endblock %}

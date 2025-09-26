@@ -1,0 +1,318 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ title }} - {{ organization.name|default:"ERP System" }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .card-custom {
+        border: none;
+        border-radius: 12px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    
+    .payment-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 12px 12px 0 0;
+    }
+    
+    .info-card {
+        background: #f8f9fa;
+        border-radius: 8px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        border-left: 4px solid #007bff;
+    }
+    
+    .info-label {
+        font-weight: 600;
+        color: #495057;
+        margin-bottom: 0.25rem;
+    }
+    
+    .info-value {
+        color: #6c757d;
+        font-size: 1.1rem;
+    }
+    
+    .status-badge {
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        font-weight: 500;
+    }
+    
+    .badge-completed { background-color: #28a745; color: white; }
+    .badge-paid { background-color: #17a2b8; color: white; }
+    .badge-pending { background-color: #ffc107; color: #000; }
+    .badge-cancelled { background-color: #dc3545; color: white; }
+    
+    .action-btn {
+        border-radius: 8px;
+        padding: 0.5rem 1rem;
+        transition: all 0.3s ease;
+    }
+    
+    .action-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-0">{{ title }}</h1>
+            <p class="text-custom mb-0">Payment details and transaction information</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{% url 'finance:payment_list' %}" class="btn btn-outline-secondary action-btn">
+                <i class="bi bi-arrow-left me-1"></i> Back to List
+            </a>
+            {% if perms.finance.change_payment %}
+            <a href="{% url 'finance:payment_update' payment.id %}" class="btn btn-outline-primary action-btn">
+                <i class="bi bi-pencil me-1"></i> Edit
+            </a>
+            {% endif %}
+            {% if perms.finance.delete_payment %}
+            <button type="button" class="btn btn-outline-danger action-btn" data-bs-toggle="modal" data-bs-target="#deleteModal">
+                <i class="bi bi-trash me-1"></i> Delete
+            </button>
+            {% endif %}
+             {% if perms.finance.change_payment %}
+                <div class="btn-group">
+                    <button type="button" class="btn btn-outline-info dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="bi bi-printer me-1"></i> Export
+                    </button>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="{% url 'finance:payment_detail_export' payment.id %}?format=pdf">PDF</a></li>
+                        <li><a class="dropdown-item" href="{% url 'finance:payment_detail_export' payment.id %}?format=csv">CSV</a></li>
+                        <li><a class="dropdown-item" href="{% url 'finance:payment_detail_export' payment.id %}?format=excel">Excel</a></li>
+                    </ul>
+                </div>
+             {% endif %}
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Main Content -->
+        <div class="col-lg-8">
+            <div class="card card-custom">
+                <div class="card-header payment-header">
+                    <h5 class="card-title mb-0 text-white">
+                        <i class="bi bi-receipt me-2"></i>
+                        Payment Receipt
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <!-- Payment Information -->
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <div class="info-card">
+                                <div class="info-label">Payment Number</div>
+                                <div class="info-value">{{ payment.payment_number }}</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="info-card">
+                                <div class="info-label">Status</div>
+                                <div class="info-value">
+                                    <span class="status-badge badge-{{ payment.status }}">
+                                        {{ payment.get_status_display }}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Amount Information -->
+                    <div class="row mb-4">
+                        <div class="col-md-4">
+                            <div class="info-card">
+                                <div class="info-label">Total Amount</div>
+                                <div class="info-value">₹{{ payment.amount }}</div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="info-card">
+                                <div class="info-label">Amount Paid</div>
+                                <div class="info-value text-success">₹{{ payment.amount_paid }}</div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="info-card">
+                                <div class="info-label">Balance</div>
+                                <div class="info-value {% if payment.balance > 0 %}text-danger{% else %}text-success{% endif %}">
+                                    ₹{{ payment.balance }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Payment Details -->
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <div class="info-card">
+                                <div class="info-label">Payment Mode</div>
+                                <div class="info-value">{{ payment.get_payment_mode_display }}</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="info-card">
+                                <div class="info-label">Payment Date</div>
+                                <div class="info-value">{{ payment.payment_date|date:"M d, Y" }}</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Reference Information -->
+                    {% if payment.reference_number %}
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <div class="info-card">
+                                <div class="info-label">Reference Number</div>
+                                <div class="info-value">{{ payment.reference_number }}</div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Remarks -->
+                    {% if payment.remarks %}
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <div class="info-card">
+                                <div class="info-label">Remarks</div>
+                                <div class="info-value">{{ payment.remarks }}</div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Related Invoice -->
+                    {% if payment.invoice %}
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <div class="info-card">
+                                <div class="info-label">Related Invoice</div>
+                                <div class="info-value">
+                                    <a href="{% url 'finance:fee_invoice_detail' payment.invoice.id %}" class="text-decoration-none">
+                                        #{{ payment.invoice.invoice_number }} - ₹{{ payment.invoice.total_amount }}
+                                        (Balance: ₹{{ payment.invoice.balance }})
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Student Information -->
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="info-card">
+                                <div class="info-label">Student</div>
+                                <div class="info-value">
+                                    <a href="{% url 'students:student_detail' payment.student.id %}" class="text-decoration-none">
+                                        {{ payment.student.user.get_full_name|default:payment.student.user.username }}
+                                        ({{ payment.student.roll_number }})
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="col-lg-4">
+            <!-- Timeline -->
+            <div class="card card-custom mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="bi bi-clock-history me-2"></i>
+                        Payment Timeline
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="timeline">
+                        <div class="timeline-item">
+                            <div class="timeline-marker bg-primary"></div>
+                            <div class="timeline-content">
+                                <h6 class="mb-1">Payment Created</h6>
+                                <p class="text-custom mb-0">{{ payment.created_at|date:"M d, Y H:i" }}</p>
+                            </div>
+                        </div>
+                        <div class="timeline-item">
+                            <div class="timeline-marker bg-success"></div>
+                            <div class="timeline-content">
+                                <h6 class="mb-1">Last Updated</h6>
+                                <p class="text-custom mb-0">{{ payment.updated_at|date:"M d, Y H:i" }}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="card card-custom">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="bi bi-lightning me-2"></i>
+                        Quick Actions
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        {% if payment.invoice %}
+                        <a href="{% url 'finance:fee_invoice_detail' payment.invoice.id %}" class="btn btn-outline-primary">
+                            <i class="bi bi-receipt me-1"></i> View Invoice
+                        </a>
+                        {% endif %}
+                        <a href="{% url 'students:student_detail' payment.student.id %}" class="btn btn-outline-info">
+                            <i class="bi bi-person me-1"></i> Student Profile
+                        </a>
+                        <a href="{% url 'finance:payment_update' payment.id %}" class="btn btn-outline-warning">
+                            <i class="bi bi-pencil me-1"></i> Edit Payment
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+{% if perms.finance.delete_payment %}
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteModalLabel">Confirm Deletion</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-warning">
+                    <i class="bi bi-exclamation-triangle me-2"></i>
+                    <strong>Warning:</strong> This action cannot be undone.
+                </div>
+                <p>Are you sure you want to delete payment <strong>#{{ payment.payment_number }}</strong>?</p>
+                <p class="text-custom">Amount: ₹{{ payment.amount }} | Status: {{ payment.get_status_display }}</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form method="post" action="{% url 'finance:payment_delete' payment.id %}">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">
+                        <i class="bi bi-trash me-1"></i> Delete Payment
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

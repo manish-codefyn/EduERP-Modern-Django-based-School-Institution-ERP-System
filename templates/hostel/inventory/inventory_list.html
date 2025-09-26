@@ -1,0 +1,269 @@
+{% extends 'base.html' %}
+{% load static custom_filters %}
+
+{% block title %} Hostel Inventory Management - {{ organization.name|default:"ERP System" }}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
+{% endblock %}
+
+{% block content %}
+<!-- Header Section -->
+<div class="header-section bg-custom text-white py-4 mb-4">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <div class="d-flex align-items-center">
+                    <div class="header-icon me-3">
+                        <i class="bi bi-box-seam display-6 text-white"></i>
+                    </div>
+                    <div>
+                        <h1 class="h3 fw-bold mb-1">Hostel Inventory</h1>
+                        <p class="text-white mb-0 opacity-75">Manage and track hostel items</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="d-flex gap-2 justify-content-md-end flex-wrap">
+                    <!-- Quick Actions -->
+                    <div class="btn-group w-100" role="group">
+                        <a href="{% url 'hostel:inventory_create' %}" class="btn btn-primary">
+                            <i class="bi bi-plus-circle me-1"></i> Add New Item
+                        </a>
+                        <button type="button" class="btn btn-primary dropdown-toggle dropdown-toggle-split" 
+                                data-bs-toggle="dropdown" aria-expanded="false">
+                            <span class="visually-hidden">Toggle Dropdown</span>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li class="dropdown-header">Export Inventory</li>
+                            <li>
+                                <a class="dropdown-item" href="{% url 'hostel:inventory_export' %}?format=csv">
+                                    <i class="bi bi-filetype-csv me-2"></i> Export CSV
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="{% url 'hostel:inventory_export' %}?format=excel">
+                                    <i class="bi bi-file-earmark-excel me-2"></i> Export Excel
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="{% url 'hostel:inventory_export' %}?format=pdf">
+                                    <i class="bi bi-file-earmark-pdf me-2"></i> Export PDF
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container">
+    <!-- Stats Cards -->
+    <div class="row g-4 mb-4">
+        <div class="col-xl-3 col-md-6">
+            <div class="card stats-card text-white h-100" style="background: linear-gradient(135deg, #4e54c8, #8f94fb);">
+                <div class="card-body d-flex justify-content-between">
+                    <div>
+                        <h6 class="card-title small opacity-75">TOTAL ITEMS</h6>
+                        <h3 class="fw-bold mb-0">{{ total_items|default:"0" }}</h3>
+                    </div>
+                    <i class="bi bi-box fs-2"></i>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card stats-card text-white h-100" style="background: linear-gradient(135deg, #17a2b8, #6adef0);">
+                <div class="card-body d-flex justify-content-between">
+                    <div>
+                        <h6 class="card-title small opacity-75">GOOD CONDITION</h6>
+                        <h3 class="fw-bold mb-0">{{ good_items|default:"0" }}</h3>
+                    </div>
+                    <i class="bi bi-emoji-smile fs-2"></i>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card stats-card text-white h-100" style="background: linear-gradient(135deg, #ffc107, #ffdb70);">
+                <div class="card-body d-flex justify-content-between">
+                    <div>
+                        <h6 class="card-title small opacity-75">NEEDS REPAIR</h6>
+                        <h3 class="fw-bold mb-0">{{ repair_items|default:"0" }}</h3>
+                    </div>
+                    <i class="bi bi-tools fs-2"></i>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card stats-card text-white h-100" style="background: linear-gradient(135deg, #dc3545, #ff7b7b);">
+                <div class="card-body d-flex justify-content-between">
+                    <div>
+                        <h6 class="card-title small opacity-75">DAMAGED</h6>
+                        <h3 class="fw-bold mb-0">{{ damaged_items|default:"0" }}</h3>
+                    </div>
+                    <i class="bi bi-exclamation-triangle fs-2"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filter Section -->
+    <div class="card card-custom mb-4">
+        <div class="card-header">
+            <h5 class="card-title mb-0">Filter Inventory</h5>
+        </div>
+        <div class="card-body">
+            <form method="get" class="row g-3" id="filterForm">
+                <div class="col-md-3">
+                    <input type="text" name="search" class="form-control" placeholder="Search items..." 
+                           value="{{ request.GET.search }}">
+                </div>
+                <div class="col-md-3">
+                    <select name="hostel" class="form-select">
+                        <option value="">All Hostels</option>
+                        {% for hostel in hostels %}
+                            <option value="{{ hostel.id }}" {% if request.GET.hostel == hostel.id|stringformat:"s" %}selected{% endif %}>
+                                {{ hostel.name }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <select name="condition" class="form-select">
+                        <option value="">All Conditions</option>
+                        {% for value, label in conditions.items %}
+                            <option value="{{ value }}" {% if request.GET.condition == value %}selected{% endif %}>
+                                {{ label }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3 d-flex">
+                    <button type="submit" class="btn btn-primary me-2">
+                        <i class="bi bi-filter me-1"></i> Apply
+                    </button>
+                    <a href="{% url 'hostel:inventory_list' %}" class="btn btn-outline-secondary">
+                        <i class="bi bi-x-circle me-1"></i> Clear
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Table Section -->
+    <div class="card card-custom">
+        <div class="card-header bg-transparent border-0 pt-4 px-4">
+            <h5 class="card-title mb-0 fw-bold">Inventory Items</h5>
+            <p class="text-custom mb-0">Showing {{ inventory_items|length }} of {{ total_items }} items</p>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                {% if inventory_items %}
+                <table id="inventoryTable" class="table-custom w-100 table-hover align-middle">
+                    <thead>
+                        <tr>
+                            <th>Item</th>
+                            <th>Hostel</th>
+                            <th>Quantity</th>
+                            <th>Condition</th>
+                            <th>Last Maintenance</th>
+                            <th>Next Maintenance</th>
+                            <th class="text-center">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in inventory_items %}
+                        <tr>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <i class="bi bi-box-seam text-primary fs-5 me-2"></i>
+                                    {{ item.item_name }}
+                                </div>
+                            </td>
+                            <td>{{ item.hostel.name }}</td>
+                            <td>{{ item.quantity }}</td>
+                            <td>
+                                <span class="badge 
+                                    {% if item.condition == 'excellent' %}bg-success
+                                    {% elif item.condition == 'good' %}bg-primary
+                                    {% elif item.condition == 'fair' %}bg-warning
+                                    {% else %}bg-danger
+                                    {% endif %}">
+                                    {{ item.get_condition_display }}
+                                </span>
+                            </td>
+                            <td>{{ item.last_maintenance|default:"-" }}</td>
+                            <td>
+                                {% if item.next_maintenance %}
+                                    {% if item.next_maintenance < today %}
+                                        <span class="text-danger">{{ item.next_maintenance }}</span>
+                                    {% else %}
+                                        {{ item.next_maintenance }}
+                                    {% endif %}
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </td>
+                            <td class="text-center">
+                                <div class="btn-group">
+                                    <a href="{% url 'hostel:inventory_detail' item.id %}" class="btn btn-sm btn-outline-primary">
+                                        <i class="bi bi-eye"></i> View
+                                    </a>
+                                    <a href="{% url 'hostel:inventory_update' item.id %}" class="btn btn-sm btn-outline-warning">
+                                        <i class="bi bi-pencil"></i> Edit
+                                    </a>
+                                    <a href="{% url 'hostel:inventory_delete' item.id %}" class="btn btn-sm btn-outline-danger">
+                                        <i class="bi bi-trash"></i> Delete
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% else %}
+                <div class="text-center py-5">
+                    <i class="bi bi-inbox display-1 text-custom"></i>
+                    <h4 class="mt-3">No inventory items found</h4>
+                    <p class="text-custom">Try adjusting your filters or add a new item</p>
+                    <a href="{% url 'hostel:inventory_create' %}" class="btn btn-primary mt-2">
+                        <i class="bi bi-plus-circle me-1"></i> Add New Item
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    {% if inventory_items %}
+    let table = $('#inventoryTable').DataTable({
+        "pageLength": 10,
+        "order": [[0, 'asc']],
+        "language": {
+            "search": "<i class='bi bi-search me-2'></i>Search:",
+            "lengthMenu": "Show _MENU_ entries",
+            "info": "Showing _START_ to _END_ of _TOTAL_ items",
+            "paginate": {
+                "previous": "<i class='bi bi-chevron-left'></i>",
+                "next": "<i class='bi bi-chevron-right'></i>"
+            }
+        },
+        "columnDefs": [
+            { "targets": [-1], "orderable": false, "className": "dt-center" }
+        ],
+        "responsive": true
+    });
+    {% endif %}
+});
+</script>
+{% endblock %}

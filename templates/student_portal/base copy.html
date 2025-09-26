@@ -1,0 +1,37 @@
+<!-- templates/student_portal/base.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>
+        {% block title %}
+          Student Portal -{{ organization.name|default:"Codefyn" }}
+        {% endblock %}
+    </title>
+    <style>
+        .navbar { background: #4CAF50; color: white; padding: 1rem; }
+        .nav-links a { color: white; margin: 0 1rem; text-decoration: none; }
+        .content { padding: 2rem; }
+        .card { border: 1px solid #ddd; padding: 1rem; margin: 1rem 0; }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-links">
+            <a href="{% url 'student_portal:dashboard' %}">Dashboard</a>
+            <a href="{% url 'student_portal:timetable' %}">Timetable</a>
+            <a href="{% url 'student_portal:grades' %}">Grades</a>
+            <a href="{% url 'student_portal:attendance' %}">Attendance</a>
+            <a href="{% url 'student_portal:resources' %}">Resources</a>
+            <a href="{% url 'student_portal:profile' %}">Profile</a>
+            <a href="{% url 'account_logout' %}" style="float: right;">Logout</a>
+        </div>
+    </nav>
+    
+    <div class="content">
+        <h1>{% block page_title %}{{ page_title|default:"Student Portal" }}{% endblock %}</h1>
+        {% block content %}{% endblock %}
+    </div>
+</body>
+</html>

@@ -1,0 +1,326 @@
+{% extends "hr/base.html" %}
+
+{% block title %}HR Dashboard{% endblock %}
+
+{% block content %}
+
+<div class="container-fluid p-4">
+
+    <!-- Header Section -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800 fw-bold">{{ dashboard_title }}</h1>
+        <div class="d-flex">
+            <span class="badge bg-primary bg-opacity-10 text-primary px-3 py-2 me-2">
+                <i class="bi bi-calendar-check me-1"></i>{{ current_date|date:"F d, Y" }}
+            </span>
+            <button class="btn btn-primary">
+                <i class="bi bi-download me-1"></i>Export Report
+            </button>
+        </div>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="row g-4 mb-4">
+        {% include "hr/includes/stats_cards.html" %}
+    </div>
+
+    <!-- Charts Row -->
+    <div class="row g-4 mb-4">
+        <!-- Staff Distribution Chart -->
+        <div class="col-xl-8 col-lg-7">
+            <div class="card shadow border-0 h-100">
+                <div class="card-header bg-primary bg-gradient text-white py-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h6 class="m-0 fw-bold">Staff Distribution by Department</h6>
+                        <div class="dropdown">
+                            <button class="btn btn-sm btn-primary  text-white border-0" type="button" 
+                                    data-bs-toggle="dropdown">
+                                <i class="bi bi-three-dots-vertical"></i>
+                            </button>
+                            <!-- <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" href="#">View Details</a></li>
+                                <li><a class="dropdown-item" href="#">Export Data</a></li>
+                            </ul> -->
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body p-3">
+                    <canvas id="departmentStaffChart" style="height: 300px;"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Employment Type Chart -->
+        <div class="col-xl-4 col-lg-5">
+            <div class="card shadow border-0 h-100">
+                <div class="card-header bg-success bg-gradient text-white py-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h6 class="m-0 fw-bold">Staff by Employment Type</h6>
+                        <div class="dropdown">
+                            <button class="btn btn-sm btn-primary  text-white border-0" type="button" 
+                                    data-bs-toggle="dropdown">
+                                <i class="bi bi-three-dots-vertical"></i>
+                            </button>
+                            <!-- <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" href="#">View Details</a></li>
+                                <li><a class="dropdown-item" href="#">Export Data</a></li>
+                            </ul> -->
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body p-3">
+                    <canvas id="employmentTypeChart" style="height: 300px;"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+ 
+    <!-- Tables Row -->
+    <div class="row g-4">
+        <!-- Recent Hires Table -->
+        <div class="col-lg-6">
+            <div class="card card-custom shadow border-0 h-100">
+                <div class="card-header  text-white py-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h6 class="m-0 fw-bold">Recent Hires</h6>
+                        <a href="{% url 'hr:staff_list' %}" class="btn btn-sm btn-primary bg-opacity-25 text-white border-0">
+                            View All <i class="bi bi-arrow-right ms-1"></i>
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table-custom w-100 table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th class="ps-3">Name</th>
+                                    <th>Department</th>
+                                    <th>Joining Date</th>
+                                    <th class="text-end pe-3">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for staff in recent_hires %}
+                                <tr>
+                                    <td class="ps-3">
+                                        <div class="d-flex align-items-center">
+                                            <div class="bg-primary bg-opacity-10 rounded-circle p-2 me-2">
+                                                <i class="bi bi-person-fill text-primary"></i>
+                                            </div>
+                                            <div>
+                                                <div class="fw-semibold">{{ staff.user.get_full_name|default:staff.user.username }}</div>
+                                                <small class="text-muted">{{ staff.designation.name|default:"Not assigned" }}</small>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>{{ staff.department.name|default:"Not assigned" }}</td>
+                                    <td>{{ staff.joining_date|date:"d M, Y" }}</td>
+                                    <td class="text-end pe-3">
+                                        <span class="badge bg-success bg-opacity-10 text-success">
+                                            <i class="bi bi-check-circle me-1"></i>Active
+                                        </span>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="4" class="text-center text-muted py-4">
+                                        <i class="bi bi-people display-4 d-block mb-2 opacity-25"></i>
+                                        No recent hires found.
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Leave Applications Table -->
+        <div class="col-lg-6">
+            <div class="card card-custom shadow border-0 h-100">
+                <div class="card-header text-white py-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h6 class="m-0 fw-bold">Recent Leave Applications</h6>
+                        <a href="{% url 'hr:leave_application_list' %}" class="btn btn-sm btn-success  text-white border-0">
+                            View All <i class="bi bi-arrow-right ms-1"></i>
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table-custom w-100 table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th class="ps-3">Staff</th>
+                                    <th>Leave Type</th>
+                                    <th>Days</th>
+                                    <th class="text-end pe-3">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for leave in recent_leaves %}
+                                <tr>
+                                    <td class="ps-3">
+                                        <div class="d-flex align-items-center">
+                                            <div class="bg-info bg-opacity-10 rounded-circle p-2 me-2">
+                                                <i class="bi bi-person-fill text-info"></i>
+                                            </div>
+                                            <div>
+                                                <div class="fw-semibold">{{ leave.staff.user.get_full_name|default:leave.staff.user.username }}</div>
+                                                <small class="text-muted">{{ leave.staff.department.name|default:"Not assigned" }}</small>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>{{ leave.leave_type.name }}</td>
+                                    <td>{{ leave.total_days }}</td>
+                                    <td class="text-end pe-3">
+                                        {% if leave.status == 'approved' %}
+                                            <span class="badge bg-success">
+                                                <i class="bi bi-check-circle me-1"></i>Approved
+                                            </span>
+                                        {% elif leave.status == 'pending' %}
+                                            <span class="badge bg-warning text-dark">
+                                                <i class="bi bi-clock me-1"></i>Pending
+                                            </span>
+                                        {% elif leave.status == 'rejected' %}
+                                            <span class="badge bg-danger">
+                                                <i class="bi bi-x-circle me-1"></i>Rejected
+                                            </span>
+                                        {% else %}
+                                            <span class="badge bg-secondary">{{ leave.get_status_display }}</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="4" class="text-center text-muted py-4">
+                                        <i class="bi bi-calendar-x display-4 d-block mb-2 opacity-25"></i>
+                                        No recent leave applications.
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    // Helper function to create gradients
+    const createGradient = (ctx, color1, color2) => {
+        const gradient = ctx.createLinearGradient(0, 0, 0, 300);
+        gradient.addColorStop(0, color1);
+        gradient.addColorStop(1, color2);
+        return gradient;
+    };
+
+    // Bar Chart: Staff per Department
+    const deptCtx = document.getElementById('departmentStaffChart').getContext('2d');
+    const deptLabels = JSON.parse('{{ department_chart_labels|safe }}');
+    const deptData = JSON.parse('{{ department_chart_data|safe }}');
+
+    new Chart(deptCtx, {
+        type: 'bar',
+        data: {
+            labels: deptLabels,
+            datasets: [{
+                label: 'Staff Count',
+                data: deptData,
+                backgroundColor: createGradient(deptCtx, 'rgba(78, 115, 223, 0.8)', 'rgba(78, 115, 223, 0.2)'),
+                borderColor: '#4e73df',
+                borderWidth: 1,
+                borderRadius: 6,
+                borderSkipped: false,
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { 
+                legend: { display: false },
+                tooltip: {
+                    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+                    titleFont: { size: 14 },
+                    bodyFont: { size: 13 },
+                    padding: 10,
+                    cornerRadius: 4
+                }
+            },
+            scales: { 
+                y: { 
+                    beginAtZero: true, 
+                    ticks: { precision: 0 },
+                    grid: { color: 'rgba(0, 0, 0, 0.05)' }
+                },
+                x: {
+                    grid: { display: false }
+                }
+            }
+        }
+    });
+
+    // Doughnut Chart: Employment Type
+    const empCtx = document.getElementById('employmentTypeChart').getContext('2d');
+    const empLabels = JSON.parse('{{ employment_chart_labels|safe }}');
+    const empData = JSON.parse('{{ employment_chart_data|safe }}');
+
+    new Chart(empCtx, {
+        type: 'doughnut',
+        data: {
+            labels: empLabels,
+            datasets: [{
+                data: empData,
+                backgroundColor: [
+                    'rgba(28, 200, 138, 0.8)',
+                    'rgba(54, 185, 204, 0.8)',
+                    'rgba(246, 194, 62, 0.8)',
+                    'rgba(231, 74, 59, 0.8)',
+                    'rgba(133, 135, 150, 0.8)'
+                ],
+                borderColor: [
+                    'rgba(28, 200, 138, 1)',
+                    'rgba(54, 185, 204, 1)',
+                    'rgba(246, 194, 62, 1)',
+                    'rgba(231, 74, 59, 1)',
+                    'rgba(133, 135, 150, 1)'
+                ],
+                borderWidth: 1,
+                hoverOffset: 12
+            }]
+        },
+        options: { 
+            responsive: true, 
+            maintainAspectRatio: false, 
+            cutout: '65%',
+            plugins: { 
+                legend: { 
+                    position: 'bottom',
+                    labels: {
+                        padding: 20,
+                        usePointStyle: true,
+                        pointStyle: 'circle'
+                    }
+                },
+                tooltip: {
+                    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+                    bodyFont: { size: 13 },
+                    padding: 10,
+                    cornerRadius: 4
+                }
+            } 
+        }
+    });
+});
+</script>
+{% endblock %}

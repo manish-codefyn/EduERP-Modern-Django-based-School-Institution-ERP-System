@@ -1,0 +1,244 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ fee_structure.name }} - {{ organization.name|default:"ERP System" }}{% endblock %}
+
+{% block extra_css %}
+
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+
+    <!-- Header -->
+    <div class="header-section">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb breadcrumb-dark">
+                        <li class="breadcrumb-item"><a href="{% url 'finance:fee_structure_list' %}" class="text-white">Fee Structures</a></li>
+                        <li class="breadcrumb-item active text-white" aria-current="page">Details</li>
+                    </ol>
+                </nav>
+                <h1 class="display-6 fw-bold mb-2">{{ fee_structure.name }}</h1>
+                <p class="lead mb-0 opacity-75">Fee structure details and management</p>
+            </div>
+            <div class="col-md-4 text-md-end">
+                {% if fee_structure.is_active %}
+                <span class="status-badge bg-success bg-opacity-10 text-success">
+                    <i class="bi bi-check-circle me-2"></i>Active
+                </span>
+                {% else %}
+                <span class="status-badge bg-danger bg-opacity-10 text-danger">
+                    <i class="bi bi-x-circle me-2"></i>Inactive
+                </span>
+                {% endif %}
+            </div>
+
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Main Information -->
+        <div class="col-lg-8">
+            <div class="card card-custom mb-4">
+                <div class="detail-card-header">
+                  <i class="bi bi-info-circle me-2"></i>Basic Information
+                </div>
+                <div class="detail-card-body">
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <span class="info-label">Fee Structure Name</span>
+                            <span class="info-value">{{ fee_structure.name }}</span>
+                        </div>
+                      <div class="info-item">
+                        <span class="info-label">Applicable Class</span>
+                        <span class="info-value">
+                            <i class="bi bi-mortarboard me-2 text-primary"></i>
+                            {{ fee_structure.class_name.name }}
+                        </span>
+                    </div>
+
+                    <div class="info-item">
+                        <span class="info-label">Academic Year</span>
+                        <span class="info-value">
+                            <i class="bi bi-calendar-event me-2 text-info"></i>
+                            {{ fee_structure.academic_year.name }}
+                        </span>
+                    </div>
+
+                    <div class="info-item">
+                        <span class="info-label">Institution</span>
+                        <span class="info-value">
+                            <i class="bi bi-building me-2 text-warning"></i>
+                            {{ fee_structure.institution.name }}
+                        </span>
+                    </div>
+                        <div class="info-item">
+                            <span class="info-label">Status</span>
+                            <span class="info-value">
+                                {% if fee_structure.is_active %}
+                                <span class="badge bg-success bg-opacity-10 text-success">
+                                    <i class="bi bi-check-circle me-1"></i>Active
+                                </span>
+                                {% else %}
+                                <span class="badge bg-danger bg-opacity-10 text-danger">
+                                    <i class="bi bi-x-circle me-1"></i>Inactive
+                                </span>
+                                {% endif %}
+                            </span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Last Updated</span>
+                            <span class="info-value">
+                                <i class="fas fa-clock me-2 text-secondary"></i>
+                                {{ fee_structure.updated_at|date:"M d, Y H:i" }}
+                            </span>
+                        </div>
+                    </div>
+                    
+                    <div class="text-center mt-4">
+                        <div class="amount-display">
+                            ₹{{ fee_structure.amount }}
+                        </div>
+                        <p class="text-custom">Total fee amount</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Additional Information -->
+            <div class="card card-custom mb-4">
+                <div class="detail-card-header">
+                    <i class="bi bi-file-text me-2"></i>Additional Details
+                </div>
+                <div class="detail-card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="info-item">
+                                <span class="info-label">Created Date</span>
+                                <span class="info-value">{{ fee_structure.created_at|date:"M d, Y" }}</span>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="info-item">
+                                <span class="info-label">Last Modified</span>
+                                <span class="info-value">{{ fee_structure.updated_at|date:"M d, Y" }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    {% if fee_structure.description %}
+                    <div class="mt-3">
+                        <span class="info-label">Description</span>
+                        <div class="border rounded p-3 mt-2 bg-light">
+                            {{ fee_structure.description|linebreaks }}
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="col-lg-4">
+            <!-- Statistics -->
+            <div class="card card-custom mb-4">
+                <div class="detail-card-header">
+                    <i class="fas fa-chart-bar me-2"></i>Statistics
+                </div>
+                <div class="detail-card-body">
+                    <div class="info-item mb-3">
+                        <span class="info-label">Total Students Affected</span>
+                        <span class="info-value">{{ affected_students_count|default:"0" }} Students</span>
+                    </div>
+                    <div class="info-item mb-3">
+                        <span class="info-label">Active Invoices</span>
+                        <span class="info-value">{{ active_invoices_count|default:"0" }} Invoices</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Total Revenue</span>
+                        <span class="info-value">₹{{ total_revenue|default:"0" }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Activity Timeline -->
+            <div class="card card-custom">
+                <div class="detail-card-header">
+                    <i class="fas fa-history me-2"></i>Recent Activity
+                </div>
+                <div class="detail-card-body">
+                    <div class="timeline">
+                        <div class="timeline-item">
+                            <div class="timeline-content">
+                                <div class="d-flex justify-content-between">
+                                    <strong>Fee Structure Created</strong>
+                                    <small class="history-date">{{ fee_structure.created_at|date:"M d, Y" }}</small>
+                                </div>
+                                <p class="mb-0 small text-custom">Initial creation of the fee structure</p>
+                            </div>
+                        </div>
+                        <div class="timeline-item">
+                            <div class="timeline-content">
+                                <div class="d-flex justify-content-between">
+                                    <strong>Last Updated</strong>
+                                    <small class="history-date">{{ fee_structure.updated_at|date:"M d, Y" }}</small>
+                                </div>
+                                <p class="mb-0 small text-custom">Latest modification to fee details</p>
+                            </div>
+                        </div>
+                        {% if fee_structure.is_active %}
+                        <div class="timeline-item">
+                            <div class="timeline-content">
+                                <div class="d-flex justify-content-between">
+                                    <strong>Status Changed</strong>
+                                    <small class="history-date">{{ fee_structure.updated_at|date:"M d, Y" }}</small>
+                                </div>
+                                <p class="mb-0 small text-custom">Marked as Active</p>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="card card-custom mt-4">
+        <div class="card-body">
+            <div class="action-buttons">
+                {% if request.user.is_superadmin or request.user.is_accountant %}
+                <a href="{% url 'finance:fee_structure_update' fee_structure.id %}" class="btn btn-primary">
+                    <i class="fas fa-edit me-2"></i>Edit Fee Structure
+                </a>
+                {% if fee_structure.is_active %}
+                <a href="{% url 'finance:fee_structure_disable' fee_structure.id %}" class="btn btn-warning">
+                    <i class="fas fa-ban me-2"></i>Disable
+                </a>
+                {% else %}
+                <a href="{% url 'finance:fee_structure_enable' fee_structure.id %}" class="btn btn-success">
+                    <i class="fas fa-check me-2"></i>Enable
+                </a>
+                {% endif %}
+                <a href="{% url 'finance:fee_structure_delete' fee_structure.id %}" class="btn btn-danger">
+                    <i class="fas fa-trash-alt me-2"></i>Delete
+                </a>
+                {% endif %}
+                <a href="{% url 'finance:fee_structure_list' %}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left me-2"></i>Back to List
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Any JavaScript functionality can be added here
+    console.log('Fee structure detail page loaded');
+});
+</script>
+{% endblock %}

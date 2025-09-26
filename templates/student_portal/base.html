@@ -1,0 +1,152 @@
+<html lang="en" {% if request.LANGUAGE_CODE %}lang="{{ request.LANGUAGE_CODE }}"{% endif %}>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    
+    <!-- Primary Meta Tags -->
+    <title>
+        {% block title %}
+            Student Portal - {{ organization.name|default:'EduERP by Codefyn Software Solutions' }}
+        {% endblock %}
+    </title>
+    
+    <meta name="description" content="{% block meta_description %}{{ organization.description|default:'Comprehensive School Management System for efficient administration' }}{% endblock %}">
+    <meta name="keywords" content="{% block meta_keywords %}school, education, management, erp, student, teacher, administration{% endblock %}">
+    <meta name="author" content="{{ organization.name|default:'School ERP' }}">
+    <meta name="robots" content="index, follow">
+    <meta name="theme-color" content="#3b82f6">
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="{{ request.build_absolute_uri }}">
+    <meta property="og:title" content="{% block og_title %}{{ organization.name|default:'School ERP System' }}{% endblock %}">
+    <meta property="og:description" content="{% block og_description %}{{ organization.description|default:'Comprehensive School Management System' }}{% endblock %}">
+    {% if organization.logo %}
+    <meta property="og:image" content="{{ request.scheme }}://{{ request.get_host }}{{ organization.logo.url }}">
+    {% endif %}
+    
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="{{ request.build_absolute_uri }}">
+    <meta property="twitter:title" content="{% block twitter_title %}{{ organization.name|default:'School ERP System' }}{% endblock %}">
+    <meta property="twitter:description" content="{% block twitter_description %}{{ organization.description|default:'Comprehensive School Management System' }}{% endblock %}">
+    {% if organization.logo %}
+    <meta property="twitter:image" content="{{ request.scheme }}://{{ request.get_host }}{{ organization.logo.url }}">
+    {% endif %}
+    
+    <!-- Favicon -->
+     {% load static %}
+    <link rel="apple-touch-icon" sizes="180x180" href="{% static 'favicon/apple-touch-icon.png' %}">
+    <link rel="icon" type="image/png" sizes="32x32" href="{% static 'favicon/favicon-32x32.png' %}">
+    <link rel="icon" type="image/png" sizes="16x16" href="{% static 'favicon/favicon-16x16.png' %}">
+    <link rel="manifest" href="{% static 'favicon/site.webmanifest' %}">
+    <link rel="mask-icon" href="{% static 'favicon/safari-pinned-tab.svg' %}" color="#3b82f6">
+    <link rel="shortcut icon" href="{% static 'favicon/favicon.ico' %}">
+    <meta name="msapplication-TileColor" content="#3b82f6">
+    <meta name="msapplication-config" content="{% static 'favicon/browserconfig.xml' %}">
+    
+    <!-- Canonical URL -->
+    <link rel="canonical" href="{{ request.build_absolute_uri }}">
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    
+    <!-- Google Fonts (Poppins) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'css/student_portal.css' %}">
+
+     <!-- JSON-LD Structured Data -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "EducationalOrganization",
+        "name": "{{ organization.name|default:'Codefyn' }}",
+        "description": "{{ organization.description|default:'Comprehensive Management System' }}",
+        "url": "{{ request.build_absolute_uri }}",
+        {% if organization.logo %}
+        "logo": "{{ request.scheme }}://{{ request.get_host }}{{ organization.logo.url }}",
+        {% endif %}
+        "address": {
+            "@type": "PostalAddress",
+            "streetAddress": "{{ organization.address|default:'' }}"
+        }
+    }
+    </script>
+    <!-- Custom CSS -->
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+
+    <header class="dashboard-header">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <p class="greeting" id="greeting">Hello,</p>
+                <h1 class="mb-0">{% block header_name %} {{ student.first_name }} {% endblock %}</h1>
+            </div>
+           <div>
+            <div>
+            {% if student and student.get_photo %}
+                <img src="{{ student.get_photo.file.url }}" alt="Avatar" class="rounded-circle" width="60" height="60">
+            {% else %}
+                <img src="{% block header_avatar %}https://i.pravatar.cc/60?img=32{% endblock %}" alt="Avatar" class="rounded-circle">
+            {% endif %}
+           </div>
+
+        </div>
+
+        </div>
+    </header>
+
+    <main class="main-content">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Mobile App-like Bottom Navigation -->
+    <nav class="mobile-nav">
+        {% block mobile_nav %}
+        <a href="{% url 'student_portal:dashboard'%}" class="nav-icon-item active">
+            <i class="bi bi-house-door-fill"></i>
+            <span>Home</span>
+        </a>
+        <a href="{% url 'student_portal:library'%}" class="nav-icon-item">
+            <i class="bi bi-journal-text"></i>
+            <span>Courses</span>
+        </a>
+        <a href="{% url 'student_portal:grades'%}" class="nav-icon-item">
+            <i class="bi bi-trophy"></i>
+            <span>Grades</span>
+        </a>
+       <a href="{% url 'student_portal:fun_game' %}" class="nav-icon-item">
+            <i class="bi bi-controller"></i>
+            <span>Fun</span>
+        </a>
+
+        <a href="{% url 'student_portal:profile'%}" class="nav-icon-item">
+            <i class="bi bi-person-circle"></i>
+            <span>Profile</span>
+        </a>
+        {% endblock %}
+    </nav>
+
+    <!-- Bootstrap JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const greetingEl = document.getElementById('greeting');
+            const hours = new Date().getHours();
+            let greeting;
+            if (hours < 12) greeting = 'Good Morning,';
+            else if (hours < 18) greeting = 'Good Afternoon,';
+            else greeting = 'Good Evening,';
+            greetingEl.textContent = greeting;
+        });
+    </script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+{% load custom_filters %}
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Attendance Report</title>
+    <style>
+        body { 
+            font-family: DejaVu Sans, Arial, Helvetica, sans-serif; 
+            font-size: 12px; 
+            color: #333; 
+            margin: 0; 
+            padding: 0;
+        }
+        .header, .footer { 
+            text-align: center; 
+            width: 100%; 
+        }
+        .header { margin-bottom: 20px; }
+        .footer { 
+            font-size: 10px; 
+            color: #777; 
+            margin-top: 20px; 
+        }
+        h1 { margin: 5px 0; color: #2c3e50; }
+        table { 
+            width: 100%; 
+            border-collapse: collapse; 
+            margin-bottom: 15px; 
+        }
+        table th, table td { 
+            border: 1px solid #999; 
+            padding: 6px; 
+            text-align: left; 
+        }
+        table th { 
+            background: #f0f0f0; 
+        }
+        .logo img { height: 80px; margin-bottom: 5px; }
+        .filters p { margin: 2px 0; font-size: 11px; color: #555; }
+    </style>
+</head>
+<body>
+
+    <!-- Header -->
+    <div class="header">
+        {% if logo %}
+            <div class="logo">
+                <img src="{{ logo }}" alt="Logo">
+            </div>
+        {% endif %}
+        <h1>Attendance Report</h1>
+        <p>{{ organization.name|default:"ERP System" }}</p>
+        <p class="filters">
+            {% if class_obj %}Class: {{ class_obj.name }}{% endif %}
+            {% if section_obj %} | Section: {{ section_obj.name }}{% endif %}
+            {% if status_filter %} | Status: {{ status_filter|title }}{% endif %}
+        </p>
+        <p><small>Generated on {{ generated_date|date:"F j, Y \\a\\t H:i" }}</small></p>
+    </div>
+
+    <!-- Attendance Table -->
+    <table>
+        <thead>
+            <tr>
+                <th>Roll No</th>
+                <th>Student Name</th>
+                <th>Class</th>
+                <th>Section</th>
+                <th>Date</th>
+                <th>Status</th>
+                <th>Remarks</th>
+            </tr>
+        </thead>
+ <tbody>
+    {% for att in attendance_data %}
+        <tr>
+            <td>{{ att|get_item:"Roll No" }}</td>
+            <td>{{ att|get_item:"Name" }}</td>
+            <td>{{ att|get_item:"Class" }}</td>
+            <td>{{ att|get_item:"Section" }}</td>
+            <td>{{ att|get_item:"Date" }}</td>
+            <td>{{ att|get_item:"Status" }}</td>
+            <td>{{ att|get_item:"Remarks" }}</td>
+        </tr>
+    {% empty %}
+        <tr>
+            <td colspan="7" style="text-align:center;">No attendance records found.</td>
+        </tr>
+    {% endfor %}
+</tbody>
+
+    </table>
+
+    <!-- Footer -->
+    <div class="footer">
+        Generated on {{ generated_date|date:"F j, Y \\a\\t H:i" }} |
+        Page <pdf:pagenumber> of <pdf:pagecount> <br>
+        &copy; {{ organization.name|default:"ERP System" }} - Attendance Report
+    </div>
+
+</body>
+</html>

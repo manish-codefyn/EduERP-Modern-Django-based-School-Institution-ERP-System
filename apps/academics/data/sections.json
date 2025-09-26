@@ -1,0 +1,16 @@
+[
+  {
+    "class_code": "C1",
+    "institution_code": "main-campus",
+    "name": "A",
+    "capacity": 20,
+    "is_active": true
+  },
+  {
+    "class_code": "C1",
+    "institution_code": "main-campus",
+    "name": "B",
+    "capacity": 20,
+    "is_active": true
+  }
+]

@@ -1,0 +1,188 @@
+{% extends 'transport/base.html' %}
+{% load static %}
+
+{% block title %}{{ route.name }} - {{ organization.name|default:"ERP System" }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+
+    <!-- Header -->
+    <div class="header-section mb-4">
+        <div class="row align-items-center">
+            <div class="col-md-7 d-flex align-items-center">
+                <div class="header-icon me-3">
+                    <i class="bi bi-signpost-split display-6 text-primary"></i>
+                </div>
+                <div>
+                    <h1 class="h3 fw-bold mb-1">{{ route.name }}</h1>
+                    <p class="text-custom mb-0">{{ route.start_point }} to {{ route.end_point }}</p>
+                </div>
+            </div>
+            <div class="col-md-5">
+                <div class="d-flex justify-content-end align-items-center gap-2">
+                    <a href="{% url 'transport:route_list' %}" class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-left me-1"></i> Back to Routes
+                    </a>
+                    {% if request.user.is_superadmin or request.user.is_institution_admin %}
+                    <a href="{% url 'transport:route_update' route.pk %}" class="btn btn-outline-primary">
+                        <i class="bi bi-pencil me-1"></i> Edit
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Route Details -->
+    <div class="row g-4">
+        <!-- Main Information -->
+        <div class="col-lg-8">
+            <div class="card card-custom h-100">
+                <div class="card-header bg-transparent border-0 pt-4 px-4">
+                    <h5 class="card-title mb-0 fw-bold text-custom">Route Details</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold text-custom">Route Name</label>
+                            <p class="mb-0">{{ route.name }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold text-custom">Status</label>
+                            <p class="mb-0">
+                                {% if route.is_active %}
+                                <span class="badge bg-success bg-opacity-10 text-success">
+                                    <i class="bi bi-check-circle me-1"></i>Active
+                                </span>
+                                {% else %}
+                                <span class="badge bg-danger bg-opacity-10 text-danger">
+                                    <i class="bi bi-x-circle me-1"></i>Inactive
+                                </span>
+                                {% endif %}
+                            </p>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold text-custom">Start Point</label>
+                            <p class="mb-0">{{ route.start_point }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold text-custom">End Point</label>
+                            <p class="mb-0">{{ route.end_point }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold text-custom">Distance</label>
+                            <p class="mb-0">{{ route.distance }} km</p>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold text-custom">Estimated Time</label>
+                            <p class="mb-0">{{ route.estimated_time }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold text-custom">Fare</label>
+                            <p class="mb-0">₹{{ route.fare }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold text-custom">Created</label>
+                            <p class="mb-0">{{ route.created_at|date:"M d, Y" }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Statistics -->
+        <div class="col-lg-4">
+            <div class="card card-custom h-100">
+                <div class="card-header bg-transparent border-0 pt-4 px-4">
+                    <h5 class="card-title mb-0 fw-bold text-custom">Statistics</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex flex-column gap-3">
+                        <div class="d-flex justify-content-between align-items-center p-3 bg-light rounded">
+                            <span class="fw-semibold text-dark text-custom">Total Stops</span>
+                            <span class="badge bg-success fs-6">{{ stops|length }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center p-3 bg-light rounded">
+                            <span class="fw-semibold text-dark ">Route Distance</span>
+                            <span class="text-primary fw-bold">{{ route.distance }} km</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center p-3 bg-light rounded">
+                            <span class="fw-semibold text-dark ">Estimated Time</span>
+                            <span class="text-primary fw-bold">{{ route.estimated_time }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center p-3 bg-light rounded">
+                            <span class="fw-semibold text-dark ">Fare Amount</span>
+                            <span class="text-primary fw-bold">₹{{ route.fare }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Route Stops Section -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card card-custom">
+                <div class="card-header bg-transparent border-0 pt-4 px-4 d-flex justify-content-between align-items-center">
+                    <div>
+                        <h5 class="card-title mb-0 fw-bold text-custom">Route Stops</h5>
+                        <p class="text-custom mb-0">Stops along this route in sequence</p>
+                    </div>
+                    {% if request.user.is_superadmin or request.user.is_institution_admin %}
+                    <a href="{% url 'transport:route_stop_create' %}?route={{ route.id }}" class="btn btn-primary btn-sm">
+                        <i class="bi bi-plus-circle me-1"></i> Add Stop
+                    </a>
+                    {% endif %}
+                </div>
+                <div class="card-body">
+                    {% if stops %}
+                    <div class="table-responsive">
+                        <table class="table-custom w-100 table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Sequence</th>
+                                    <th>Stop Name</th>
+                                    <th>Address</th>
+                                    <th>Arrival Time</th>
+                                    <th>Departure Time</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for stop in stops %}
+                                <tr>
+                                    <td><span class="badge bg-secondary">{{ stop.sequence }}</span></td>
+                                    <td>{{ stop.name }}</td>
+                                    <td>{{ stop.address|default:"-" }}</td>
+                                    <td>{{ stop.pickup_time|default:"-" }}</td>
+                                    <td>{{ stop.drop_time|default:"-" }}</td>
+                                    <td>
+                                        <a href="{% url 'transport:route_stop_list'%}" class="btn btn-sm btn-outline-primary">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-4">
+                        <i class="bi bi-signpost-split fs-1 text-custom"></i>
+                        <h5 class="mt-3 mb-2">No Stops Added</h5>
+                        <p class="text-custom mb-3">Add stops to complete this route</p>
+                        {% if request.user.is_superadmin or request.user.is_institution_admin %}
+                        <a href="{% url 'transport:route_create' %}?route={{ route.id }}" class="btn btn-primary">
+                            <i class="bi bi-plus-circle me-2"></i> Add First Stop
+                        </a>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

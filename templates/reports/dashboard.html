@@ -1,0 +1,486 @@
+{% extends 'base.html' %}
+{% load static crispy_forms_tags %}
+{% block title %} Dashboard - {{ organization.name|default:"codefyn" }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Main Content -->
+    <!-- Stats Cards -->
+<div class="row g-4 mb-4">
+    <!-- Total Students -->
+    <div class="col-md-6 col-lg-3">
+        <div class="card text-white shadow-sm border-0 rounded-4" style="height: 150px; background: linear-gradient(135deg, #6f42c1, #d63384);">
+            <div class="card-body d-flex justify-content-between align-items-center">
+                <div>
+                    <h6 class="text-uppercase fw-bold mb-1">Total Students</h6>
+                    <h3 class="fw-bold mb-1">{{ total_students }}</h3>
+                    <small class="text-white">
+                        <i class="bi bi-arrow-up"></i> +{{ new_students }} today
+                    </small>
+                </div>
+                <div class="rounded-circle d-flex align-items-center justify-content-center" style="width:40px; height:40px; background: rgba(255,255,255,0.3); color: #fff;">
+                    <i class="bi bi-people fs-5"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Total Teachers -->
+    <div class="col-md-6 col-lg-3">
+        <div class="card text-white shadow-sm border-0 rounded-4" style="height: 150px; background: linear-gradient(135deg, #0dcaf0, #198754);">
+            <div class="card-body d-flex justify-content-between align-items-center">
+                <div>
+                    <h6 class="text-uppercase fw-bold mb-1">Total Teachers</h6>
+                    <h3 class="fw-bold mb-1">{{ total_teachers }}</h3>
+                    <small class="text-white">All active staff</small>
+                </div>
+                <div class="rounded-circle d-flex align-items-center justify-content-center" style="width:40px; height:40px; background: rgba(255,255,255,0.3); color: #fff;">
+                    <i class="bi bi-person-badge fs-5"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Today's Attendance -->
+    <div class="col-md-6 col-lg-3">
+        <div class="card text-white shadow-sm border-0 rounded-4" style="height: 150px; background: linear-gradient(135deg, #198754, #20c997);">
+            <div class="card-body d-flex justify-content-between align-items-center">
+                <div>
+                    <h6 class="text-uppercase fw-bold mb-1">Today's Attendance</h6>
+                    <h3 class="fw-bold mb-1">{{ attendance_percentage }}%</h3>
+                    <small class="text-white">
+                        <i class="bi bi-check-circle"></i> Good performance
+                    </small>
+                </div>
+                <div class="rounded-circle d-flex align-items-center justify-content-center" style="width:40px; height:40px; background: rgba(255,255,255,0.3); color: #fff;">
+                    <i class="bi bi-calendar-check fs-5"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Today's Payments -->
+    <div class="col-md-6 col-lg-3">
+        <div class="card text-white shadow-sm border-0 rounded-4" style="height: 150px; background: linear-gradient(135deg, #ffc107, #fd7e14);">
+            <div class="card-body d-flex justify-content-between align-items-center">
+                <div>
+                    <h6 class="text-uppercase fw-bold mb-1">Today's Payments</h6>
+                    <h3 class="fw-bold mb-1">₹{{ today_payments }}</h3>
+                    <small class="text-white">
+                        Outstanding: ₹{{ outstanding_amount }}
+                    </small>
+                </div>
+                <div class="rounded-circle d-flex align-items-center justify-content-center" style="width:40px; height:40px; background: rgba(255,255,255,0.3); color: #fff;">
+                    <i class="bi bi-cash-coin fs-5"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Reports Buttons -->
+<div class="row g-3 mt-3">
+    <!-- Student Report -->
+     
+    <div class="col-md-2">
+        <a href="{% url 'student_report' %}" class="card text-white text-center shadow-sm border-0 rounded-4 report-btn" 
+           style="height: 100px; background: linear-gradient(135deg, #6f42c1, #d63384); display: flex; align-items: center; justify-content: center; text-decoration: none;">
+            <div>
+                <i class="bi bi-people fs-2 mb-1"></i>
+                <h6 class="mb-0 fw-bold">Student</h6>
+            </div>
+        </a>
+    </div>
+
+    <!-- Attendance Report -->
+    <div class="col-md-2">
+        <a href="{% url 'attendance_report' %}" class="card text-white text-center shadow-sm border-0 rounded-4 report-btn" 
+           style="height: 100px; background: linear-gradient(135deg, #198754, #20c997); display: flex; align-items: center; justify-content: center; text-decoration: none;">
+            <div>
+                <i class="bi bi-calendar-check fs-2 mb-1"></i>
+                <h6 class="mb-0 fw-bold">Attendance</h6>
+            </div>
+        </a>
+    </div>
+
+    <!-- Financial Report -->
+    <div class="col-md-2">
+        <a href="{% url 'financial_report' %}" class="card text-white text-center shadow-sm border-0 rounded-4 report-btn" 
+           style="height: 100px; background: linear-gradient(135deg, #ffc107, #fd7e14); display: flex; align-items: center; justify-content: center; text-decoration: none;">
+            <div>
+                <i class="bi bi-cash-coin fs-2 mb-1"></i>
+                <h6 class="mb-0 fw-bold">Financial</h6>
+            </div>
+        </a>
+    </div>
+
+    <!-- Academic Report -->
+    <div class="col-md-2">
+        <a href="{% url 'academic_report' %}" class="card text-white text-center shadow-sm border-0 rounded-4 report-btn" 
+           style="height: 100px; background: linear-gradient(135deg, #0dcaf0, #198754); display: flex; align-items: center; justify-content: center; text-decoration: none;">
+            <div>
+                <i class="bi bi-journal-text fs-2 mb-1"></i>
+                <h6 class="mb-0 fw-bold">Academic</h6>
+            </div>
+        </a>
+    </div>
+
+    <!-- Custom Report -->
+    <!-- <div class="col-md-2">
+        <a href="" class="card text-white text-center shadow-sm border-0 rounded-4 report-btn" 
+           style="height: 100px; background: linear-gradient(135deg, #6610f2, #6f42c1); display: flex; align-items: center; justify-content: center; text-decoration: none;">
+            <div>
+                <i class="bi bi-sliders fs-2 mb-1"></i>
+                <h6 class="mb-0 fw-bold">Custom</h6>
+            </div>
+        </a>
+    </div> -->
+</div>
+
+<!-- Optional Hover CSS -->
+<style>
+.report-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+    text-decoration: none;
+}
+</style>
+
+        <!-- Charts and Data Section -->
+        <div class="row g-4">
+            <!-- Attendance Chart -->
+            <div class="col-lg-8">
+                <div class="chart-container">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5>Attendance Overview</h5>
+                        <div class="btn-group">
+                            <button type="button" class="btn btn-sm btn-outline-primary active">Weekly</button>
+                            <button type="button" class="btn btn-sm btn-outline-primary">Monthly</button>
+                            <button type="button" class="btn btn-sm btn-outline-primary">Yearly</button>
+                        </div>
+                    </div>
+                    <canvas id="attendanceChart" height="250"></canvas>
+                </div>
+            </div>
+            
+            <!-- Quick Stats -->
+            <div class="col-lg-4">
+                <div class="chart-container">
+                    <h5 class="mb-3">Quick Stats</h5>
+                    
+                    <div class="d-flex justify-content-between align-items-center mb-3 p-2 bg-secondary rounded">
+                        <div>
+                            <small class="text-custom ">New Admissions</small>
+                            <h6 class="mb-0">{{ new_students }} This Month</h6>
+                        </div>
+                        <span class="badge bg-primary">+12%</span>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between align-items-center mb-3 p-2 bg-primary rounded">
+                        <div>
+                            <small class="text-custom">Fee Collection</small>
+                            <h6 class="mb-0">78% Collected</h6>
+                        </div>
+                        <span class="badge bg-success">On Track</span>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between align-items-center mb-3 p-2 bg-success rounded">
+                        <div>
+                            <small class="text-custom">Exams Completed</small>
+                            <h6 class="mb-0">3 This Month</h6>
+                        </div>
+                        <span class="badge bg-info">2 Pending</span>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between align-items-center p-2 bg-warning rounded">
+                        <div>
+                            <small class="text-custom">Staff Attendance</small>
+                            <h6 class="mb-0">94% Today</h6>
+                        </div>
+                        <span class="badge bg-success">Excellent</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Financial Chart -->
+            <div class="col-lg-6">
+                <div class="chart-container">
+                    <h5 class="mb-3">Financial Overview</h5>
+                    <canvas id="financeChart" height="250"></canvas>
+                </div>
+            </div>
+            
+            <!-- Recent Activities -->
+            <div class="col-lg-6">
+                <div class="chart-container">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5>Recent Activities</h5>
+                        <a href="#" class="btn btn-sm btn-outline-primary">View All</a>
+                    </div>
+                    
+                    <div class="list-group list-group-flush">
+                        <div class="list-group-item d-flex justify-content-between align-items-center px-0">
+                            <div>
+                                <i class="bi bi-person-plus text-success me-2"></i>
+                                <span>New student registered</span>
+                            </div>
+                            <small>2 min ago</small>
+                        </div>
+                        
+                        <div class="list-group-item d-flex justify-content-between align-items-center px-0">
+                            <div>
+                                <i class="bi bi-cash-coin text-primary me-2"></i>
+                                <span>Fee payment received</span>
+                            </div>
+                            <small class="text-custom">1 hour ago</small>
+                        </div>
+                        
+                        <div class="list-group-item d-flex justify-content-between align-items-center px-0">
+                            <div>
+                                <i class="bi bi-journal-text text-info me-2"></i>
+                                <span>Exam results published</span>
+                            </div>
+                            <small class="text-custom">3 hours ago</small>
+                        </div>
+                        
+                        <div class="list-group-item d-flex justify-content-between align-items-center px-0">
+                            <div>
+                                <i class="bi bi-calendar-x text-warning me-2"></i>
+                                <span>Staff leave application</span>
+                            </div>
+                            <small class="text-custom">5 hours ago</small>
+                        </div>
+                        
+                        <div class="list-group-item d-flex justify-content-between align-items-center px-0">
+                            <div>
+                                <i class="bi bi-megaphone text-danger me-2"></i>
+                                <span>New announcement posted</span>
+                            </div>
+                            <small class="text-custom">1 day ago</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Student Performance -->
+            <div class="col-12">
+                <div class="chart-container">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5>Student Performance</h5>
+                        <div>
+                            <select class="form-select form-select-sm w-auto d-inline-block">
+                                <option>Class 10</option>
+                                <option>Class 9</option>
+                                <option>Class 8</option>
+                            </select>
+                        </div>
+                    </div>
+                    <canvas id="performanceChart" height="100"></canvas>
+                </div>
+            </div>
+            
+            <!-- Recent Students Table -->
+            <div class="col-12">
+                <div class="data-table">
+                    <div class="table-responsive">
+                        <table class="table-custom w-100 table-hover mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Admission No.</th>
+                                    <th>Student Name</th>
+                                    <th>Class</th>
+                                    <th>Gender</th>
+                                    <th>Contact</th>
+                                    <th>Status</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for student in students %}
+                                <tr>
+                                    <td>{{ student.admission_number }}</td>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <div class="rounded-circle bg-primary bg-opacity-10 d-flex align-items-center justify-content-center me-2" style="width: 30px; height: 30px;">
+                                                <i class="bi bi-person text-primary"></i>
+                                            </div>
+                                            {{ student.user.get_full_name }}
+                                        </div>
+                                    </td>
+                                    <td>{{ student.current_class.name }}</td>
+                                    <td>{{ student.get_gender_display }}</td>
+                                    <td>{{ student.user.phone }}</td>
+                                    <td>
+                                        <span class="badge bg-success">Active</span>
+                                    </td>
+                                    <td>
+                                        <div class="dropdown">
+                                            <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                                Actions
+                                            </button>
+                                            <ul class="dropdown-menu">
+                                                <li><a class="dropdown-item" href="#">View Profile</a></li>
+                                                <li><a class="dropdown-item" href="#">Edit</a></li>
+                                                <li><a class="dropdown-item" href="#">Attendance</a></li>
+                                                <li><hr class="dropdown-divider"></li>
+                                                <li><a class="dropdown-item text-danger" href="#">Deactivate</a></li>
+                                            </ul>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+ 
+{% endblock %}
+
+{% block extra_js %}
+    
+    <!-- Custom JS -->
+    <script>
+        // Sidebar Toggle
+        document.getElementById('sidebarToggle').addEventListener('click', function() {
+            document.getElementById('sidebar').classList.toggle('active');
+            document.getElementById('mainContent').classList.toggle('active');
+        });
+        
+        // Charts
+        document.addEventListener('DOMContentLoaded', function() {
+            // Attendance Chart
+            const attendanceCtx = document.getElementById('attendanceChart').getContext('2d');
+            const attendanceChart = new Chart(attendanceCtx, {
+                type: 'line',
+                data: {
+                    labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
+                    datasets: [{
+                        label: 'Present',
+                        data: [85, 90, 87, 92, 88, 75],
+                        borderColor: '#4361ee',
+                        backgroundColor: 'rgba(67, 97, 238, 0.1)',
+                        tension: 0.3,
+                        fill: true
+                    }, {
+                        label: 'Absent',
+                        data: [15, 10, 13, 8, 12, 25],
+                        borderColor: '#f72585',
+                        backgroundColor: 'rgba(247, 37, 133, 0.1)',
+                        tension: 0.3,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100,
+                            ticks: {
+                                callback: function(value) {
+                                    return value + '%';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+            
+            // Finance Chart
+            const financeCtx = document.getElementById('financeChart').getContext('2d');
+            const financeChart = new Chart(financeCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+                    datasets: [{
+                        label: 'Collected',
+                        data: [12000, 19000, 15000, 25000, 22000, 30000],
+                        backgroundColor: '#4cc9f0',
+                    }, {
+                        label: 'Outstanding',
+                        data: [5000, 7000, 6000, 8000, 9000, 5000],
+                        backgroundColor: '#f72585',
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return '$' + value;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+            
+            // Performance Chart
+            const performanceCtx = document.getElementById('performanceChart').getContext('2d');
+            const performanceChart = new Chart(performanceCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['Math', 'Science', 'English', 'History', 'Geography', 'Arts'],
+                    datasets: [{
+                        label: 'Average Score',
+                        data: [75, 82, 78, 85, 80, 88],
+                        backgroundColor: [
+                            'rgba(67, 97, 238, 0.7)',
+                            'rgba(76, 201, 240, 0.7)',
+                            'rgba(72, 149, 239, 0.7)',
+                            'rgba(63, 55, 201, 0.7)',
+                            'rgba(247, 37, 133, 0.7)',
+                            'rgba(106, 76, 219, 0.7)'
+                        ],
+                        borderColor: [
+                            '#4361ee',
+                            '#4cc9f0',
+                            '#4895ef',
+                            '#3f37c9',
+                            '#f72585',
+                            '#6a4cdb'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100,
+                            ticks: {
+                                callback: function(value) {
+                                    return value + '%';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        });
+
+    </script>
+{% endblock %}
+

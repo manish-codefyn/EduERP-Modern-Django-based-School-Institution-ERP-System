@@ -1,0 +1,40 @@
+{% extends 'transport/base.html' %}
+
+{% block title %}Delete Vehicle - {{ vehicle.vehicle_number }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="mb-0"><i class="bi bi-trash me-2"></i>Confirm Delete</h5>
+                </div>
+                <div class="card-body">
+                    <p class="mb-3">
+                        Are you sure you want to delete the vehicle 
+                        <strong>{{ vehicle.vehicle_number }} - {{ vehicle.make }} {{ vehicle.model }}</strong>?
+                    </p>
+                    <p class="text-danger small">
+                        This action is irreversible and will remove all associated transport assignments.
+                    </p>
+
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="d-flex justify-content-between mt-4">
+                            <a href="{% url 'transport:vehicle_list' %}" class="btn btn-outline-secondary">
+                                <i class="bi bi-x-circle me-1"></i> Cancel
+                            </a>
+                            <button type="submit" class="btn btn-danger">
+                                <i class="bi bi-trash me-1"></i> Delete Vehicle
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+{% endblock %}

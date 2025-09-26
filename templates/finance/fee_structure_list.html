@@ -1,0 +1,383 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Fee Structures - {{ organization.name|default:"ERP System" }}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+
+    <!-- Header -->
+<div class="header-section">
+    <div class="row align-items-center">
+        <div class="col-md-8">
+            <div class="d-flex align-items-center">
+                <div class="header-icon me-3">
+                   <i class="bi bi-currency-rupee display-6 "></i> 
+                </div>
+                <div>
+                    <h1 class="h3 fw-bold mb-1">Fee Structure Management</h1>
+                    <p class="text-custom mb-0">Manage tuition, transport, hostel, and other fee structures</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            {% if request.user.is_superadmin or request.user.is_accountant %}
+            <div class="d-flex gap-2 justify-content-md-end flex-wrap">
+                <!-- Quick Actions -->
+                <div class="btn-group w-100" role="group">
+                    <a href="{% url 'finance:fee_structure_add' %}" class="btn btn-primary">
+                        <i class="bi bi-plus-circle me-1"></i> New Structure
+                    </a>
+                    <button type="button" class="btn btn-primary dropdown-toggle dropdown-toggle-split" 
+                            data-bs-toggle="dropdown" aria-expanded="false">
+                        <span class="visually-hidden">Toggle Dropdown</span>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <li>
+                            <button type="button" class="dropdown-item" data-bs-toggle="modal" data-bs-target="#exportModal">
+                                <i class="bi bi-download me-2"></i> Export Data
+                            </button>
+                        </li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li>
+                            <a class="dropdown-item" href="{% url 'finance:payment_list' %}">
+                                <i class="bi bi-wallet2 me-2"></i> View Payments
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item" href="{% url 'finance:fee_collection_report' %}">
+                                <i class="bi bi-bar-chart-line me-2"></i> View Reports
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item" href="{% url 'finance:fee_invoice_list' %}">
+                                <i class="bi bi-receipt me-2"></i> View Invoices
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+    <!-- Stats Cards -->
+   <div class="row g-4 mb-4">
+    <div class="col-xl-4 col-md-6">
+        <div class="card stats-card text-white" style="background: var(--primary-gradient);">
+            <div class="card-body">
+                <div class="row align-items-center">
+                    <div class="col-8">
+                        <h6 class="card-title mb-1 small opacity-75">TOTAL FEE STRUCTURES</h6>
+                        <h3 class="mb-0 fw-bold">{{ object_list.count|default:"0" }}</h3>
+                        <p class="mb-0 small opacity-75">All fee categories</p>
+                    </div>
+                    <div class="col-4 text-end">
+                        <div class="stats-icon">
+                            <i class="bi bi-cash-coin fs-2"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-4 col-md-6">
+        <div class="card stats-card text-white" style="background: var(--success-gradient);">
+            <div class="card-body">
+                <div class="row align-items-center">
+                    <div class="col-8">
+                        <h6 class="card-title mb-1 small opacity-75">ACTIVE STRUCTURES</h6>
+                        <h3 class="mb-0 fw-bold">{{ active_fee_structures|default:"0" }}</h3>
+                        <p class="mb-0 small opacity-75">Currently in use</p>
+                    </div>
+                    <div class="col-4 text-end">
+                        <div class="stats-icon">
+                            <i class="bi bi-check-circle fs-2"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-4 col-md-6">
+        <div class="card stats-card text-white" style="background: var(--danger-gradient);">
+            <div class="card-body">
+                <div class="row align-items-center">
+                    <div class="col-8">
+                        <h6 class="card-title mb-1 small opacity-75">INACTIVE STRUCTURES</h6>
+                        <h3 class="mb-0 fw-bold">{{ inactive_fee_structures|default:"0" }}</h3>
+                        <p class="mb-0 small opacity-75">Archived or disabled</p>
+                    </div>
+                    <div class="col-4 text-end">
+                        <div class="stats-icon">
+                            <i class="bi bi-x-circle fs-2"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+    <!-- Table Section -->
+    <div class="card card-custom">
+        <div class="card-header bg-transparent border-0 pt-4 px-4">
+            <h5 class="card-title mb-0 fw-bold text-custom">All Fee Structures</h5>
+            <p class="text-custom mb-0">Manage and review all fee structures in the system</p>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                {% if object_list %}
+                <table id="feeStructureTable" class=" w-100 table-custom table-hover align-middle">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Class</th>
+                            <th>Academic Year</th>
+                            <th>Amount</th>
+                            <th>Status</th>
+                            <!-- <th>Created At</th> -->
+                            {% if request.user.is_superadmin or request.user.is_accountant %}
+                            <th class="text-center">Actions</th>
+                            {% endif %}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for fee in object_list %}
+                        <tr>
+                           <td>
+                            <div class="d-flex align-items-center">
+                                <div class="flex-shrink-0">
+                                    <i class="bi bi-cash-stack text-primary fs-5 me-2"></i>
+                                </div>
+                                <div class="flex-grow-1 ms-2">
+                                     <a href="{% url 'finance:fee_structure_detail' fee.id %}">
+                                    <h6 class="mb-0">{{ fee.name }}</h6>
+                                    </a>
+                                    <!-- <small class="text-custom">{{ fee.institution.name }}</small> -->
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="badge bg-light text-dark">
+                                <i class="bi bi-mortarboard-fill me-1 text-primary"></i>
+                                {{ fee.class_name.name }}
+                            </span>
+                        </td>
+                        <td>
+                            <span class="badge bg-light text-dark">
+                                <i class="bi bi-calendar-event me-1 text-info"></i>
+                                {{ fee.academic_year.name }}
+                            </span>
+                        </td>
+                        <td>
+                            <span class="fw-bold text-warning">₹{{ fee.amount }}</span>
+                        </td>
+                        <td>
+                            {% if fee.is_active %}
+                                <span class="badge bg-success bg-opacity-10 text-success">
+                                    <i class="bi bi-check-circle me-1"></i>Active
+                                </span>
+                            {% else %}
+                                <span class="badge bg-danger bg-opacity-10 text-danger">
+                                    <i class="bi bi-x-circle me-1"></i>Inactive
+                                </span>
+                            {% endif %}
+                        </td>
+                        <!-- <td>
+                            <small class="text-custom">{{ fee.created_at|date:"M d, Y" }}</small>
+                        </td> -->
+                        {% if request.user.is_superadmin or request.user.is_accountant %}
+                        <td>
+                            <div class="d-flex justify-content-center">
+                                <a href="{% url 'finance:fee_structure_detail' fee.id %}" class="btn btn-sm btn-outline-primary" title="View Details" data-bs-toggle="tooltip">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                                <a href="{% url 'finance:fee_structure_update' fee.id %}" class="btn btn-sm btn-outline-secondary" title="Edit" data-bs-toggle="tooltip">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                <a href="{% url 'finance:fee_structure_delete' fee.id %}" class="btn btn-sm btn-outline-danger" title="Delete" data-bs-toggle="tooltip">
+                                    <i class="bi bi-trash"></i>
+                                </a>
+                            </div>
+                        </td>
+                        {% endif %}
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% else %}
+                <div class="empty-state">
+                    <i class="fas fa-cash-register"></i>
+                    <h4 class="mt-3 mb-2">No Fee Structures Found</h4>
+                    <p class="text-custom mb-4">Get started by creating your first fee structure</p>
+                    {% if request.user.is_superadmin or request.user.is_accountant %}
+                    <a href="{% url 'finance:fee_structure_add' %}" class="btn btn-primary">
+                        <i class="fas fa-plus-circle me-2"></i> Add First Fee Structure
+                    </a>
+                    {% endif %}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Export Modal -->
+<div class="modal fade" id="exportModal" tabindex="-1" aria-labelledby="exportModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title fw-bold">Export Fee Structures</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="get" action="{% url 'finance:fee_structure_export' %}">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Export Format</label>
+                        <select class="form-select" name="format" required>
+                            <option value="csv">CSV Format</option>
+                            <option value="pdf">PDF Document</option>
+                            <option value="excel">Excel Spreadsheet</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Class</label>
+                        <select class="form-select" name="class_id">
+                            <option value="">All Classes</option>
+                            {% for class in classes %}
+                            <option value="{{ class.id }}">{{ class.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Academic Year</label>
+                        <select class="form-select" name="academic_year_id">
+                            <option value="">All Academic Years</option>
+                            {% for year in academic_years %}
+                            <option value="{{ year.id }}">{{ year.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Status</label>
+                        <select class="form-select" name="is_active">
+                            <option value="">All Statuses</option>
+                            <option value="true">Active Only</option>
+                            <option value="false">Inactive Only</option>
+                        </select>
+                    </div>
+                    <div class="mb-3 form-check">
+                        <input type="checkbox" class="form-check-input" name="include_inactive" value="true" checked>
+                        <label class="form-check-label">Include inactive fee structures</label>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-download me-2"></i>Export Data
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize DataTable
+    $('#feeStructureTable').DataTable({
+        "pageLength": 10,
+        "order": [[0, 'asc']],
+        "language": {
+            "search": "<i class='fas fa-search me-2'></i>Search:",
+            "lengthMenu": "Show _MENU_ entries",
+            "info": "Showing _START_ to _END_ of _TOTAL_ entries",
+            "paginate": {
+                "previous": "<i class='bi bi-chevron-left'></i>",
+                "next": "<i class='bi bi-chevron-right'></i>"
+            }
+        },
+        "columnDefs": [
+            { 
+                "targets": [-1], 
+                "orderable": false,
+                "className": "dt-center"
+            }
+        ],
+        "responsive": true,
+        "dom": '<"row"<"col-md-6"l><"col-md-6"f>>rt<"row"<"col-md-6"i><"col-md-6"p>>'
+    });
+    
+    // Initialize tooltips
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl)
+    });
+
+      // 3) Robust modal cleanup handlers
+    // Remove any leftover backdrop BEFORE a modal opens
+    document.querySelectorAll('.modal').forEach(modalEl => {
+        modalEl.addEventListener('show.bs.modal', function () {
+            // if another leftover backdrop exists, remove it
+            document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+        });
+
+        // on hidden, remove backdrops and restore body scrolling
+        modalEl.addEventListener('hidden.bs.modal', function () {
+            document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+            document.body.classList.remove('modal-open');
+            document.body.style.overflow = '';
+            document.body.style.paddingRight = '';
+        });
+    });
+
+    // 4) Safety-net: if a backdrop exists but there is no visible modal, remove it
+    // (handles cases where Bootstrap failed silently)
+    const observer = new MutationObserver(() => {
+        const backdrop = document.querySelector('.modal-backdrop');
+        const anyShown = !!document.querySelector('.modal.show');
+        if (backdrop && !anyShown) {
+            backdrop.remove();
+            document.body.classList.remove('modal-open');
+            document.body.style.overflow = '';
+            document.body.style.paddingRight = '';
+        }
+    });
+    observer.observe(document.body, { childList: true, subtree: true });
+
+    // 5) Allow manual cleanup by pressing Esc (extra safety)
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+            document.body.classList.remove('modal-open');
+            document.body.style.overflow = '';
+            document.body.style.paddingRight = '';
+            document.querySelectorAll('.modal.show').forEach(m => {
+                try { bootstrap.Modal.getInstance(m)?.hide(); } catch(e) {}
+            });
+        }
+    });
+
+    // 6) Final cleanup in case something stuck earlier
+    setTimeout(() => {
+        document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+        document.body.classList.remove('modal-open');
+        document.body.style.overflow = '';
+        document.body.style.paddingRight = '';
+    }, 500);
+});
+</script>
+{% endblock %}

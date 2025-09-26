@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            font-size: 12px;
+            margin: 0;
+            padding: 0;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .header h1 {
+            margin: 5px 0;
+            font-size: 18px;
+        }
+        .header p {
+            margin: 2px 0;
+            font-size: 13px;
+        }
+        .logo img {
+            max-width: 210px;
+            margin-bottom: 8px;
+        }
+        .filter-info {
+            margin: 0 20px 15px 20px;
+            padding: 10px;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+        }
+        table {
+            width: 95%;
+            margin: 0 auto;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 6px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        .no-data {
+            text-align: center;
+            padding: 20px;
+            font-weight: bold;
+        }
+
+        /* Footer must be fixed for every page */
+        .footer {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 40px;
+            text-align: center;
+            font-size: 10px;
+            color: #777;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <div class="header">
+        {% if logo %}
+            <div class="logo">
+                <img src="{{ logo }}" alt="Logo">
+            </div>
+        {% endif %}
+        <h1>Attendance Report</h1>
+        <p>{{ organization.name|default:"ERP System" }}</p>
+        <p><small>Generated on {{ generated_date|date:"F j, Y \\a\\t H:i" }}</small></p>
+    </div>
+
+    <!-- Main Content -->
+    {% if no_data %}
+        <div class="no-data">
+            No attendance data found for the selected filters.
+        </div>
+    {% else %}
+        <div class="filter-info">
+            {% if class_obj %}<p><strong>Class:</strong> {{ class_obj.name }}</p>{% endif %}
+            {% if section_obj %}<p><strong>Section:</strong> {{ section_obj.name }}</p>{% endif %}
+            {% if start_date %}<p><strong>From Date:</strong> {{ start_date }}</p>{% endif %}
+            {% if end_date %}<p><strong>To Date:</strong> {{ end_date }}</p>{% endif %}
+            {% if status_filter %}<p><strong>Status:</strong> {{ status_filter }}</p>{% endif %}
+            {% if student_id %}<p><strong>Student ID:</strong> {{ student_id }}</p>{% endif %}
+            {% if roll_number %}<p><strong>Roll Number:</strong> {{ roll_number }}</p>{% endif %}
+        </div>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Roll No</th>
+                    <th>Name</th>
+                    <th>Class</th>
+                    <th>Section</th>
+                    <th>Date</th>
+                    <th>Status</th>
+                    <th>Remarks</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for record in attendance_data %}
+                <tr>
+                    <td>{{ record.roll_no }}</td>
+                    <td>{{ record.name }}</td>
+                    <td>{{ record.class_name }}</td>
+                    <td>{{ record.section }}</td>
+                    <td>{{ record.date }}</td>
+                    <td>{{ record.status }}</td>
+                    <td>{{ record.remarks }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% endif %}
+
+    <!-- Fixed Footer -->
+    <div class="footer">
+        Generated on {{ generated_date|date:"F j, Y \\a\\t H:i" }} |
+        Page <pdf:pagenumber> of <pdf:pagecount> <br>
+        &copy; {{ organization.name|default:"ERP System" }} - Attendance Report
+    </div>
+</body>
+</html>

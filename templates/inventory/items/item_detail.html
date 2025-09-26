@@ -1,0 +1,175 @@
+{% extends 'inventory/base.html' %}
+{% load static %}
+
+{% block title %}{{ item.name }} - {{ organization.name|default:"ERP System" }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row">
+        <!-- Item Details -->
+        <div class="col-lg-8">
+            <div class="card card-custom">
+                <div class="card-header bg-transparent border-0">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div class="d-flex align-items-center">
+                            <i class="bi bi-box-seam display-6 text-primary me-3"></i>
+                            <div>
+                                <h1 class="h3 fw-bold mb-1">{{ item.name }}</h1>
+                                <p class="text-custom mb-0">Item Details and Information</p>
+                            </div>
+                        </div>
+                        <div>
+                            <span class="badge {% if item.status == 'in_stock' %}bg-success{% elif item.status == 'low_stock' %}bg-warning{% else %}bg-danger{% endif %} fs-6">
+                                {{ item.status|title }}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card-body">
+                    <div class="row g-4">
+                        <!-- Basic Information -->
+                        <div class="col-md-6">
+                            <h5 class="fw-bold text-custom mb-3">
+                                <i class="bi bi-info-circle me-2"></i>Basic Information
+                            </h5>
+                            <table class="table table-borderless">
+                                <tr>
+                                    <td class="text-custom fw-semibold" style="width: 40%;">Category:</td>
+                                    <td>
+                                        <span class="badge bg-primary bg-opacity-10 text-primary">
+                                            {{ item.category.name }}
+                                        </span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="text-custom fw-semibold">Current Quantity:</td>
+                                    <td>
+                                        <span class="fw-bold fs-5 {% if item.status == 'out_of_stock' %}text-danger{% elif item.status == 'low_stock' %}text-warning{% else %}text-success{% endif %}">
+                                            {{ item.quantity }} {{ item.unit }}
+                                        </span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="text-custom fw-semibold">Minimum Quantity:</td>
+                                    <td>{{ item.min_quantity }} {{ item.unit }}</td>
+                                </tr>
+                                <tr>
+                                    <td class="text-custom fw-semibold">Unit Price:</td>
+                                    <td>
+                                        {% if item.price %}
+                                        <span class="fw-bold text-success">${{ item.price }}</span>
+                                        {% else %}
+                                        <span class="text-custom">Not set</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+
+                        <!-- Additional Details -->
+                        <div class="col-md-6">
+                            <h5 class="fw-bold text-custom mb-3">
+                                <i class="bi bi-geo-alt me-2"></i>Additional Details
+                            </h5>
+                            <table class="table table-borderless">
+                                <tr>
+                                    <td class="text-custom fw-semibold" style="width: 40%;">Storage Location:</td>
+                                    <td>
+                                        {% if item.location %}
+                                        <span class="badge bg-light text-dark">{{ item.location }}</span>
+                                        {% else %}
+                                        <span class="text-custom">Not specified</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="text-custom fw-semibold">Created:</td>
+                                    <td>{{ item.created_at|date:"M d, Y" }}</td>
+                                </tr>
+                                <tr>
+                                    <td class="text-custom fw-semibold">Last Updated:</td>
+                                    <td>{{ item.updated_at|date:"M d, Y" }}</td>
+                                </tr>
+                                <tr>
+                                    <td class="text-custom fw-semibold">Slug:</td>
+                                    <td><code>{{ item.slug }}</code></td>
+                                </tr>
+                            </table>
+                        </div>
+
+                        <!-- Description -->
+                        {% if item.description %}
+                        <div class="col-12">
+                            <h5 class="fw-bold text-custom mb-3">
+                                <i class="bi bi-card-text me-2"></i>Description
+                            </h5>
+                            <div class="border rounded p-3 bg-light">
+                                {{ item.description|linebreaks }}
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Action Buttons -->
+                    {% if request.user.is_superadmin or request.user.is_institution_admin %}
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <div class="d-flex gap-2">
+                                <a href="{% url 'inventory:item_update' item.pk %}" class="btn btn-primary">
+                                    <i class="bi bi-pencil me-1"></i> Edit Item
+                                </a>
+                                <a href="{% url 'inventory:transaction_create' %}?item={{ item.pk }}" class="btn btn-success">
+                                    <i class="bi bi-arrow-left-right me-1"></i> Stock Transaction
+                                </a>
+                                <a href="{% url 'inventory:item_list' %}" class="btn btn-outline-secondary">
+                                    <i class="bi bi-arrow-left me-1"></i> Back to List
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Transactions -->
+        <div class="col-lg-4">
+            <div class="card card-custom h-100">
+                <div class="card-header bg-transparent border-0">
+                    <h5 class="card-title mb-0 fw-bold text-custom">Recent Transactions</h5>
+                    <p class="text-custom mb-0">Latest stock movements</p>
+                </div>
+                <div class="card-body">
+                    {% if transactions %}
+                    <div class="list-group list-group-flush">
+                        {% for transaction in transactions %}
+                        <div class="list-group-item px-0">
+                            <div class="d-flex justify-content-between align-items-start mb-1">
+                                <span class="badge {% if transaction.transaction_type == 'purchase' %}bg-success{% elif transaction.transaction_type == 'issue' %}bg-primary{% else %}bg-info{% endif %}">
+                                    {{ transaction.get_transaction_type_display }}
+                                </span>
+                                <small class="text-custom">{{ transaction.transaction_date|date:"M d" }}</small>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span class="fw-semibold">{{ transaction.quantity }} {{ item.unit }}</span>
+                                <small class="text-custom">by {{ transaction.performed_by.get_full_name }}</small>
+                            </div>
+                            {% if transaction.notes %}
+                            <small class="text-custom d-block mt-1">{{ transaction.notes }}</small>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="text-center py-4">
+                        <i class="bi bi-clock-history display-4 text-secondary"></i>
+                        <p class="mt-3 mb-0 text-custom">No transactions yet</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

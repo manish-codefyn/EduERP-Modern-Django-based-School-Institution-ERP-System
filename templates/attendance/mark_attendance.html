@@ -1,0 +1,963 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Mark Student Attendance{% endblock %}
+
+{% block extra_css %}
+<style>
+.attendance-container {
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+.student-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 1.5rem;
+    margin: 2rem 0;
+}
+
+.student-card {
+    position: relative;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border-radius: 15px;
+    padding: 1rem;
+}
+
+.student-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+}
+
+.student-avatar {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 3px solid #dee2e6;
+    transition: all 0.3s ease;
+}
+
+.student-info {
+    margin-top: 0.5rem;
+}
+
+.student-name {
+    font-weight: 600;
+    font-size: 0.9rem;
+    margin-bottom: 0.2rem;
+}
+
+.student-roll {
+    font-size: 0.8rem;
+    color: #6c757d;
+}
+
+.status-indicator {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    border: 2px solid #fff;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+
+.status-present { background-color: #28a745; }
+.status-absent { background-color: #dc3545; }
+.status-late { background-color: #ffc107; }
+.status-half_day { background-color: #fd7e14; }
+.status-excused { background-color: #6f42c1; }
+
+.attendance-summary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-radius: 15px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.summary-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 1rem;
+    text-align: center;
+}
+
+.stat-item {
+    padding: 1rem;
+    background: rgba(255,255,255,0.1);
+    border-radius: 10px;
+    backdrop-filter: blur(10px);
+}
+
+.stat-number {
+    font-size: 2rem;
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+}
+
+.attendance-controls {
+    position: sticky;
+    bottom: 0;
+    background: white;
+    padding: 1.5rem;
+    border-top: 1px solid #dee2e6;
+    box-shadow: 0 -4px 20px rgba(0,0,0,0.1);
+}
+
+.bulk-actions {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
+}
+
+.bulk-btn {
+    padding: 0.5rem 1rem;
+    border: none;
+    border-radius: 25px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.bulk-btn:hover {
+    transform: translateY(-2px);
+}
+
+.student-card.selected {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border: 2px solid #007bff;
+}
+
+.student-card.selected .student-avatar {
+    border-color: #007bff;
+}
+
+.attendance-modal .modal-content {
+    border-radius: 15px;
+    border: none;
+}
+
+.attendance-modal .modal-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-radius: 15px 15px 0 0;
+}
+
+.status-options {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 1rem;
+    margin: 1rem 0;
+}
+
+.status-option {
+    padding: 1rem;
+    border: 2px solid #dee2e6;
+    border-radius: 10px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.status-option:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+
+.status-option.selected {
+    border-color: #007bff;
+    background-color: #f8f9fa;
+}
+
+.search-box {
+    position: relative;
+    margin-bottom: 2rem;
+}
+
+.search-box input {
+    border-radius: 25px;
+    padding-left: 3rem;
+}
+
+.search-box i {
+    position: absolute;
+    left: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #6c757d;
+}
+
+/* Attendance Diary Table Styles */
+.attendance-diary {
+    margin-top: 2rem;
+    display: none;
+}
+
+.diary-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 1rem;
+    background-color: var(--card-bg);
+    color: var(--text-color);
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+}
+
+.diary-table th {
+    background-color: var(--card-bg);
+    color: var(--text-color);
+    padding: 1rem;
+    text-align: left;
+}
+
+.diary-table td {
+    padding: 1rem;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.diary-table tr:last-child td {
+    border-bottom: none;
+}
+
+.diary-table tr:hover {
+    background-color: #f8f9fa;
+}
+
+.status-cell {
+    text-align: center;
+    font-weight: bold;
+}
+
+.status-present { color: #28a745; }
+.status-absent { color: #dc3545; }
+.status-late { color: #ffc107; }
+.status-half_day { color: #fd7e14; }
+.status-excused { color: #6f42c1; }
+
+.attendance-toggle {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.toggle-btn {
+    padding: 0.5rem 1.5rem;
+    border: 2px solid #007bff;
+    border-radius: 25px;
+    background: transparent;
+    color: #007bff;
+    transition: all 0.3s ease;
+}
+
+.toggle-btn.active {
+    background: #007bff;
+    color: white;
+}
+
+.toggle-btn:hover {
+    transform: translateY(-2px);
+}
+
+/* OTP Modal Styles */
+.otp-input {
+    letter-spacing: 10px;
+    font-size: 2rem;
+    text-align: center;
+    padding: 0.5rem;
+    border: 2px solid #dee2e6;
+    border-radius: 10px;
+    width: 100%;
+}
+
+.otp-timer {
+    text-align: center;
+    font-size: 1.2rem;
+    margin-top: 1rem;
+    color: #dc3545;
+}
+
+@media (max-width: 768px) {
+    .student-grid {
+        grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+        gap: 1rem;
+    }
+    
+    .student-avatar {
+        width: 60px;
+        height: 60px;
+    }
+    
+    .summary-stats {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .diary-table {
+        font-size: 0.8rem;
+    }
+    
+    .diary-table th, 
+    .diary-table td {
+        padding: 0.5rem;
+    }
+}
+
+/* Custom colors for attendance status */
+.text-purple {
+    color: #6f42c1 !important;
+}
+
+.bg-purple {
+    background-color: #6f42c1 !important;
+}
+
+/* Animation for status indicators */
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+    100% { transform: scale(1); }
+}
+
+.status-indicator {
+    animation: pulse 0.5s ease;
+}
+
+/* Hover effects */
+.student-card {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.student-card:hover {
+    transform: translateY(-8px) scale(1.02);
+    box-shadow: 0 12px 30px rgba(0,0,0,0.2);
+}
+
+/* Gradient backgrounds for status options */
+.status-option[data-status="present"]:hover {
+    background: linear-gradient(135deg, #28a74520, #28a74510);
+}
+
+.status-option[data-status="absent"]:hover {
+    background: linear-gradient(135deg, #dc354520, #dc354510);
+}
+
+.status-option[data-status="late"]:hover {
+    background: linear-gradient(135deg, #ffc10720, #ffc10710);
+}
+
+.status-option[data-status="half_day"]:hover {
+    background: linear-gradient(135deg, #fd7e1420, #fd7e1410);
+}
+
+.status-option[data-status="excused"]:hover {
+    background: linear-gradient(135deg, #6f42c120, #6f42c110);
+}
+
+/* Responsive design */
+@media (max-width: 576px) {
+    .student-grid {
+        grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)) !important;
+        gap: 1rem !important;
+    }
+    
+    .student-avatar {
+        width: 60px !important;
+        height: 60px !important;
+    }
+    
+    .summary-stats {
+        grid-template-columns: repeat(2, 1fr) !important;
+    }
+    
+    .attendance-toggle {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid attendance-container">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 mb-0">
+            <i class="bi bi-calendar-check me-2"></i>Mark Attendance
+        </h1>
+        <div>
+            <a href="{% url 'attendance:attendance_list' %}" class="btn btn-outline-secondary me-2">
+                <i class="bi bi-arrow-left me-1"></i> Back to List
+            </a>
+            <button class="btn btn-primary" onclick="requestOTP()">
+                <i class="bi bi-check2-circle me-1"></i> Submit Attendance
+            </button>
+        </div>
+    </div>
+
+    <!-- Attendance Summary -->
+    <div class="attendance-summary">
+        <div class="row align-items-center">
+            <div class="col-md-6">
+                <h4 class="mb-3">Class: {{ class_name }}</h4>
+                <p class="mb-0">
+                    <i class="bi bi-calendar me-1"></i> {{ selected_date|date:"F j, Y" }}
+                </p>
+            </div>
+            <div class="col-md-6">
+                <div class="summary-stats">
+                    <div class="stat-item">
+                        <div class="stat-number" id="total-students">{{ students|length }}</div>
+                        <div>Total</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number text-success" id="present-count">0</div>
+                        <div>Present</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number text-danger" id="absent-count">0</div>
+                        <div>Absent</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number text-warning" id="late-count">0</div>
+                        <div>Late</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- View Toggle -->
+    <div class="attendance-toggle">
+        <button class="toggle-btn active" id="grid-view-btn" onclick="toggleView('grid')">
+            <i class="bi bi-grid me-1"></i> Grid View
+        </button>
+        <button class="toggle-btn" id="diary-view-btn" onclick="toggleView('diary')">
+            <i class="bi bi-table me-1"></i> Attendance Diary
+        </button>
+    </div>
+
+    <!-- Search and Filters -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="search-box">
+                <i class="bi bi-search"></i>
+                <input type="text" id="student-search" class="form-control" placeholder="Search students...">
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="d-flex gap-2">
+                <select class="form-select" id="status-filter">
+                    <option value="">All Statuses</option>
+                    <option value="present">Present</option>
+                    <option value="absent">Absent</option>
+                    <option value="late">Late</option>
+                    <option value="half_day">Half Day</option>
+                    <option value="excused">Excused</option>
+                </select>
+                <button class="btn btn-outline-secondary" onclick="clearAll()">
+                    <i class="bi bi-x-circle"></i> Clear All
+                </button>
+            </div>
+        </div>
+    </div>
+    <!-- Student Grid -->
+    <div class="student-grid" id="student-grid">
+        {% for student in students %}
+        <div class="student-card" data-student-id="{{ student.id }}" data-roll="{{ student.roll_number }}">
+            <div class="status-indicator" id="status-{{ student.id }}"></div>
+            {% with photo=student.get_photo %}
+                <img src="{{ photo.file.url|default:'/static/images/default-avatar.png' }}"
+                    alt="{{ student.first_name }} {{ student.last_name }}"
+                    class="student-avatar"
+                    onclick="openStatusModal('{{ student.id }}')">
+            {% endwith %}
+
+            <div class="student-info">
+                <div class="student-name">{{ student.user.get_full_name|truncatewords:2 }}</div>
+                <div class="student-roll">#{{ student.roll_number }}</div>
+            </div>
+            <input type="hidden" name="attendance_{{ student.id }}" id="attendance_{{ student.id }}" value="">
+        </div>
+        {% endfor %}
+    </div>
+    <!-- Attendance Diary Table -->
+    <div class="attendance-diary" id="attendance-diary">
+        <div class=" table-responsive">
+            <table class="diary-table table-custom">
+                <thead>
+                    <tr>
+                        <th>Sr. No.</th>
+                        <th>Roll No.</th>
+                        <th>Student Name</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for student in students %}
+                    <tr data-student-id="{{ student.id }}">
+                        <td>{{ forloop.counter }}</td>
+                        <td>#{{ student.roll_number }}</td>
+                        <td class="text-custom">{{ student.full_name }}</td>
+                        <td class="status-cell" id="table-status-{{ student.id }}">-</td>
+                        <td>
+                            <div class="btn-group btn-group-sm">
+                                <button class="btn btn-outline-success" onclick="setStatus('{{ student.id }}', 'present')">
+                                    <i class="bi bi-check-lg"></i> P
+                                </button>
+                                <button class="btn btn-outline-danger" onclick="setStatus('{{ student.id }}', 'absent')">
+                                    <i class="bi bi-x-lg"></i> A
+                                </button>
+                                <button class="btn btn-outline-warning" onclick="setStatus('{{ student.id }}', 'late')">
+                                    <i class="bi bi-clock"></i> L
+                                </button>
+                                <button class="btn btn-outline-info" onclick="setStatus('{{ student.id }}', 'half_day')">
+                                    <i class="bi bi-circle-half"></i> H
+                                </button>
+                                <button class="btn btn-outline-primary" onclick="setStatus('{{ student.id }}', 'excused')">
+                                    <i class="bi bi-file-earmark-text"></i> E
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Bulk Actions -->
+    <div class="attendance-controls card-custom mt-2">
+        <div class="bulk-actions">
+            <span class="me-2 fw-bold text-dark">Bulk Actions:</span>
+            <button class="btn btn-sm btn-outline-success bulk-btn" onclick="markAll('present')">
+                <i class="bi bi-check-circle me-1"></i> Mark All Present
+            </button>
+            <button class="btn btn-sm btn-outline-danger bulk-btn" onclick="markAll('absent')">
+                <i class="bi bi-x-circle me-1"></i> Mark All Absent
+            </button>
+            <button class="btn btn-sm btn-outline-warning bulk-btn" onclick="markAll('late')">
+                <i class="bi bi-clock me-1"></i> Mark All Late
+            </button>
+        </div>
+        <div class="d-flex justify-content-between align-items-center">
+            <span id="selected-count" class="badge bg-success p-3">0 students marked</span>
+            <button class="btn btn-primary btn-lg" onclick="requestOTP()">
+                <i class="bi bi-check2-circle me-1"></i> Submit Attendance
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Status Modal -->
+<div class="modal fade attendance-modal" id="statusModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Mark Attendance</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="text-center mb-4">
+                    <img id="modal-avatar" src="" class="student-avatar mb-2" alt="">
+                    <h6 id="modal-name"></h6>
+                    <p class="text-custom" id="modal-roll"></p>
+                </div>
+                <div class="status-options">
+                    <div class="status-option" data-status="present" onclick="selectStatus('present')">
+                        <i class="bi bi-check-circle-fill text-success fs-3"></i>
+                        <div>Present</div>
+                    </div>
+                    <div class="status-option" data-status="absent" onclick="selectStatus('absent')">
+                        <i class="bi bi-x-circle-fill text-danger fs-3"></i>
+                        <div>Absent</div>
+                    </div>
+                    <div class="status-option" data-status="late" onclick="selectStatus('late')">
+                        <i class="bi bi-clock-fill text-warning fs-3"></i>
+                        <div>Late</div>
+                    </div>
+                    <div class="status-option" data-status="half_day" onclick="selectStatus('half_day')">
+                        <i class="bi bi-circle-half text-info fs-3"></i>
+                        <div>Half Day</div>
+                    </div>
+                    <div class="status-option" data-status="excused" onclick="selectStatus('excused')">
+                        <i class="bi bi-file-earmark-text text-purple fs-3"></i>
+                        <div>Excused</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- OTP Verification Modal -->
+<div class="modal fade" id="otpModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">OTP Verification</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p class="text-center">An OTP has been sent to your registered email. Please enter it below to submit attendance.</p>
+                <input type="text" class="form-control otp-input" id="otpInput" maxlength="6" placeholder="XXXXXX">
+                <div class="otp-timer" id="otpTimer">02:00</div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="verifyOTP()">Verify & Submit</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<form id="attendance-form" method="post" style="display: none;">
+    {% csrf_token %}
+    <input type="hidden" name="date" value="{{ selected_date }}">
+    <input type="hidden" name="class_id" value="{{ class_id }}">
+    <input type="hidden" name="attendance_data" id="attendance-data">
+</form>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Cleanup any stray backdrops
+    document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+    document.body.classList.remove('modal-open');
+    document.body.style.overflow = '';
+    document.body.style.paddingRight = '';
+    
+    // Initialize
+    updateSummary();
+    setupSearch();
+    setupFilter();
+});
+
+let currentStudentId = null;
+const attendanceData = {};
+let otpTimerInterval;
+
+function toggleView(viewType) {
+    if (viewType === 'grid') {
+        document.getElementById('student-grid').style.display = 'grid';
+        document.getElementById('attendance-diary').style.display = 'none';
+        document.getElementById('grid-view-btn').classList.add('active');
+        document.getElementById('diary-view-btn').classList.remove('active');
+    } else {
+        document.getElementById('student-grid').style.display = 'none';
+        document.getElementById('attendance-diary').style.display = 'block';
+        document.getElementById('grid-view-btn').classList.remove('active');
+        document.getElementById('diary-view-btn').classList.add('active');
+    }
+}
+
+function openStatusModal(studentId) {
+    currentStudentId = studentId;
+    const studentCard = document.querySelector(`[data-student-id="${studentId}"]`);
+    const avatar = studentCard.querySelector('.student-avatar').src;
+    const name = studentCard.querySelector('.student-name').textContent;
+    const roll = studentCard.querySelector('.student-roll').textContent;
+    
+    document.getElementById('modal-avatar').src = avatar;
+    document.getElementById('modal-name').textContent = name;
+    document.getElementById('modal-roll').textContent = roll;
+    
+    // Show current status if exists
+    const currentStatus = attendanceData[studentId];
+    if (currentStatus) {
+        document.querySelectorAll('.status-option').forEach(opt => {
+            opt.classList.remove('selected');
+            if (opt.dataset.status === currentStatus) {
+                opt.classList.add('selected');
+            }
+        });
+    }
+    
+    new bootstrap.Modal(document.getElementById('statusModal')).show();
+}
+
+function setStatus(studentId, status) {
+    // Update grid view
+    const indicator = document.getElementById(`status-${studentId}`);
+    if (indicator) {
+        indicator.className = 'status-indicator';
+        indicator.classList.add(`status-${status}`);
+    }
+    
+    // Update table view
+    const tableStatus = document.getElementById(`table-status-${studentId}`);
+    if (tableStatus) {
+        tableStatus.textContent = status.charAt(0).toUpperCase() + status.slice(1);
+        tableStatus.className = `status-cell status-${status}`;
+    }
+    
+    // Update data
+    attendanceData[studentId] = status;
+    document.getElementById(`attendance_${studentId}`).value = status;
+    
+    // Update summary
+    updateSummary();
+}
+
+function selectStatus(status) {
+    if (!currentStudentId) return;
+    
+    setStatus(currentStudentId, status);
+    
+    // Close modal
+    bootstrap.Modal.getInstance(document.getElementById('statusModal')).hide();
+}
+
+function markAll(status) {
+    document.querySelectorAll('.student-card').forEach(card => {
+        const studentId = card.dataset.studentId;
+        setStatus(studentId, status);
+    });
+    
+    updateSummary();
+    showToast(`All students marked as ${status}`, 'success');
+}
+
+function clearAll() {
+    document.querySelectorAll('.student-card').forEach(card => {
+        const studentId = card.dataset.studentId;
+        
+        // Reset grid view
+        const indicator = document.getElementById(`status-${studentId}`);
+        if (indicator) indicator.className = 'status-indicator';
+        
+        // Reset table view
+        const tableStatus = document.getElementById(`table-status-${studentId}`);
+        if (tableStatus) {
+            tableStatus.textContent = '-';
+            tableStatus.className = 'status-cell';
+        }
+        
+        // Reset data
+        delete attendanceData[studentId];
+        document.getElementById(`attendance_${studentId}`).value = '';
+    });
+    
+    updateSummary();
+    showToast('All attendance cleared', 'info');
+}
+
+function updateSummary() {
+    const counts = {
+        present: 0,
+        absent: 0,
+        late: 0,
+        half_day: 0,
+        excused: 0
+    };
+    
+    Object.values(attendanceData).forEach(status => {
+        if (counts.hasOwnProperty(status)) {
+            counts[status]++;
+        }
+    });
+    
+    const total = Object.values(counts).reduce((sum, count) => sum + count, 0);
+    
+    document.getElementById('present-count').textContent = counts.present;
+    document.getElementById('absent-count').textContent = counts.absent;
+    document.getElementById('late-count').textContent = counts.late;
+    document.getElementById('selected-count').textContent = `${total} students marked`;
+}
+
+function setupSearch() {
+    const searchInput = document.getElementById('student-search');
+    searchInput.addEventListener('input', function() {
+        const searchTerm = this.value.toLowerCase();
+        
+        // Filter grid view
+        document.querySelectorAll('.student-card').forEach(card => {
+            const name = card.querySelector('.student-name').textContent.toLowerCase();
+            const roll = card.querySelector('.student-roll').textContent.toLowerCase();
+            const matches = name.includes(searchTerm) || roll.includes(searchTerm);
+            card.style.display = matches ? 'block' : 'none';
+        });
+        
+        // Filter table view
+        document.querySelectorAll('.diary-table tbody tr').forEach(row => {
+            const name = row.cells[2].textContent.toLowerCase();
+            const roll = row.cells[1].textContent.toLowerCase();
+            const matches = name.includes(searchTerm) || roll.includes(searchTerm);
+            row.style.display = matches ? '' : 'none';
+        });
+    });
+}
+
+function setupFilter() {
+    const filterSelect = document.getElementById('status-filter');
+    filterSelect.addEventListener('change', function() {
+        const status = this.value;
+        
+        // Filter grid view
+        document.querySelectorAll('.student-card').forEach(card => {
+            const studentId = card.dataset.studentId;
+            const currentStatus = attendanceData[studentId];
+            const matches = !status || currentStatus === status;
+            card.style.display = matches ? 'block' : 'none';
+        });
+        
+        // Filter table view
+        document.querySelectorAll('.diary-table tbody tr').forEach(row => {
+            const studentId = row.dataset.studentId;
+            const currentStatus = attendanceData[studentId];
+            const matches = !status || currentStatus === status;
+            row.style.display = matches ? '' : 'none';
+        });
+    });
+}
+
+function requestOTP() {
+    if (Object.keys(attendanceData).length === 0) {
+        showToast('Please mark attendance for at least one student', 'warning');
+        return;
+    }
+    
+    // In a real application, you would make an AJAX request to generate and send OTP
+    // For demo purposes, we'll just show the modal with a simulated OTP
+    showToast('OTP sent to your registered email', 'info');
+    
+    // Start OTP timer (2 minutes)
+    let timeLeft = 120;
+    clearInterval(otpTimerInterval);
+    
+    otpTimerInterval = setInterval(() => {
+        timeLeft--;
+        
+        if (timeLeft <= 0) {
+            clearInterval(otpTimerInterval);
+            document.getElementById('otpTimer').textContent = 'OTP Expired';
+            document.getElementById('otpInput').disabled = true;
+        } else {
+            const minutes = Math.floor(timeLeft / 60);
+            const seconds = timeLeft % 60;
+            document.getElementById('otpTimer').textContent = 
+                `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        }
+    }, 1000);
+    
+    // Show OTP modal
+    document.getElementById('otpInput').value = '';
+    document.getElementById('otpInput').disabled = false;
+    document.getElementById('otpTimer').textContent = '02:00';
+    new bootstrap.Modal(document.getElementById('otpModal')).show();
+}
+
+function verifyOTP() {
+    const enteredOTP = document.getElementById('otpInput').value;
+    
+    // In a real application, you would verify the OTP with the server
+    // For demo purposes, we'll accept any 6-digit code
+    if (enteredOTP.length === 6) {
+        clearInterval(otpTimerInterval);
+        submitAttendance();
+        bootstrap.Modal.getInstance(document.getElementById('otpModal')).hide();
+    } else {
+        showToast('Please enter a valid 6-digit OTP', 'error');
+    }
+}
+
+function submitAttendance() {
+    document.getElementById('attendance-data').value = JSON.stringify(attendanceData);
+    document.getElementById('attendance-form').submit();
+}
+
+function showToast(message, type = 'info') {
+    // Create and show a toast notification
+    const toastContainer = document.getElementById('toast-container') || createToastContainer();
+    const toast = document.createElement('div');
+    
+    toast.className = `toast align-items-center text-white bg-${type} border-0`;
+    toast.setAttribute('role', 'alert');
+    toast.setAttribute('aria-live', 'assertive');
+    toast.setAttribute('aria-atomic', 'true');
+    
+    toast.innerHTML = `
+        <div class="d-flex">
+            <div class="toast-body">${message}</div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+        </div>
+    `;
+    
+    toastContainer.appendChild(toast);
+    const bsToast = new bootstrap.Toast(toast);
+    bsToast.show();
+    
+    // Remove toast after it hides
+    toast.addEventListener('hidden.bs.toast', () => {
+        toast.remove();
+    });
+}
+
+function createToastContainer() {
+    const container = document.createElement('div');
+    container.id = 'toast-container';
+    container.className = 'toast-container position-fixed top-0 end-0 p-3';
+    container.style.zIndex = '9999';
+    document.body.appendChild(container);
+    return container;
+}
+
+   // 3) Robust modal cleanup handlers
+    // Remove any leftover backdrop BEFORE a modal opens
+    document.querySelectorAll('.modal').forEach(modalEl => {
+        modalEl.addEventListener('show.bs.modal', function () {
+            // if another leftover backdrop exists, remove it
+            document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+        });
+
+        // on hidden, remove backdrops and restore body scrolling
+        modalEl.addEventListener('hidden.bs.modal', function () {
+            document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+            document.body.classList.remove('modal-open');
+            document.body.style.overflow = '';
+            document.body.style.paddingRight = '';
+        });
+    });
+
+    // 4) Safety-net: if a backdrop exists but there is no visible modal, remove it
+    // (handles cases where Bootstrap failed silently)
+    const observer = new MutationObserver(() => {
+        const backdrop = document.querySelector('.modal-backdrop');
+        const anyShown = !!document.querySelector('.modal.show');
+        if (backdrop && !anyShown) {
+            backdrop.remove();
+            document.body.classList.remove('modal-open');
+            document.body.style.overflow = '';
+            document.body.style.paddingRight = '';
+        }
+    });
+    observer.observe(document.body, { childList: true, subtree: true });
+
+    // 5) Allow manual cleanup by pressing Esc (extra safety)
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+            document.body.classList.remove('modal-open');
+            document.body.style.overflow = '';
+            document.body.style.paddingRight = '';
+            document.querySelectorAll('.modal.show').forEach(m => {
+                try { bootstrap.Modal.getInstance(m)?.hide(); } catch(e) {}
+            });
+        }
+    });
+
+    // 6) Final cleanup in case something stuck earlier
+    setTimeout(() => {
+        document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+        document.body.classList.remove('modal-open');
+        document.body.style.overflow = '';
+        document.body.style.paddingRight = '';
+    }, 500);
+</script>
+{% endblock %}

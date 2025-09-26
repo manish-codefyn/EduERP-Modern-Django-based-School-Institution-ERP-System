@@ -1,0 +1,210 @@
+{% extends 'hr/base.html' %}
+{% load static %}
+
+{% block title %}{{ application.staff.user.get_full_name }}'s Leave Application - {{ organization.name|default:"ERP System" }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+
+    <!-- Header -->
+    <div class="header-section mb-4">
+        <div class="row align-items-center">
+            <div class="col-md-7 d-flex align-items-center">
+                <div class="header-icon me-3">
+                    <i class="bi bi-calendar-check display-6 text-primary"></i>
+                </div>
+                <div>
+                    <h1 class="h3 fw-bold mb-1">Leave Application Details</h1>
+                    <p class="text-custom mb-0">Review leave request information</p>
+                </div>
+            </div>
+            <div class="col-md-5">
+                <div class="d-flex justify-content-end align-items-center gap-2">
+                    <a href="{% url 'hr:leave_application_list' %}" class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-left me-1"></i> Back to List
+                    </a>
+                    <div class="dropdown">
+                    <button class="btn btn-outline-secondary dropdown-toggle" type="button" id="exportDropdown"
+                        data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="bi bi-download me-1"></i> Export
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="exportDropdown">
+                        <li class="dropdown-header">Export Application</li>
+                        <li><a class="dropdown-item" href="{% url 'hr:leave_application_detail_export' application.pk %}?format=csv">
+                            <i class="bi bi-filetype-csv me-2"></i> Export CSV</a></li>
+                        <li><a class="dropdown-item" href="{% url 'hr:leave_application_detail_export' application.pk %}?format=excel">
+                            <i class="bi bi-file-earmark-excel me-2"></i> Export Excel</a></li>
+                        <li><a class="dropdown-item" href="{% url 'hr:leave_application_detail_export' application.pk %}?format=pdf">
+                            <i class="bi bi-file-earmark-pdf me-2"></i> Export PDF</a></li>
+                    </ul>
+                </div>
+                    {% if application.status == 'pending' and application.staff.user == request.user %}
+                    <a href="{% url 'hr:leave_application_update' application.pk %}" class="btn btn-outline-primary">
+                        <i class="bi bi-pencil me-1"></i> Edit
+                    </a>
+                    {% endif %}
+                    {% if can_review and application.status == 'pending' %}
+                    <a href="{% url 'hr:leave_application_review' application.pk %}" class="btn btn-outline-warning">
+                        <i class="bi bi-clipboard-check me-1"></i> Review
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Details Card -->
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card card-custom mb-4">
+                <div class="card-header bg-transparent border-0 pt-4 px-4">
+                    <h5 class="card-title mb-0 fw-bold text-custom">Application Information</h5>
+                    <p class="text-custom mb-0">Complete details of this leave application</p>
+                </div>
+                <div class="card-body">
+                    <div class="row g-4">
+                        <div class="col-md-6">
+                            <h6 class="text-custom small fw-bold">Staff Member</h6>
+                            <p class="mb-0">{{ application.staff.user.get_full_name }}</p>
+                            <small class="text-custom">{{ application.staff.designation|default:"Staff Member" }}</small>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <h6 class="text-custom small fw-bold">Leave Type</h6>
+                            <p class="mb-0">{{ application.leave_type.name }}</p>
+                            <small class="text-custom">Code: {{ application.leave_type.code }}</small>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <h6 class="text-custom small fw-bold">Start Date</h6>
+                            <p class="mb-0">{{ application.start_date|date:"M d, Y" }}</p>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <h6 class="text-custom small fw-bold">End Date</h6>
+                            <p class="mb-0">{{ application.end_date|date:"M d, Y" }}</p>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <h6 class="text-custom small fw-bold">Duration</h6>
+                            <p class="mb-0">{{ application.total_days }} day{{ application.total_days|pluralize }}</p>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <h6 class="text-custom small fw-bold">Status</h6>
+                            <p class="mb-0">
+                                {% if application.status == 'pending' %}
+                                <span class="badge bg-warning">
+                                    <i class="bi bi-clock me-1"></i>{{ application.get_status_display }}
+                                </span>
+                                {% elif application.status == 'approved' %}
+                                <span class="badge bg-success">
+                                    <i class="bi bi-check-circle me-1"></i>{{ application.get_status_display }}
+                                </span>
+                                {% elif application.status == 'rejected' %}
+                                <span class="badge bg-danger">
+                                    <i class="bi bi-x-circle me-1"></i>{{ application.get_status_display }}
+                                </span>
+                                {% else %}
+                                <span class="badge bg-secondary">
+                                    <i class="bi bi-dash-circle me-1"></i>{{ application.get_status_display }}
+                                </span>
+                                {% endif %}
+                            </p>
+                        </div>
+                        
+                        <div class="col-12">
+                            <h6 class="text-custom small fw-bold">Reason</h6>
+                            <p class="mb-0">{{ application.reason|linebreaks }}</p>
+                        </div>
+                        
+                        {% if application.supporting_document %}
+                        <div class="col-12">
+                            <h6 class="text-custom small fw-bold">Supporting Document</h6>
+                            <a href="{{ application.supporting_document.url }}" target="_blank" class="btn btn-outline-primary btn-sm">
+                                <i class="bi bi-download me-1"></i> Download Document
+                            </a>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+         {% if application.status == 'approved' or application.status == 'rejected' %}
+<div class="card card-custom">
+    <div class="card-header bg-transparent border-0 pt-4 px-4">
+        <h5 class="card-title mb-0 fw-bold text-custom">Approval Details</h5>
+        <p class="text-custom mb-0">Review and approval information</p>
+    </div>
+    <div class="card-body">
+        <div class="row g-4">
+            <div class="col-md-6">
+                <h6 class="text-custom small fw-bold">Approved/Rejected By</h6>
+                <p class="mb-0">{{ application.approved_by.get_full_name|default:application.approved_by.username }}</p>
+            </div>
+            
+            <div class="col-md-6">
+                <h6 class="text-custom small fw-bold">Decision Date</h6>
+                <p class="mb-0">{{ application.approved_date|date:"M d, Y H:i" }}</p>
+            </div>
+            
+            {% if application.remarks %}
+            <div class="col-12">
+                <h6 class="text-custom small fw-bold">Remarks</h6>
+                <p class="mb-0">{{ application.remarks|linebreaks }}</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endif %}
+
+        </div>
+        
+        <!-- Timeline Sidebar -->
+        <div class="col-lg-4">
+            <div class="card card-custom">
+                <div class="card-header bg-transparent border-0 pt-4 px-4">
+                    <h5 class="card-title mb-0 fw-bold text-custom">Application Timeline</h5>
+                    <p class="text-custom mb-0">History of this application</p>
+                </div>
+                <div class="card-body">
+                    <div class="timeline">
+                        <div class="timeline-item">
+                            <div class="timeline-marker bg-primary"></div>
+                            <div class="timeline-content">
+                                <h6 class="fw-bold mb-1">Application Submitted</h6>
+                                <p class="text-custom mb-0 small">{{ application.created_at|date:"M d, Y H:i" }}</p>
+                                <p class="mb-0 small">By: {{ application.staff.user.get_full_name }}</p>
+                            </div>
+                        </div>
+                        
+                        {% if application.status == 'approved' or application.status == 'rejected' %}
+                        <div class="timeline-item">
+                            <div class="timeline-marker bg-{% if application.status == 'approved' %}success{% else %}danger{% endif %}"></div>
+                            <div class="timeline-content">
+                                <h6 class="fw-bold mb-1">Application {{ application.get_status_display }}</h6>
+                                <p class="text-custom mb-0 small">{{ application.approved_date|date:"M d, Y H:i" }}</p>
+                                <p class="mb-0 small">By: {{ application.approved_by.get_full_name }}</p>
+                                {% if application.remarks %}
+                                <p class="mb-0 small">Remarks: {{ application.remarks }}</p>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endif %}
+                        
+                        <div class="timeline-item">
+                            <div class="timeline-marker bg-secondary"></div>
+                            <div class="timeline-content">
+                                <h6 class="fw-bold mb-1">Last Updated</h6>
+                                <p class="text-custom mb-0 small">{{ application.updated_at|date:"M d, Y H:i" }}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

@@ -1,0 +1,92 @@
+{% extends 'hr/base.html' %}
+{% load crispy_forms_tags %}
+{% load static %}
+
+{% block title %}{{ title|default:"Leave Balance Form" }} - {{ organization.name|default:"ERP System" }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+
+    <!-- Header -->
+    <div class="header-section mb-4">
+        <div class="row align-items-center">
+            <div class="col-md-7 d-flex align-items-center">
+                <div class="header-icon me-3">
+                    <i class="bi bi-pencil-square display-6 text-primary"></i>
+                </div>
+                <div>
+                    <h1 class="h3 fw-bold mb-1">{{ title|default:"Manage Leave Balance" }}</h1>
+                    <p class="text-custom mb-0">Create or update leave allocation for staff members</p>
+                </div>
+            </div>
+            <div class="col-md-5 d-flex justify-content-end">
+                <a href="{% url 'hr:leave_balance_list' %}" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left me-1"></i> Back to List
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Form Card -->
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card card-custom">
+                <div class="card-header bg-transparent border-0 pt-4 px-4">
+                    <h5 class="card-title mb-0 fw-bold text-custom">Leave Balance Form</h5>
+                    <p class="text-custom mb-0">Fill in details to allocate or update leave</p>
+                </div>
+                <div class="card-body px-4 pb-4">
+                    
+                    <!-- Show non-field errors -->
+                    {% if form.non_field_errors %}
+                    <div class="alert alert-danger">
+                        {{ form.non_field_errors }}
+                    </div>
+                    {% endif %}
+
+                    <form method="post" novalidate>
+                        {% csrf_token %}
+                        <div class="row g-3">
+
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Staff</label>
+                                {{ form.staff|as_crispy_field }}
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Leave Type</label>
+                                {{ form.leave_type|as_crispy_field }}
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Year</label>
+                                {{ form.year|as_crispy_field }}
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Total Allocated</label>
+                                {{ form.total_allocated|as_crispy_field }}
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Carry Forward</label>
+                                {{ form.carry_forward|as_crispy_field }}
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-end gap-2 mt-4">
+                            <a href="{% url 'hr:leave_balance_list' %}" class="btn btn-outline-secondary">
+                                <i class="bi bi-x-circle me-1"></i> Cancel
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-save me-1"></i> Save
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

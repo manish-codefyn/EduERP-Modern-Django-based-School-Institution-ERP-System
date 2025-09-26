@@ -1,0 +1,152 @@
+<!-- templates/teachers/teachers_list_pdf.html -->
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+  <style>
+/* Page size and margins */
+@page {
+    size: letter landscape;
+    margin: 50pt 20pt 50pt 20pt; /* top, right, bottom, left */
+}
+
+/* General body font */
+body {
+    font-family: Arial, sans-serif;
+    font-size: 10pt;
+}
+
+/* Header section */
+.header {
+    text-align: center;
+    margin-bottom: 10px;
+    padding-bottom: 5px;
+    border-bottom: 1px solid #ecc4c4;
+}
+
+.report-title {
+    font-size: 18pt;
+    font-weight: bold;
+}
+
+.report-date {
+    font-size: 10pt;
+    color: #666;
+}
+
+/* Table styling */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 5px;
+}
+
+th, td {
+    border: 1px solid #666;
+    padding: 4px;
+    text-align: left;
+    vertical-align: top;
+}
+
+th {
+    background-color: #f0f0f0;
+    font-weight: bold;
+}
+
+/* Alternate row colors */
+tr:nth-child(odd) {
+    background-color: #f9f9f9;
+}
+
+/* Summary section below table */
+.summary {
+    margin-top: 10px;
+    padding: 5px;
+    background-color: #f5f5f5;
+}
+
+/* Inline summary for PDF header/footer */
+.summary td {
+    border: none;
+    padding: 2px 0;
+}
+</style>
+
+</head>
+<body>
+    <div class="header">
+          
+      <table border="1" cellspacing="0" cellpadding="8" width="100%" style="border-collapse: collapse; font-size: 12px;">
+    <tr>
+        <td width="20%" align="center">
+            {% if logo %}
+                <img src="{{ logo }}" alt="{{ organization.name }} Logo" width="215">
+            {% endif %}
+        </td>
+        <td width="80%">
+            <strong style="font-size: 16px;">{{ organization.name }}</strong><br>
+            {% if organization.email %}Email: {{ organization.email }}{% endif %}
+            {% if organization.email and organization.mobile %} | {% endif %}
+            {% if organization.mobile %}Mobile: {{ organization.mobile }}{% endif %}<br>
+            {{ organization.address }}
+        </td>
+    </tr>
+    <tr>
+        <td colspan="2" align="center" style="background-color: #f2f2f2; font-weight: bold;">
+            Teachers List Report
+        </td>
+    </tr>
+   
+</table>
+
+    </div>
+
+    
+    <table>
+        <thead>
+            <tr>
+                <th>Employee ID</th>
+                <th>Name</th>
+               
+                <th>Phone</th>
+                <th>Department</th>
+                <th>Designation</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for teacher in teachers_data %}
+            <tr>
+                <td>{{ teacher.employee_id }}</td>
+                <td>{{ teacher.full_name }}</td>
+              
+                <td>{{ teacher.mobile  }}</td>
+                <td>{{ teacher.department }}</td>
+                <td>{{ teacher.designation }}</td>
+                <td>{{ teacher.status }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+
+ <table width="100%" cellspacing="0" cellpadding="0" style="border:none; font-size:12px; margin-top: 20px;">
+    <tr>
+        <!-- Left side: summary text -->
+       <td align="left" style="border:none; vertical-align: top;">
+        <strong>Total Teachers:</strong> {{ total_count }}<br>
+        <strong>Active Teachers:</strong> {{ active_count }}<br>
+        <strong>Report Generated:</strong> {{ export_date }}
+        </td>
+        <!-- Right side: stamp -->
+        <td align="right" style="border:none; vertical-align: top;">
+            {% if stamp %}
+                <img src="{{ stamp }}" alt="Stamp" style="width:100px; height:100px;">
+            {% endif %}
+        </td>
+    </tr>
+</table>
+
+
+</body>
+</html>

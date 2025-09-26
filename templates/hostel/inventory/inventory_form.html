@@ -1,0 +1,61 @@
+{% extends 'base.html' %}
+{% load static crispy_forms_tags %}
+
+{% block title %}  
+    {% if form.instance.pk %} Edit Inventory Item - {{ organization.name|default:"ERP System" }}  
+    {% else %} Add Inventory Item - {{ organization.name|default:"ERP System" }}  
+    {% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="card card-custom shadow-sm border-0">
+        <div class="card-header detail-card-header">
+            <h3 class="mb-0">
+                <i class="bi bi-box-seam me-2"></i>
+                {% if form.instance.pk %} Edit Inventory Item {% else %} Add New Inventory Item {% endif %}
+            </h3>
+        </div>
+        <div class="card-body">
+            <form method="post" id="inventoryForm" novalidate>
+                {% csrf_token %}
+
+                {% if form.non_field_errors %}
+                <div class="alert alert-danger d-flex align-items-center">
+                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                    <div>{{ form.non_field_errors }}</div>
+                </div>
+                {% endif %}
+
+                <div class="row">
+                    {% for field in form %}
+                        <div class="col-md-6 mb-3">
+                            {{ field|as_crispy_field }}
+
+                            {% if field.errors %}
+                                <div class="text-danger small mt-1">
+                                    {{ field.errors|striptags }}
+                                </div>
+                            {% endif %}
+
+                            {% if field.help_text %}
+                                <small class="form-text text-muted">{{ field.help_text }}</small>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                </div>
+
+                <div class="d-flex gap-2 justify-content-end mt-4 pt-3 border-top">
+                    <a href="{% url 'hostel:inventory_list' %}" class="btn btn-secondary">
+                        <i class="bi bi-arrow-left me-1"></i> Cancel
+                    </a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-check-circle me-1"></i>
+                        {% if form.instance.pk %} Update Item {% else %} Create Item {% endif %}
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

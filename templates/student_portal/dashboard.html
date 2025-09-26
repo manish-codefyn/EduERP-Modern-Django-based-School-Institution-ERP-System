@@ -1,0 +1,82 @@
+{% extends "student_portal/base.html" %}
+
+{% block title %}Student Portal - {{ organization.name|default:"Codefyn" }}{% endblock %}
+
+{% block header_name %}{{ student.first_name }} {{ student.last_name}}{% endblock %}
+{% block header_avatar %}{{ student.avatar_url|default:"https://i.pravatar.cc/60?img=32" }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Quick Stats Cards -->
+    <div class="row">
+        <div class="col-6">
+            <div class="dashboard-card text-center">
+                <i class="bi bi-calendar-check card-icon"></i>
+                <h3 class="h6">Attendance</h3>
+                <p class="fw-bold text-success mb-0 small">{{ attendance_percentage }}%</p>
+            </div>
+        </div>
+        <div class="col-6">
+            <div class="dashboard-card text-center">
+                <i class="bi bi-award card-icon"></i>
+                <h3 class="h6">Overall Grade</h3>
+                <p class="fw-bold text-primary mb-0 small">{{ overall_grade }}</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+<div class="quick-actions my-4">
+    <h3>Quick Actions</h3>
+    <div class="actions-grid">
+        <a href="{% url 'student_portal:timetable' %}" class="action-item">
+            <div class="action-icon"><i class="bi bi-calendar3"></i></div>
+            <span>Timetable</span>
+        </a>
+        <a href="{% url 'student_portal:academic_overview' %}" class="action-item">
+            <div class="action-icon"><i class="bi bi-book"></i></div>
+            <span>Assignments</span>
+        </a>
+        <a href="{% url 'student_portal:notifications' %}" class="action-item">
+            <div class="action-icon"><i class="bi bi-bell"></i></div>
+            <span>Notices</span>
+        </a>
+        <a href="{% url 'student_portal:resources' %}" class="action-item">
+            <div class="action-icon"><i class="bi bi-people"></i></div>
+            <span>Community</span>
+        </a>
+    </div>
+</div>
+    <!-- Today's Classes -->
+    <div class="dashboard-card">
+        <h3>Today's Classes</h3>
+        {% for cls in todays_classes %}
+        <div class="class-item">
+            <div class="class-time">{{ cls.time }}</div>
+            <div>
+                <p class="mb-0 fw-bold">{{ cls.subject }}</p>
+                <p class="mb-0 small text-muted">{{ cls.teacher }}</p>
+            </div>
+        </div>
+        {% empty %}
+        <p class="text-muted">No classes scheduled today.</p>
+        {% endfor %}
+    </div>
+
+    <!-- Recent Grades -->
+    <div class="dashboard-card grades-table">
+        <h3>Recent Grades</h3>
+        {% for grade in recent_grades %}
+        <div class="d-flex justify-content-between align-items-center py-2 {% if not forloop.last %}border-bottom{% endif %}">
+            <div>
+                <div class="fw-500">{{ grade.subject }}</div>
+                <div class="small text-muted">{{ grade.date|date:"M d, Y" }}</div>
+            </div>
+            <div class="grade-badge">{{ grade.grade }}</div>
+        </div>
+        {% empty %}
+        <p class="text-muted">No grades available.</p>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

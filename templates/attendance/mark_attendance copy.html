@@ -1,0 +1,95 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Mark Attendance - {{ organization.name|default:"ERP System" }}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-2">
+        <h1 class="h2">Mark Attendance</h1>
+        <a href="{% url 'attendance:attendance_list' %}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-1"></i> Back to Attendance List
+        </a>
+    </div>
+
+    <!-- Attendance Form -->
+    <form method="post" id="attendanceForm">
+        {% csrf_token %}
+        <div class="card card-custom mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Class: {{ class_obj.name }} | Date: {{ today|date:"M d, Y" }}</h5>
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-check2-circle me-1"></i> Save Attendance
+                </button>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table id="attendanceTable" class="w-100 table-custom table-hover">
+                        <thead>
+                            <tr>
+                                <th>Roll No</th>
+                                <th>Student Name</th>
+                                <th>Status</th>
+                                <th>Remarks</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for student in students %}
+                            <tr>
+                                <td>{{ student.roll_number }}</td>
+                                <td>{{ student.full_name }}</td>
+                                <td>
+                                    <div class="btn-group" role="group">
+                                        <input type="radio" class="btn-check" name="status_{{ student.id }}" id="present_{{ student.id }}" value="present" checked>
+                                        <label class="btn btn-outline-success btn-sm" for="present_{{ student.id }}">Present</label>
+
+                                        <input type="radio" class="btn-check" name="status_{{ student.id }}" id="absent_{{ student.id }}" value="absent">
+                                        <label class="btn btn-outline-danger btn-sm" for="absent_{{ student.id }}">Absent</label>
+
+                                        <input type="radio" class="btn-check" name="status_{{ student.id }}" id="leave_{{ student.id }}" value="leave">
+                                        <label class="btn btn-outline-warning btn-sm" for="leave_{{ student.id }}">Leave</label>
+                                    </div>
+                                </td>
+                                <td>
+                                    <input type="text" name="remark_{{ student.id }}" class="form-control form-control-sm" placeholder="Optional remark">
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="4" class="text-center py-4">
+                                    <i class="bi bi-emoji-frown display-6 text-custom d-block mb-2"></i>
+                                    <p>No students found for this class.</p>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+
+<script>
+$(document).ready(function() {
+    $('#attendanceTable').DataTable({
+        paging: false,
+        searching: false,
+        info: false,
+        ordering: false
+    });
+});
+</script>
+{% endblock %}

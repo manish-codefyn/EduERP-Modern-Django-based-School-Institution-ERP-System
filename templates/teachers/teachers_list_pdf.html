@@ -1,0 +1,116 @@
+<!-- templates/teachers/teachers_list_pdf.html -->
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <style>
+      @page {
+      size: letter portrait;
+            @frame header_frame {
+                -pdf-frame-content: header_content;
+                left: 10pt; width: 592pt; top: 2pt; height: 50pt;
+            }
+            @frame content_frame {
+                left: 10pt; width: 592pt; top: 2pt; height: 660pt;
+            }
+            @frame footer_frame {
+                -pdf-frame-content: footer_content;
+                left: 10pt; width: 592pt; top: 750pt; height: 20pt;
+            }
+        }
+
+        body { font-family: Arial, sans-serif; }
+        .header { text-align: center; margin-bottom: 10px; border-bottom: 1px solid #f2f2f2; padding-bottom: 5px; }
+        .report-title { font-size: 24px; font-weight: bold; }
+        .report-date { font-size: 14px; color: #666; }
+        table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+        th, td { border: 1px solid #f2f2f2; padding: 3px; text-align: left; }
+        th { background-color: #f2f2f2; font-weight: bold; }
+        tr:nth-child(even) { background-color: #f9f9f9; }
+        .summary { margin-top: 10px; padding: 5px; background-color: #f5f5f5; border-radius: 5px; }
+    </style>
+</head>
+<body>
+    <div class="header">
+          
+      <table border="1" cellspacing="0" cellpadding="8" width="100%" style="border-collapse: collapse; font-size: 12px;">
+    <tr>
+        <td width="20%" align="center">
+            {% if logo %}
+                <img src="{{ logo }}" alt="{{ organization.name }} Logo" width="215">
+            {% endif %}
+        </td>
+        <td width="80%">
+            <strong style="font-size: 16px;">{{ organization.name }}</strong><br>
+            {% if organization.email %}Email: {{ organization.email }}{% endif %}
+            {% if organization.email and organization.mobile %} | {% endif %}
+            {% if organization.mobile %}Mobile: {{ organization.mobile }}{% endif %}<br>
+            {{ organization.address }}
+        </td>
+    </tr>
+    <tr>
+        <td colspan="2" align="center" style="background-color: #f2f2f2; font-weight: bold;">
+            Teachers List Report
+        </td>
+    </tr>
+   
+</table>
+
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Employee ID</th>
+                <th>Name</th>
+              
+                <th>Mobile</th>
+                <th>Qualification</th>
+                <th>Experience</th>
+                <th>Subjects</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for teacher in teachers %}
+            <tr>
+                <td>{{ teacher.employee_id }}</td>
+                <td>{{ teacher.get_full_name }}</td>
+               
+                <td>{{ teacher.mobile|default:"-" }}</td>
+                <td>{{ teacher.get_qualification_display }}</td>
+                <td>{{ teacher.experience }} years</td>
+                <td>
+                    {% for subject in teacher.subjects.all %}
+                    {{ subject.name }}{% if not forloop.last %}, {% endif %}
+                    {% empty %}
+                    -
+                    {% endfor %}
+                </td>
+                <td>{{ teacher.is_active|yesno:"Active,Inactive" }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+ <table width="100%" cellspacing="0" cellpadding="0" style="border:none; font-size:12px; margin-top: 20px;">
+    <tr>
+        <!-- Left side: summary text -->
+        <td align="left" style="border:none; vertical-align: top;">
+            <strong>Total Teachers:</strong> {{ total_count }}<br>
+            <strong>Active Teachers:</strong> {{ teachers|length|add:"0" }}<br>
+            <strong>Report Generated:</strong> {{ export_date }}
+        </td>
+
+        <!-- Right side: stamp -->
+        <td align="right" style="border:none; vertical-align: top;">
+            {% if stamp %}
+                <img src="{{ stamp }}" alt="Stamp" style="width:100px; height:100px;">
+            {% endif %}
+        </td>
+    </tr>
+</table>
+
+
+</body>
+</html>

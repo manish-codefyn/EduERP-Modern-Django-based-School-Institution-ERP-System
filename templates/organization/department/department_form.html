@@ -1,0 +1,144 @@
+{% extends 'organization/base.html' %}
+{% load static %}
+
+{% block title %}Departments - {{ institution.name|default:"Codefyn" }}{% endblock %}
+
+{% load widget_tweaks %}
+
+{% block content %}
+<div class="card card-custom">
+    <div class="card-header">
+        <h3 class="card-title">
+            {% if object %}Edit Department{% else %}Create New Department{% endif %}
+        </h3>
+    </div>
+    <div class="card-body">
+        {% if not can_create_department and not object %}
+        <div class="alert alert-warning">
+            <h4 class="alert-heading">Institution Required</h4>
+            <p>You need to be associated with an institution to create departments.</p>
+            <p>Please contact your administrator to assign you to an institution.</p>
+            <a href="{% url 'organization:department_list' %}" class="btn btn-secondary">Back to List</a>
+        </div>
+        {% else %}
+        <form method="post">
+            {% csrf_token %}
+            
+            {% if form.non_field_errors %}
+            <div class="alert alert-danger">
+                {% for error in form.non_field_errors %}
+                    {{ error }}
+                {% endfor %}
+            </div>
+            {% endif %}
+            
+            {% if request.user.is_superuser %}
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="form-group">
+                        <label for="{{ form.institution.id_for_label }}">Institution *</label>
+                        {{ form.institution|add_class:"form-control" }}
+                        {% for error in form.institution.errors %}
+                            <div class="text-danger">{{ error }}</div>
+                        {% endfor %}
+                        <small class="form-text text-muted">Select the institution for this department</small>
+                    </div>
+                </div>
+            </div>
+            {% else %}
+            <div class="alert alert-info">
+                <strong>Institution:</strong> {{ user_institution.name }}
+                <input type="hidden" name="institution" value="{{ user_institution.id }}">
+            </div>
+            {% endif %}
+            
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label for="{{ form.name.id_for_label }}">Department Name *</label>
+                        {{ form.name|add_class:"form-control" }}
+                        {% for error in form.name.errors %}
+                            <div class="text-danger">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label for="{{ form.code.id_for_label }}">Department Code *</label>
+                        {{ form.code|add_class:"form-control" }}
+                        {% for error in form.code.errors %}
+                            <div class="text-danger">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Rest of your form fields remain the same -->
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label for="{{ form.short_name.id_for_label }}">Short Name</label>
+                        {{ form.short_name|add_class:"form-control" }}
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label for="{{ form.department_type.id_for_label }}">Department Type</label>
+                        {{ form.department_type|add_class:"form-control" }}
+                    </div>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="{{ form.description.id_for_label }}">Description</label>
+                {{ form.description|add_class:"form-control" }}
+            </div>
+            
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label for="{{ form.email.id_for_label }}">Email</label>
+                        {{ form.email|add_class:"form-control" }}
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label for="{{ form.phone.id_for_label }}">Phone</label>
+                        {{ form.phone|add_class:"form-control" }}
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label for="{{ form.office_location.id_for_label }}">Office Location</label>
+                        {{ form.office_location|add_class:"form-control" }}
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label for="{{ form.established_date.id_for_label }}">Established Date</label>
+                        {{ form.established_date|add_class:"form-control" }}
+                    </div>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <div class="form-check">
+                    {{ form.is_active|add_class:"form-check-input" }}
+                    <label for="{{ form.is_active.id_for_label }}" class="form-check-label">Active</label>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <button type="submit" class="btn btn-primary">
+                    {% if object %}Update{% else %}Create{% endif %} Department
+                </button>
+                <a href="{% url 'organization:department_list' %}" class="btn btn-secondary">Cancel</a>
+            </div>
+        </form>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ title }}</title>
+    <style>
+          @page {
+        size: letter portrait;
+        @frame content_frame { left: 25pt; width: 562pt; top: 25pt; height: 742pt; }
+        }
+
+        body { font-family: Arial, sans-serif; font-size: 12px; }
+        table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+        th, td { border: 1px solid #333; padding: 6px; text-align: left; vertical-align: top; }
+        th { background-color: #f2f2f2; width: 30%; }
+        h2, h4 { margin: 0; padding: 0; }
+        .logo { height: 50px; }
+        .header { text-align: center; margin-bottom: 20px; }
+        .section-title { background-color: #ddd; padding: 4px 8px; font-weight: bold; }
+        .footer { text-align: right; font-size: 10px; margin-top: 30px; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        {% if logo %}
+            <img src="{{ logo }}" class="logo" width="210">
+        {% endif %}
+        <h2>{{ organization.name|default:"Organization" }}</h2>
+        <h4>{{ title }}</h4>
+        <p>Export Date: {{ export_date|date:"Y-m-d H:i" }}</p>
+    </div>
+
+    <!-- Staff Info -->
+    <table>
+        <tr>
+            <th>Employee ID</th>
+            <td>{{ payroll.employee_id }}</td>
+        </tr>
+        <tr>
+            <th>Staff Name</th>
+            <td>{{ payroll.staff_name }}</td>
+        </tr>
+        <tr>
+            <th>Department</th>
+            <td>{{ payroll.staff_department }}</td>
+        </tr>
+        <tr>
+            <th>Designation</th>
+            <td>{{ payroll.staff_designation }}</td>
+        </tr>
+        <tr>
+            <th>Period</th>
+            <td>{{ payroll.month }}/{{ payroll.year }}</td>
+        </tr>
+    </table>
+
+    <!-- Earnings -->
+    <div class="section-title">EARNINGS</div>
+    <table>
+        <tr><th>Basic Salary</th><td>{{ payroll.basic_salary }}</td></tr>
+        <tr><th>House Rent Allowance</th><td>{{ payroll.house_rent_allowance }}</td></tr>
+        <tr><th>Travel Allowance</th><td>{{ payroll.travel_allowance }}</td></tr>
+        <tr><th>Medical Allowance</th><td>{{ payroll.medical_allowance }}</td></tr>
+        <tr><th>Special Allowance</th><td>{{ payroll.special_allowance }}</td></tr>
+        <tr><th>Performance Bonus</th><td>{{ payroll.performance_bonus }}</td></tr>
+        <tr><th>Other Allowances</th><td>{{ payroll.other_allowances }}</td></tr>
+        <tr><th>Total Earnings</th><td>{{ payroll.total_earnings }}</td></tr>
+    </table>
+
+    <!-- Deductions -->
+    <div class="section-title">DEDUCTIONS</div>
+    <table>
+        <tr><th>Professional Tax</th><td>{{ payroll.professional_tax }}</td></tr>
+        <tr><th>Provident Fund</th><td>{{ payroll.provident_fund }}</td></tr>
+        <tr><th>Income Tax</th><td>{{ payroll.income_tax }}</td></tr>
+        <tr><th>Insurance</th><td>{{ payroll.insurance }}</td></tr>
+        <tr><th>Loan Deductions</th><td>{{ payroll.loan_deductions }}</td></tr>
+        <tr><th>Other Deductions</th><td>{{ payroll.other_deductions }}</td></tr>
+        <tr><th>Total Deductions</th><td>{{ payroll.total_deductions }}</td></tr>
+    </table>
+
+    <!-- Net Salary -->
+    <div class="section-title">NET SALARY</div>
+    <table>
+        <tr><th>Net Salary</th><td>{{ payroll.net_salary }}</td></tr>
+    </table>
+
+    <!-- Payment Details -->
+    <div class="section-title">PAYMENT DETAILS</div>
+    <table>
+        <tr><th>Payment Date</th><td>{{ payroll.payment_date }}</td></tr>
+        <tr><th>Payment Mode</th><td>{{ payroll.payment_mode }}</td></tr>
+        <tr><th>Payment Reference</th><td>{{ payroll.payment_reference }}</td></tr>
+        <tr><th>Payment Status</th><td>{{ payroll.payment_status }}</td></tr>
+    </table>
+
+    <!-- Footer -->
+   
+        <tfoot>
+        <tr>
+            <td>
+                <div class="footer">
+                    Generated on {{ export_date }} | Page <pdf:pagenumber> of <pdf:pagecount>
+                </div>
+            </td>
+        </tr>
+    </tfoot>
+  
+</body>
+</html>

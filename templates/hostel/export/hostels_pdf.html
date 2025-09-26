@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>{{ title }}</title>
+    <style>
+        body { font-family: Arial, sans-serif; font-size: 12px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #333; padding: 6px; text-align: left; font-size: 11px; }
+        th { background: #3b5998; color: white; }
+        h2 { text-align: center; margin: 0; }
+        .meta { margin-top: 10px; font-size: 11px; }
+    </style>
+</head>
+<body>
+    <table style="width:100%; border-collapse: collapse; margin-bottom: 30px;">
+    <tr>
+        <!-- Left column: Logo and Organization Name -->
+        <td style="width:30%; vertical-align: top;">
+            {% if logo %}
+            <img src="{{ logo }}" alt="Logo" width="210" style="display:block;">
+            {% endif %}
+        </td>
+        <!-- Right column: Title and Generated Date -->
+        <td style="width:70%; text-align:left; vertical-align: top;">
+            <h1 style="margin:0; font-size:24px; font-weight:600; color:#212529;">
+            {{ organization.name }}</h1> 
+          
+        </td>
+    </tr>
+</table>
+
+    <h2>{{ organization.name }} - Hostel Report</h2>
+    <p class="meta">
+        Total Hostels: {{ total_count }} <br>
+        Export Date: {{ export_date|date:"Y-m-d H:i" }}
+    </p>
+    <table>
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Code</th>
+                <th>Gender</th>
+                <th>Capacity</th>
+                <th>Occupied</th>
+                <th>Available Beds</th>
+                <th>Warden</th>
+                <th>Assistant</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for h in hostels %}
+            <tr>
+                <td>{{ h.name }}</td>
+                <td>{{ h.code }}</td>
+                <td>{{ h.gender_type }}</td>
+                <td>{{ h.capacity }}</td>
+                <td>{{ h.current_occupancy }}</td>
+                <td>{{ h.available_beds }}</td>
+                <td>{{ h.warden }}</td>
+                <td>{{ h.assistant_warden }}</td>
+                <td>{{ h.status }}</td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="9">No hostel records found.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</body>
+</html>

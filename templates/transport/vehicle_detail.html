@@ -1,0 +1,322 @@
+{% extends 'transport/base.html' %}
+{% load static %}
+
+{% block title %}{{ vehicle.vehicle_number }} - Details{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+
+    <!-- Header -->
+    <div class="header-section mb-4">
+        <div class="row align-items-center">
+            <div class="col-md-7 d-flex align-items-center">
+                <div class="header-icon me-3">
+                    <i class="bi bi-truck display-6 text-primary"></i>
+                </div>
+                <div>
+                    <h1 class="h3 fw-bold mb-1">{{ vehicle.vehicle_number }}</h1>
+                    <p class="text-custom mb-0">{{ vehicle.make }} {{ vehicle.model }} • {{ vehicle.year }}</p>
+                </div>
+            </div>
+            <div class="col-md-5">
+                <div class="d-flex justify-content-end align-items-center gap-2">
+                    <a href="{% url 'transport:vehicle_update' vehicle.pk %}" class="btn btn-outline-secondary">
+                        <i class="bi bi-pencil me-1"></i> Edit
+                    </a>
+                    <div class="dropdown">
+                        <button class="btn btn-primary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                            <i class="bi bi-download me-1"></i> Export
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item" href="{% url 'transport:vehicle_export' %}?vehicle_type={{ vehicle.vehicle_type }}&format=csv">
+                                <i class="bi bi-filetype-csv me-2"></i> CSV</a></li>
+                            <li><a class="dropdown-item" href="{% url 'transport:vehicle_export' %}?vehicle_type={{ vehicle.vehicle_type }}&format=excel">
+                                <i class="bi bi-file-earmark-excel me-2"></i> Excel</a></li>
+                            <li><a class="dropdown-item" href="{% url 'transport:vehicle_export' %}?vehicle_type={{ vehicle.vehicle_type }}&format=pdf">
+                                <i class="bi bi-file-earmark-pdf me-2"></i> PDF</a></li>
+                        </ul>
+                    </div>
+                    <a href="{% url 'transport:vehicle_list' %}" class="btn btn-outline-primary">
+                        <i class="bi bi-arrow-left me-1"></i> Back
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Vehicle Details -->
+    <div class="row g-4">
+        <!-- Basic Information -->
+        <div class="col-xl-6">
+            <div class="card card-custom h-100">
+                <div class="card-header bg-transparent border-0">
+                    <h5 class="card-title fw-bold text-custom mb-0">
+                        <i class="bi bi-info-circle me-2"></i>Basic Information
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label small text-custom">Vehicle Number</label>
+                            <p class="fw-semibold">{{ vehicle.vehicle_number }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small text-custom">Vehicle Type</label>
+                            <p class="fw-semibold">{{ vehicle.get_vehicle_type_display }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small text-custom">Make</label>
+                            <p class="fw-semibold">{{ vehicle.make }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small text-custom">Model</label>
+                            <p class="fw-semibold">{{ vehicle.model }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small text-custom">Year</label>
+                            <p class="fw-semibold">{{ vehicle.year }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small text-custom">Color</label>
+                            <p class="fw-semibold">{{ vehicle.color }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small text-custom">Capacity</label>
+                            <p class="fw-semibold">{{ vehicle.capacity }} seats</p>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small text-custom">Fuel Type</label>
+                            <p class="fw-semibold">{{ vehicle.get_fuel_type_display }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Registration & Insurance -->
+        <div class="col-xl-6">
+            <div class="card card-custom h-100">
+                <div class="card-header bg-transparent border-0">
+                    <h5 class="card-title fw-bold text-custom mb-0">
+                        <i class="bi bi-card-checklist me-2"></i>Registration & Insurance
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label small text-custom">Registration Date</label>
+                            <p class="fw-semibold">{{ vehicle.registration_date }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small text-custom">Registration Expiry</label>
+                            <p class="fw-semibold {% if vehicle.registration_expiry < timezone.now.date %}text-danger{% endif %}">
+                                {{ vehicle.registration_expiry }}
+                                {% if vehicle.registration_expiry < timezone.now.date %}
+                                <span class="badge bg-danger ms-1">Expired</span>
+                                {% endif %}
+                            </p>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small text-custom">Insurance Number</label>
+                            <p class="fw-semibold">{{ vehicle.insurance_number|default:"-" }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small text-custom">Insurance Expiry</label>
+                            <p class="fw-semibold {% if vehicle.insurance_expiry and vehicle.insurance_expiry < timezone.now.date %}text-danger{% endif %}">
+                                {{ vehicle.insurance_expiry|default:"-" }}
+                                {% if vehicle.insurance_expiry and vehicle.insurance_expiry < timezone.now.date %}
+                                <span class="badge bg-danger ms-1">Expired</span>
+                                {% endif %}
+                            </p>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small text-custom">Status</label>
+                            <p>
+                                {% if vehicle.is_active %}
+                                <span class="badge bg-success bg-opacity-10 text-success">
+                                    <i class="bi bi-check-circle me-1"></i>Active
+                                </span>
+                                {% else %}
+                                <span class="badge bg-danger bg-opacity-10 text-danger">
+                                    <i class="bi bi-x-circle me-1"></i>Inactive
+                                </span>
+                                {% endif %}
+                            </p>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small text-custom">Created</label>
+                            <p class="fw-semibold">{{ vehicle.created_at|date:"M d, Y" }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Maintenance History -->
+        <div class="col-12">
+            <div class="card card-custom">
+                <div class="card-header bg-transparent border-0 d-flex justify-content-between align-items-center">
+                    <h5 class="card-title fw-bold text-custom mb-0">
+                        <i class="bi bi-tools me-2"></i>Maintenance History
+                    </h5>
+                    <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#addMaintenanceModal">
+                        <i class="bi bi-plus-circle me-1"></i> Add Maintenance
+                    </button>
+                </div>
+                <div class="card-body">
+                    {% if maintenance_records %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Type</th>
+                                    <th>Description</th>
+                                    <th>Cost</th>
+                                    <th>Next Maintenance</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for maintenance in maintenance_records %}
+                                <tr>
+                                    <td>{{ maintenance.date }}</td>
+                                    <td>
+                                        <span class="badge bg-primary bg-opacity-10 text-primary">
+                                            {{ maintenance.get_maintenance_type_display }}
+                                        </span>
+                                    </td>
+                                    <td>{{ maintenance.description|truncatewords:10 }}</td>
+                                    <td>${{ maintenance.cost }}</td>
+                                    <td>{{ maintenance.next_maintenance_date|default:"-" }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-4">
+                        <i class="bi bi-tools fs-1 text-custom"></i>
+                        <p class="text-custom mt-2">No maintenance records found</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<!-- Add Maintenance Modal -->
+<div class="modal fade" id="addMaintenanceModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Add Maintenance Record</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form method="post" action="{% url 'transport:maintenance_create' vehicle.pk %}">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label class="form-label">Maintenance Type</label>
+                        <select class="form-select" name="maintenance_type" required>
+                            <option value="">Select Type</option>
+                            <option value="routine">Routine Maintenance</option>
+                            <option value="repair">Repair</option>
+                            <option value="inspection">Inspection</option>
+                            <option value="accident">Accident Repair</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Date</label>
+                        <input type="date" class="form-control" name="date" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Cost</label>
+                        <input type="number" step="0.01" class="form-control" name="cost" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Description</label>
+                        <textarea class="form-control" name="description" rows="3" required></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Next Maintenance Date</label>
+                        <input type="date" class="form-control" name="next_maintenance_date">
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary">Save Record</button>
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize DataTable
+    
+    // Initialize tooltips
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl)
+    });
+
+   
+
+       // 3) Robust modal cleanup handlers
+    // Remove any leftover backdrop BEFORE a modal opens
+    document.querySelectorAll('.modal').forEach(modalEl => {
+        modalEl.addEventListener('show.bs.modal', function () {
+            // if another leftover backdrop exists, remove it
+            document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+        });
+
+        // on hidden, remove backdrops and restore body scrolling
+        modalEl.addEventListener('hidden.bs.modal', function () {
+            document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+            document.body.classList.remove('modal-open');
+            document.body.style.overflow = '';
+            document.body.style.paddingRight = '';
+        });
+    });
+
+    // 4) Safety-net: if a backdrop exists but there is no visible modal, remove it
+    // (handles cases where Bootstrap failed silently)
+    const observer = new MutationObserver(() => {
+        const backdrop = document.querySelector('.modal-backdrop');
+        const anyShown = !!document.querySelector('.modal.show');
+        if (backdrop && !anyShown) {
+            backdrop.remove();
+            document.body.classList.remove('modal-open');
+            document.body.style.overflow = '';
+            document.body.style.paddingRight = '';
+        }
+    });
+    observer.observe(document.body, { childList: true, subtree: true });
+
+    // 5) Allow manual cleanup by pressing Esc (extra safety)
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+            document.body.classList.remove('modal-open');
+            document.body.style.overflow = '';
+            document.body.style.paddingRight = '';
+            document.querySelectorAll('.modal.show').forEach(m => {
+                try { bootstrap.Modal.getInstance(m)?.hide(); } catch(e) {}
+            });
+        }
+    });
+
+    // 6) Final cleanup in case something stuck earlier
+    setTimeout(() => {
+        document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+        document.body.classList.remove('modal-open');
+        document.body.style.overflow = '';
+        document.body.style.paddingRight = '';
+    }, 500);
+});
+</script>
+{% endblock %}

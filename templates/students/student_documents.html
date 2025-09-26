@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Student Documents - {{ organization.name|default:"School ERP System" }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <h2 class="mb-3">Documents for {{ student.user.get_full_name|default:student.admission_number }}</h2>
+
+    <div class="mb-3">
+        <a href="{% url 'student_document_add' student.id %}" class="btn btn-primary">
+            <i class="bi bi-plus-circle"></i> Add New Document
+        </a>
+    </div>
+
+    {% if student.documents.exists %}
+    <div class="table-responsive">
+        <table class="table table-bordered table-hover">
+            <thead class="table-light">
+                <tr>
+                    <th>Title</th>
+                    <th>Document Type</th>
+                    <th>Description</th>
+                    <th>File</th>
+                    <th>Verified</th>
+                    <th>Verified By</th>
+                    <th>Verified Date</th>
+                    <th>Uploaded At</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for doc in student.documents.all %}
+                <tr>
+                    <td>{{ doc.title }}</td>
+                    <td>{{ doc.get_document_type_display }}</td>
+                    <td>{{ doc.description|default:"-" }}</td>
+                    <td>
+                        {% if doc.document_file %}
+                        <a href="{{ doc.document_file.url }}" target="_blank">Download</a>
+                        {% else %}
+                        -
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if doc.verified %}
+                        <span class="badge bg-success">Yes</span>
+                        {% else %}
+                        <span class="badge bg-warning">No</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if doc.verified_by %}
+                            {{ doc.verified_by.get_full_name }}
+                        {% else %}
+                            -
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if doc.verified_date %}
+                            {{ doc.verified_date|date:"d M Y" }}
+                        {% else %}
+                            -
+                        {% endif %}
+                    </td>
+                    <td>{{ doc.uploaded_at|date:"d M Y H:i" }}</td>
+                    <td>
+                        <a href="{% url 'student_document_edit' student.id doc.id %}" class="btn btn-sm btn-warning">
+                            <i class="bi bi-pencil-square"></i> Edit
+                        </a>
+                        <a href="{% url 'student_document_delete' student.id doc.id %}" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure?');">
+                            <i class="bi bi-trash"></i> Delete
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+        <div class="alert alert-info">
+            No documents found for this student.
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

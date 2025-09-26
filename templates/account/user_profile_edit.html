@@ -1,0 +1,199 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Edit Profile - {{ user.get_full_name }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="header-section">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb breadcrumb-dark">
+                        <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Dashboard</a></li>
+                        <li class="breadcrumb-item"><a href="{% url 'users_profile' %}">My Profile</a></li>
+                        <li class="breadcrumb-item active" aria-current="page">Edit Profile</li>
+                    </ol>
+                </nav>
+                <h1 class="display-6 fw-bold mb-2">Edit Profile</h1>
+                <p class="lead mb-0 opacity-75">Update your personal information</p>
+            </div>
+            <div class="col-md-4 text-md-end">
+                <a href="{% url 'users_profile' %}" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left me-1"></i> Back to Profile
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-lg-12">
+            <div class="card card-custom">
+                <div class="card-header detail-card-header">
+                    <h5 class="card-title mb-0">Edit Profile Information</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post" enctype="multipart/form-data" id="profileForm">
+                        {% csrf_token %}
+                        
+                        <!-- Avatar Upload -->
+                        <div class="row mb-4">
+                            <div class="col-md-4">
+                                <label class="form-label">Profile Picture</label>
+                                <div class="text-center">
+                                    {% if user.avatar %}
+                                        <img src="{{ user.avatar.url }}" alt="Current Avatar" 
+                                             class="rounded-circle d-block mb-2 mx-auto" 
+                                             width="120" height="120" style="object-fit: cover;">
+                                    {% else %}
+                                        <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center mx-auto mb-2" 
+                                             style="width: 120px; height: 120px;">
+                                            <i class="bi bi-person" style="font-size: 3rem;"></i>
+                                        </div>
+                                    {% endif %}
+                                    
+                                    <div class="d-flex gap-2 justify-content-center">
+                                        <input type="file" name="avatar" accept="image/*" 
+                                               class="form-control form-control-sm" id="avatarInput">
+                                        {% if user.avatar %}
+                                            <button type="button" class="btn btn-sm btn-outline-danger" 
+                                                    onclick="removeAvatar()">
+                                                Remove
+                                            </button>
+                                        {% endif %}
+                                    </div>
+                                    <small class="text-custom">JPG, PNG or GIF. Max 2MB.</small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <!-- Personal Information -->
+                            <div class="col-md-6">
+                                <h6 class="border-bottom pb-2 mb-3">Personal Information</h6>
+                                
+                                <div class="mb-3">
+                                    <label class="form-label">First Name *</label>
+                                    <input type="text" name="first_name" class="form-control" 
+                                           value="{{ form.first_name.value|default:'' }}" required>
+                                    {% if form.first_name.errors %}
+                                        <div class="text-danger small">{{ form.first_name.errors }}</div>
+                                    {% endif %}
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label class="form-label">Last Name *</label>
+                                    <input type="text" name="last_name" class="form-control" 
+                                           value="{{ form.last_name.value|default:'' }}" required>
+                                    {% if form.last_name.errors %}
+                                        <div class="text-danger small">{{ form.last_name.errors }}</div>
+                                    {% endif %}
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label class="form-label">Email *</label>
+                                    <input type="email" name="email" class="form-control" 
+                                           value="{{ form.email.value|default:'' }}" required>
+                                    {% if form.email.errors %}
+                                        <div class="text-danger small">{{ form.email.errors }}</div>
+                                    {% endif %}
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label class="form-label">Phone</label>
+                                    <input type="tel" name="phone" class="form-control" 
+                                           value="{{ form.phone.value|default:'' }}" 
+                                           placeholder="+1234567890">
+                                    {% if form.phone.errors %}
+                                        <div class="text-danger small">{{ form.phone.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <!-- Additional Information -->
+                            <div class="col-md-6">
+                                <h6 class="border-bottom pb-2 mb-3">Additional Information</h6>
+                                
+                                <div class="mb-3">
+                                    <label class="form-label">Date of Birth</label>
+                                    <input type="date" name="date_of_birth" class="form-control" 
+                                           value="{{ form.date_of_birth.value|default:'' }}">
+                                    {% if form.date_of_birth.errors %}
+                                        <div class="text-danger small">{{ form.date_of_birth.errors }}</div>
+                                    {% endif %}
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label class="form-label">Secondary Email</label>
+                                    <input type="email" name="secondary_email" class="form-control" 
+                                           value="{{ form.secondary_email.value|default:'' }}">
+                                    {% if form.secondary_email.errors %}
+                                        <div class="text-danger small">{{ form.secondary_email.errors }}</div>
+                                    {% endif %}
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label class="form-label">Address</label>
+                                    <textarea name="address" class="form-control" rows="3"
+                                              placeholder="Enter your full address">{{ form.address.value|default:'' }}</textarea>
+                                    {% if form.address.errors %}
+                                        <div class="text-danger small">{{ form.address.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row mt-4">
+                            <div class="col-12">
+                                <div class="d-flex gap-2 justify-content-end">
+                                    <a href="{% url 'users_profile' %}" class="btn btn-secondary">
+                                        Cancel
+                                    </a>
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="bi bi-check-lg me-1"></i> Update Profile
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function removeAvatar() {
+    if (confirm('Are you sure you want to remove your profile picture?')) {
+        fetch('{% url "avatar_remove" %}', {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}',
+                'Content-Type': 'application/json',
+            },
+        }).then(response => {
+            if (response.ok) {
+                location.reload();
+            }
+        });
+    }
+}
+
+// Preview avatar before upload
+document.getElementById('avatarInput').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            // Update preview image
+            const img = document.querySelector('.rounded-circle');
+            if (img) {
+                img.src = e.target.result;
+            }
+        }
+        reader.readAsDataURL(file);
+    }
+});
+</script>
+{% endblock %}

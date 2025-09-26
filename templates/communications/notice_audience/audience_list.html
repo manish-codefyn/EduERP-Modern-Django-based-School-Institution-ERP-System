@@ -1,0 +1,405 @@
+{% extends 'communications/base.html' %}
+{% load static %}
+
+{% block title %}Notice Audience - {{ organization.name|default:"codefyn" }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="header-section mb-4">
+        <div class="row align-items-center">
+            <div class="col-md-7 d-flex flex-column">
+                <!-- Breadcrumb -->
+                <nav aria-label="breadcrumb" class="mb-2">
+                    <ol class="breadcrumb mb-0">
+                        <li class="breadcrumb-item">
+                            <a href="{% url 'communications:dashboard' %}">
+                                <i class="bi bi-house-door me-1"></i> Dashboard
+                            </a>
+                        </li>
+                        <li class="breadcrumb-item active" aria-current="page">Notice Audience</li>
+                    </ol>
+                </nav>
+
+                <div class="d-flex align-items-center">
+                    <div class="header-icon me-3">
+                        <i class="bi bi-people display-6 text-primary"></i>
+                    </div>
+                    <div>
+                        <h1 class="h3 fw-bold mb-1">Notice Audience</h1>
+                        <p class="text-custom mb-0">Manage and track notice audience engagement</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-5">
+                <div class="d-flex justify-content-end align-items-center gap-2">
+                    <div class="dropdown">
+                        <button class="btn btn-secondary dropdown-toggle" type="button" id="exportDropdown"
+                            data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="bi bi-download me-1"></i> Export
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="exportDropdown">
+                            <li class="dropdown-header">Export Audience</li>
+                            <li>
+                                <a class="dropdown-item" href="{% url 'communications:audience_export' %}?{{ request.GET.urlencode }}&format=csv">
+                                    <i class="bi bi-filetype-csv me-2"></i> Export CSV
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="{% url 'communications:audience_export' %}?{{ request.GET.urlencode }}&format=excel">
+                                    <i class="bi bi-file-earmark-excel me-2"></i> Export Excel
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="{% url 'communications:audience_export' %}?{{ request.GET.urlencode }}&format=pdf">
+                                    <i class="bi bi-file-earmark-pdf me-2"></i> Export PDF
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-xl-3 col-md-6">
+            <div class="card card-custom">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-grow-1">
+                            <h6 class="text-custom mb-2">Total Audience</h6>
+                            <h4 class="mb-0">{{ total_count }}</h4>
+                        </div>
+                        <div class="flex-shrink-0">
+                            <i class="bi bi-people text-primary display-6"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card card-custom">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-grow-1">
+                            <h6 class="text-custom mb-2">Read</h6>
+                            <h4 class="mb-0">{{ read_count }} <small class="text-success">({{ read_percentage|floatformat:1 }}%)</small></h4>
+                        </div>
+                        <div class="flex-shrink-0">
+                            <i class="bi bi-eye text-success display-6"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card card-custom">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-grow-1">
+                            <h6 class="text-custom mb-2">Delivered</h6>
+                            <h4 class="mb-0">{{ delivered_count }} <small class="text-info">({{ delivery_percentage|floatformat:1 }}%)</small></h4>
+                        </div>
+                        <div class="flex-shrink-0">
+                            <i class="bi bi-check-circle text-info display-6"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card card-custom">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-grow-1">
+                            <h6 class="text-custom mb-2">Unread</h6>
+                            <h4 class="mb-0">{{ unread_count }}</h4>
+                        </div>
+                        <div class="flex-shrink-0">
+                            <i class="bi bi-eye-slash text-warning display-6"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filter Form -->
+    <div class="card card-custom p-3 mb-4">
+        <form method="get" class="row g-3">
+            <div class="col-md-3">
+                <label class="form-label">Notice</label>
+                <select name="notice" class="form-select">
+                    <option value="">All Notices</option>
+                    {% for notice in notices %}
+                    <option value="{{ notice.id }}" {% if request.GET.notice == notice.id|stringformat:"s" %}selected{% endif %}>
+                        {{ notice.title }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Read Status</label>
+                <select name="read_status" class="form-select">
+                    <option value="">All Status</option>
+                    <option value="read" {% if request.GET.read_status == 'read' %}selected{% endif %}>Read</option>
+                    <option value="unread" {% if request.GET.read_status == 'unread' %}selected{% endif %}>Unread</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Delivery Status</label>
+                <select name="delivery_status" class="form-select">
+                    <option value="">All Status</option>
+                    <option value="delivered" {% if request.GET.delivery_status == 'delivered' %}selected{% endif %}>Delivered</option>
+                    <option value="undelivered" {% if request.GET.delivery_status == 'undelivered' %}selected{% endif %}>Not Delivered</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Search Users</label>
+                <input type="text" name="search" class="form-control" placeholder="Search by name or email..." value="{{ request.GET.search }}">
+            </div>
+            <div class="col-md-2 d-flex align-items-end gap-2">
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="bi bi-search me-1"></i> Filter
+                </button>
+                <a href="{% url 'communications:audience_list' %}" class="btn btn-outline-secondary">
+                    <i class="bi bi-x"></i>
+                </a>
+            </div>
+        </form>
+    </div>
+
+    <!-- Bulk Actions -->
+    <form method="post" action="{% url 'communications:audience_bulk_action' %}" id="bulkActionForm">
+        {% csrf_token %}
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="mb-0">Audience Members</h5>
+            <div class="d-flex gap-2">
+                <select name="action" class="form-select form-select-sm" style="width: auto;">
+                    <option value="">Bulk Actions</option>
+                    <option value="mark_read">Mark as Read</option>
+                    <option value="mark_unread">Mark as Unread</option>
+                    <option value="mark_delivered">Mark as Delivered</option>
+                    <option value="delete">Delete Selected</option>
+                </select>
+                <button type="submit" class="btn btn-sm btn-primary" id="bulkActionBtn" disabled>
+                    Apply
+                </button>
+            </div>
+        </div>
+
+        <!-- Audience Table -->
+        <div class="card card-custom">
+            <div class="card-body">
+                <div class="table-responsive">
+                    {% if audience_members %}
+                    <table id="audienceTable" class="w-100 table-custom table-hover align-middle">
+                        <thead>
+                            <tr>
+                                <th width="30">
+                                    <input type="checkbox" id="selectAll">
+                                </th>
+                                <th>User</th>
+                                <th>Notice</th>
+                                <th>Read Status</th>
+                                <th>Delivery Status</th>
+                                <th>Notification Sent</th>
+                                <th>Read At</th>
+                                <th>Delivered At</th>
+                                <th class="text-center">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for audience in audience_members %}
+                            <tr>
+                                <td>
+                                    <input type="checkbox" name="audience_ids" value="{{ audience.id }}" class="row-checkbox">
+                                </td>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="flex-shrink-0">
+                                            <div class="avatar-sm">
+                                                <div class="avatar-title bg-light text-primary rounded-circle">
+                                                    {{ audience.user.get_full_name|first|upper }}
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="flex-grow-1 ms-3">
+                                            <h6 class="mb-1">{{ audience.user.get_full_name }}</h6>
+                                            <p class="text-custom mb-0">{{ audience.user.email }}</p>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <strong>{{ audience.notice.title }}</strong>
+                                    <br>
+                                    <small class="text-custom">{{ audience.notice.publish_date|date:"M d, Y" }}</small>
+                                </td>
+                                <td>
+                                    {% if audience.read %}
+                                    <span class="badge bg-success">Read</span>
+                                    {% else %}
+                                    <span class="badge bg-warning">Unread</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if audience.delivered %}
+                                    <span class="badge bg-info">Delivered</span>
+                                    {% else %}
+                                    <span class="badge bg-secondary">Pending</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if audience.notification_sent %}
+                                    <i class="bi bi-check-circle text-success"></i>
+                                    {% else %}
+                                    <i class="bi bi-x-circle text-danger"></i>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if audience.read_at %}
+                                    {{ audience.read_at|date:"M d, Y H:i" }}
+                                    {% else %}
+                                    <span class="text-custom">-</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if audience.delivered_at %}
+                                    {{ audience.delivered_at|date:"M d, Y H:i" }}
+                                    {% else %}
+                                    <span class="text-custom">-</span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-center">
+                                    <a href="{% url 'communications:audience_detail' audience.pk %}" 
+                                       class="btn btn-sm btn-outline-primary" title="View">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                    <a href="{% url 'communications:audience_update' audience.pk %}" 
+                                       class="btn btn-sm btn-outline-secondary" title="Edit">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                    <a href="{% url 'communications:audience_delete' audience.pk %}" 
+                                       class="btn btn-sm btn-outline-danger" title="Delete">
+                                        <i class="bi bi-trash"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                    {% else %}
+                    <div class="empty-state text-center py-5">
+                        <i class="bi bi-people fs-1"></i>
+                        <h4 class="mt-3 mb-2">No Audience Members Found</h4>
+                        <p class="text-custom mb-4">No audience members match your current filters.</p>
+                        <a href="{% url 'communications:audience_list' %}" class="btn btn-primary">
+                            <i class="bi bi-arrow-clockwise me-1"></i> Clear Filters
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </form>
+
+    <!-- Pagination -->
+    {% if is_paginated %}
+    <nav aria-label="Page navigation" class="mt-4">
+        <ul class="pagination justify-content-center">
+            {% if page_obj.has_previous %}
+            <li class="page-item">
+                <a class="page-link" href="?page=1{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">First</a>
+            </li>
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">Previous</a>
+            </li>
+            {% endif %}
+
+            {% for num in page_obj.paginator.page_range %}
+            {% if page_obj.number == num %}
+            <li class="page-item active"><a class="page-link" href="#">{{ num }}</a></li>
+            {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ num }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">{{ num }}</a>
+            </li>
+            {% endif %}
+            {% endfor %}
+
+            {% if page_obj.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.next_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">Next</a>
+            </li>
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">Last</a>
+            </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // DataTable initialization
+    $('#audienceTable').DataTable({
+        "pageLength": 25,
+        "order": [[2, 'desc']],
+        "language": {
+            "search": "<i class='bi bi-search me-2'></i>Search:",
+            "lengthMenu": "Show _MENU_ entries",
+            "info": "Showing _START_ to _END_ of _TOTAL_ entries",
+            "paginate": {
+                "previous": "<i class='bi bi-chevron-left'></i>",
+                "next": "<i class='bi bi-chevron-right'></i>"
+            }
+        },
+        "columnDefs": [
+            { "targets": [0, -1], "orderable": false, "className": "dt-center" }
+        ],
+        "responsive": true
+    });
+
+    // Bulk selection
+    const selectAll = document.getElementById('selectAll');
+    const rowCheckboxes = document.querySelectorAll('.row-checkbox');
+    const bulkActionBtn = document.getElementById('bulkActionBtn');
+
+    selectAll.addEventListener('change', function() {
+        rowCheckboxes.forEach(checkbox => {
+            checkbox.checked = selectAll.checked;
+        });
+        updateBulkActionButton();
+    });
+
+    rowCheckboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', function() {
+            const allChecked = Array.from(rowCheckboxes).every(cb => cb.checked);
+            const anyChecked = Array.from(rowCheckboxes).some(cb => cb.checked);
+            
+            selectAll.checked = allChecked;
+            updateBulkActionButton();
+        });
+    });
+
+    function updateBulkActionButton() {
+        const anyChecked = Array.from(rowCheckboxes).some(cb => cb.checked);
+        bulkActionBtn.disabled = !anyChecked;
+    }
+
+    // Bulk action form confirmation
+    document.getElementById('bulkActionForm').addEventListener('submit', function(e) {
+        const action = this.action.value;
+        if (action === 'delete') {
+            if (!confirm('Are you sure you want to delete the selected audience members?')) {
+                e.preventDefault();
+            }
+        }
+    });
+});
+</script>
+{% endblock %}

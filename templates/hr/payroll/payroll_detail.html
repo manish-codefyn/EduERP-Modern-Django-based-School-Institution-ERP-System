@@ -1,0 +1,163 @@
+{% extends 'hr/base.html' %}
+{% load static %}
+
+{% block title %}Payroll Details - {{ payroll.staff.user.get_full_name }}{% endblock %}
+
+{% block extra_css %}
+<style>
+
+.detail-label {
+    font-weight: 500;
+    color: #6c757d;
+}
+.detail-value {
+    font-weight: 600;
+    font-size: 1.05rem;
+}
+.total-card {
+    border-radius: 0.75rem;
+    padding: 1rem;
+    text-align: center;
+    color: #fff;
+}
+.total-earnings { background-color: #198754; }
+.total-deductions { background-color: #dc3545; }
+.net-salary { background-color: #0d6efd; }
+.toolbar .btn {
+    min-width: 130px;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-lg-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="h3 fw-bold"><i class="bi bi-cash-stack me-2"></i> Payroll Details</h1>
+                    <p class="text-custom mb-0">View payroll information for <strong>{{ payroll.staff.user.get_full_name }}</strong></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toolbar: Back / Edit / Export -->
+    <div class="row mb-4 toolbar">
+        <div class="col-md-5 offset-md-7 d-flex justify-content-end gap-2">
+            <a href="{% url 'hr:payroll_list' %}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left me-1"></i> Back
+            </a>
+            <a href="{% url 'hr:payroll_update' payroll.pk %}" class="btn btn-primary">
+                <i class="bi bi-pencil me-1"></i> Edit
+            </a>
+            <div class="dropdown">
+                <button class="btn btn-outline-secondary dropdown-toggle" type="button" id="exportDropdown"
+                    data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class="bi bi-download me-1"></i> Export
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="exportDropdown">
+                    <li class="dropdown-header">Export Payroll</li>
+                    <li>
+                        <a class="dropdown-item" href="{% url 'hr:payroll_detail_export' payroll.pk %}?format=csv">
+                            <i class="bi bi-filetype-csv me-2"></i> CSV
+                        </a>
+                    </li>
+                    <li>
+                        <a class="dropdown-item" href="{% url 'hr:payroll_detail_export' payroll.pk %}?format=excel">
+                            <i class="bi bi-file-earmark-excel me-2"></i> Excel
+                        </a>
+                    </li>
+                    <li>
+                        <a class="dropdown-item" href="{% url 'hr:payroll_detail_export' payroll.pk %}?format=pdf">
+                            <i class="bi bi-file-earmark-pdf me-2"></i> PDF
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Staff & Period -->
+    <div class="card card-custom p-4">
+        <h5><i class="bi bi-person-badge me-1"></i> Staff & Period</h5>
+        <div class="row g-3">
+            <div class="col-md-6">
+                <div class="detail-label">Staff</div>
+                <div class="detail-value"><i class="bi bi-person me-1"></i>{{ payroll.staff.user.get_full_name }} ({{ payroll.staff.employee_id }})</div>
+            </div>
+            <div class="col-md-3">
+                <div class="detail-label">Month</div>
+                <div class="detail-value">{{ payroll.get_month_display|default:payroll.month }}</div>
+            </div>
+            <div class="col-md-3">
+                <div class="detail-label">Year</div>
+                <div class="detail-value">{{ payroll.year }}</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Earnings -->
+    <div class="card card-custom p-4">
+        <h5><i class="bi bi-arrow-up-circle me-1 text-success"></i> Earnings</h5>
+        <div class="row g-3">
+            <div class="col-md-6"><div class="detail-label">Basic Salary</div><div class="detail-value">{{ payroll.basic_salary }}</div></div>
+            <div class="col-md-6"><div class="detail-label">House Rent Allowance</div><div class="detail-value">{{ payroll.house_rent_allowance }}</div></div>
+            <div class="col-md-6"><div class="detail-label">Travel Allowance</div><div class="detail-value">{{ payroll.travel_allowance }}</div></div>
+            <div class="col-md-6"><div class="detail-label">Medical Allowance</div><div class="detail-value">{{ payroll.medical_allowance }}</div></div>
+            <div class="col-md-6"><div class="detail-label">Special Allowance</div><div class="detail-value">{{ payroll.special_allowance }}</div></div>
+            <div class="col-md-6"><div class="detail-label">Performance Bonus</div><div class="detail-value">{{ payroll.performance_bonus }}</div></div>
+            <div class="col-md-6"><div class="detail-label">Other Allowances</div><div class="detail-value">{{ payroll.other_allowances }}</div></div>
+        </div>
+    </div>
+
+    <!-- Deductions -->
+    <div class="card card-custom p-4">
+        <h5><i class="bi bi-arrow-down-circle me-1 text-danger"></i> Deductions</h5>
+        <div class="row g-3">
+            <div class="col-md-6"><div class="detail-label">Professional Tax</div><div class="detail-value">{{ payroll.professional_tax }}</div></div>
+            <div class="col-md-6"><div class="detail-label">Provident Fund</div><div class="detail-value">{{ payroll.provident_fund }}</div></div>
+            <div class="col-md-6"><div class="detail-label">Income Tax</div><div class="detail-value">{{ payroll.income_tax }}</div></div>
+            <div class="col-md-6"><div class="detail-label">Insurance</div><div class="detail-value">{{ payroll.insurance }}</div></div>
+            <div class="col-md-6"><div class="detail-label">Loan Deductions</div><div class="detail-value">{{ payroll.loan_deductions }}</div></div>
+            <div class="col-md-6"><div class="detail-label">Other Deductions</div><div class="detail-value">{{ payroll.other_deductions }}</div></div>
+        </div>
+    </div>
+
+    <!-- Totals -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-4">
+            <div class="total-card total-earnings">
+                <i class="bi bi-currency-dollar me-1"></i> Total Earnings
+                <div class="h5 mt-2">{{ payroll.total_earnings }}</div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="total-card total-deductions">
+                <i class="bi bi-credit-card-2-back me-1"></i> Total Deductions
+                <div class="h5 mt-2">{{ payroll.total_deductions }}</div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="total-card net-salary">
+                <i class="bi bi-wallet2 me-1"></i> Net Salary
+                <div class="h5 mt-2">{{ payroll.net_salary }}</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Payment Details -->
+    <div class="card card-custom p-4">
+        <h5><i class="bi bi-bank me-1"></i> Payment Details</h5>
+        <div class="row g-3">
+            <div class="col-md-4"><div class="detail-label">Payment Date</div><div class="detail-value">{{ payroll.payment_date|date:"d M Y" }}</div></div>
+            <div class="col-md-4"><div class="detail-label">Payment Mode</div><div class="detail-value">{{ payroll.get_payment_mode_display }}</div></div>
+            <div class="col-md-4"><div class="detail-label">Payment Reference</div><div class="detail-value">{{ payroll.payment_reference }}</div></div>
+            <div class="col-md-4"><div class="detail-label">Payment Status</div><div class="detail-value">{{ payroll.get_payment_status_display }}</div></div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

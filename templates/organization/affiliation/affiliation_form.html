@@ -1,0 +1,445 @@
+{% extends 'organization/base.html' %}
+{% load static %}
+
+{% block title %}
+    {% if form.instance.pk %}Edit{% else %}Create{% endif %} Affiliation - {{ organization.name|default:"Codefyn" }}
+{% endblock %}
+
+{% block content %}
+<!-- Header -->
+<div class="header-section mb-4">
+    <div class="row align-items-center">
+        <div class="col-md-7 d-flex align-items-center">
+            <div class="header-icon me-3">
+                <i class="bi bi-award display-6 text-primary"></i>
+            </div>
+            <div>
+                <h1 class="h3 fw-bold mb-1">
+                    {% if form.instance.pk %}
+                        Edit Affiliation
+                    {% else %}
+                        Create New Affiliation
+                    {% endif %}
+                </h1>
+                <p class="text-custom mb-0">
+                    {% if form.instance.pk %}
+                        Update affiliation details for {{ form.instance.institution.name }}
+                    {% else %}
+                        Add a new affiliation or accreditation record
+                    {% endif %}
+                </p>
+            </div>
+        </div>
+        <div class="col-md-5">
+            <div class="d-flex justify-content-end align-items-center gap-2">
+                <a href="{% url 'organization:affiliation_list' %}" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left me-1"></i> Back to List
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Form Section -->
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card card-custom">
+            <div class="card-header bg-transparent border-0 pt-4 px-4">
+                <h5 class="card-title mb-0 fw-bold text-custom">Affiliation Details</h5>
+                <p class="text-custom mb-0">Enter the affiliation information below</p>
+            </div>
+            <div class="card-body">
+                <form method="post" enctype="multipart/form-data" id="affiliationForm">
+                    {% csrf_token %}
+                    
+                    {% if form.non_field_errors %}
+                    <div class="alert alert-danger">
+                        {% for error in form.non_field_errors %}
+                            <p class="mb-0"><i class="bi bi-exclamation-triangle me-2"></i>{{ error }}</p>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+
+                    <div class="row g-3">
+                        <!-- Affiliation Name -->
+                        <div class="col-md-6">
+                            <label for="{{ form.name.id_for_label }}" class="form-label">
+                                {{ form.name.label }} <span class="text-danger">*</span>
+                            </label>
+                            {{ form.name }}
+                            {% if form.name.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.name.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                            <div class="form-text">e.g., CBSE, ICSE, UGC, AICTE, NAAC</div>
+                        </div>
+
+                        <!-- Affiliation Code -->
+                        <div class="col-md-6">
+                            <label for="{{ form.code.id_for_label }}" class="form-label">
+                                {{ form.code.label }}
+                            </label>
+                            {{ form.code }}
+                            {% if form.code.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.code.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                            <div class="form-text">Unique code provided by the affiliation body</div>
+                        </div>
+
+                        <!-- Validity Period -->
+                        <div class="col-md-6">
+                            <label for="{{ form.valid_from.id_for_label }}" class="form-label">
+                                {{ form.valid_from.label }}
+                            </label>
+                            {{ form.valid_from }}
+                            {% if form.valid_from.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.valid_from.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="{{ form.valid_to.id_for_label }}" class="form-label">
+                                {{ form.valid_to.label }}
+                            </label>
+                            {{ form.valid_to }}
+                            {% if form.valid_to.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.valid_to.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Document Upload -->
+                        <div class="col-12">
+                            <label for="{{ form.document.id_for_label }}" class="form-label">
+                                {{ form.document.label }}
+                            </label>
+                            {% if form.instance.document %}
+                                <div class="mb-2">
+                                    <span class="badge bg-success bg-opacity-10 text-success">
+                                        <i class="bi bi-file-earmark-text me-1"></i>
+                                        Current file: <a href="{{ form.instance.document.url }}" target="_blank" class="text-success">{{ form.instance.document.name|cut:"affiliation_docs/" }}</a>
+                                    </span>
+                                </div>
+                            {% endif %}
+                            {{ form.document }}
+                            {% if form.document.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.document.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                            <div class="form-text">Upload affiliation certificate or document (PDF, DOC, JPEG, PNG)</div>
+                        </div>
+
+                        <!-- Renewal Settings -->
+                        <div class="col-md-6">
+                            <div class="form-check form-switch">
+                                {{ form.renewal_required }}
+                                <label class="form-check-label" for="{{ form.renewal_required.id_for_label }}">
+                                    {{ form.renewal_required.label }}
+                                </label>
+                            </div>
+                            {% if form.renewal_required.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.renewal_required.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                            <div class="form-text">Enable if this affiliation requires periodic renewal</div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="{{ form.renewal_notice_period.id_for_label }}" class="form-label">
+                                {{ form.renewal_notice_period.label }}
+                            </label>
+                            {{ form.renewal_notice_period }}
+                            {% if form.renewal_notice_period.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.renewal_notice_period.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                            <div class="form-text">Days before expiry to send renewal reminders</div>
+                        </div>
+
+                        <!-- Status -->
+                        <div class="col-12">
+                            <div class="form-check form-switch">
+                                {{ form.is_active }}
+                                <label class="form-check-label" for="{{ form.is_active.id_for_label }}">
+                                    {{ form.is_active.label }}
+                                </label>
+                            </div>
+                            {% if form.is_active.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.is_active.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                            <div class="form-text">Active affiliations will be considered valid</div>
+                        </div>
+                    </div>
+
+                    <!-- Form Actions -->
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <div class="d-flex gap-2 justify-content-end">
+                                <a href="{% url 'organization:affiliation_list' %}" class="btn btn-outline-secondary">
+                                    <i class="bi bi-x-circle me-1"></i> Cancel
+                                </a>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="bi bi-check-circle me-1"></i>
+                                    {% if form.instance.pk %}
+                                        Update Affiliation
+                                    {% else %}
+                                        Create Affiliation
+                                    {% endif %}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sidebar Information -->
+    <div class="col-lg-4">
+        <div class="card card-custom">
+            <div class="card-header bg-transparent border-0 pt-4 px-4">
+                <h5 class="card-title mb-0 fw-bold text-custom">
+                    <i class="bi bi-info-circle me-2"></i>Guidelines
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="d-flex flex-column gap-3">
+                    <div class="d-flex align-items-start">
+                        <i class="bi bi-building text-primary me-2 mt-1"></i>
+                        <div>
+                            <h6 class="mb-1">Institution Association</h6>
+                            <p class="small text-custom mb-0">This affiliation will be automatically associated with your institution.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex align-items-start">
+                        <i class="bi bi-calendar-check text-warning me-2 mt-1"></i>
+                        <div>
+                            <h6 class="mb-1">Validity Period</h6>
+                            <p class="small text-custom mb-0">Set accurate dates to enable automatic renewal reminders.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex align-items-start">
+                        <i class="bi bi-file-earmark-text text-success me-2 mt-1"></i>
+                        <div>
+                            <h6 class="mb-1">Document Upload</h6>
+                            <p class="small text-custom mb-0">Upload the official affiliation certificate for verification.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex align-items-start">
+                        <i class="bi bi-bell text-info me-2 mt-1"></i>
+                        <div>
+                            <h6 class="mb-1">Renewal Notices</h6>
+                            <p class="small text-custom mb-0">System will send alerts based on the notice period set.</p>
+                        </div>
+                    </div>
+
+                    {% if form.instance.pk %}
+                    <div class="alert alert-info mt-2">
+                        <h6 class="alert-heading mb-2">Record Information</h6>
+                        <p class="small mb-1"><strong>Created:</strong> {{ form.instance.created_at|date:"M d, Y" }}</p>
+                        {% if form.instance.updated_at %}
+                        <p class="small mb-0"><strong>Last Updated:</strong> {{ form.instance.updated_at|date:"M d, Y" }}</p>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Validity Check Card -->
+        <div class="card card-custom mt-4">
+            <div class="card-header bg-transparent border-0 pt-4 px-4">
+                <h5 class="card-title mb-0 fw-bold text-custom">
+                    <i class="bi bi-clock-history me-2"></i>Validity Status
+                </h5>
+            </div>
+            <div class="card-body">
+                <div id="validityStatus">
+                    <p class="small text-custom mb-2">Enter dates above to see validity status</p>
+                    <div class="progress mb-2" style="height: 6px;">
+                        <div class="progress-bar" id="validityProgress" style="width: 0%"></div>
+                    </div>
+                    <p class="small mb-0" id="validityText">-</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.form-check-input:checked {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+.form-control:focus, .form-select:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 0.2rem rgba(var(--primary-rgb), 0.25);
+}
+
+.invalid-feedback {
+    display: block;
+}
+
+.was-validated .form-control:invalid, .form-control.is-invalid {
+    border-color: #dc3545;
+    padding-right: calc(1.5em + 0.75rem);
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12' width='12' height='12' fill='none' stroke='%23dc3545'%3e%3ccircle cx='6' cy='6' r='4.5'/%3e%3cpath d='m5.8 3.6.4.4.4-.4'/%3e%3cpath d='M6 7v1'/%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right calc(0.375em + 0.1875rem) center;
+    background-size: calc(0.75em + 0.375rem) calc(0.75em + 0.375rem);
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize date pickers
+    const validFromInput = document.getElementById('{{ form.valid_from.id_for_label }}');
+    const validToInput = document.getElementById('{{ form.valid_to.id_for_label }}');
+    
+    // Add Bootstrap validation styling
+    const forms = document.querySelectorAll('.needs-validation');
+    
+    // Validity status calculator
+    function calculateValidityStatus() {
+        const fromDate = validFromInput.value ? new Date(validFromInput.value) : null;
+        const toDate = validToInput.value ? new Date(validToInput.value) : null;
+        const today = new Date();
+        
+        if (!fromDate || !toDate) {
+            document.getElementById('validityProgress').style.width = '0%';
+            document.getElementById('validityText').textContent = 'Enter both dates to check validity';
+            return;
+        }
+        
+        if (fromDate > toDate) {
+            document.getElementById('validityProgress').style.width = '0%';
+            document.getElementById('validityText').textContent = 'Valid From date cannot be after Valid To date';
+            document.getElementById('validityProgress').classList.remove('bg-success', 'bg-warning', 'bg-danger');
+            document.getElementById('validityProgress').classList.add('bg-danger');
+            return;
+        }
+        
+        const totalDuration = toDate - fromDate;
+        const elapsedDuration = today - fromDate;
+        
+        let percentage = (elapsedDuration / totalDuration) * 100;
+        percentage = Math.max(0, Math.min(100, percentage));
+        
+        const progressBar = document.getElementById('validityProgress');
+        progressBar.style.width = percentage + '%';
+        
+        if (today < fromDate) {
+            const daysUntilStart = Math.ceil((fromDate - today) / (1000 * 60 * 60 * 24));
+            document.getElementById('validityText').textContent = `Starts in ${daysUntilStart} days`;
+            progressBar.classList.remove('bg-success', 'bg-warning', 'bg-danger');
+            progressBar.classList.add('bg-info');
+        } else if (today > toDate) {
+            const daysSinceExpiry = Math.ceil((today - toDate) / (1000 * 60 * 60 * 24));
+            document.getElementById('validityText').textContent = `Expired ${daysSinceExpiry} days ago`;
+            progressBar.classList.remove('bg-success', 'bg-warning', 'bg-danger');
+            progressBar.classList.add('bg-danger');
+        } else {
+            const daysRemaining = Math.ceil((toDate - today) / (1000 * 60 * 60 * 24));
+            const totalDays = Math.ceil((toDate - fromDate) / (1000 * 60 * 60 * 24));
+            const daysUsed = totalDays - daysRemaining;
+            
+            document.getElementById('validityText').textContent = 
+                `${daysRemaining} days remaining (${daysUsed}/${totalDays} days used)`;
+            
+            if (daysRemaining <= 30) {
+                progressBar.classList.remove('bg-success', 'bg-warning', 'bg-danger');
+                progressBar.classList.add('bg-danger');
+            } else if (daysRemaining <= 90) {
+                progressBar.classList.remove('bg-success', 'bg-warning', 'bg-danger');
+                progressBar.classList.add('bg-warning');
+            } else {
+                progressBar.classList.remove('bg-success', 'bg-warning', 'bg-danger');
+                progressBar.classList.add('bg-success');
+            }
+        }
+    }
+    
+    // Add event listeners for date changes
+    if (validFromInput) validFromInput.addEventListener('change', calculateValidityStatus);
+    if (validToInput) validToInput.addEventListener('change', calculateValidityStatus);
+    
+    // Calculate initial status if dates are pre-filled
+    calculateValidityStatus();
+    
+    // Form validation
+    Array.from(forms).forEach(form => {
+        form.addEventListener('submit', event => {
+            if (!form.checkValidity()) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
+            
+            form.classList.add('was-validated');
+        }, false);
+    });
+    
+    // Toggle renewal notice period based on renewal required checkbox
+    const renewalRequired = document.getElementById('{{ form.renewal_required.id_for_label }}');
+    const renewalNoticePeriod = document.getElementById('{{ form.renewal_notice_period.id_for_label }}');
+    
+    function toggleRenewalNoticePeriod() {
+        if (renewalRequired && renewalNoticePeriod) {
+            renewalNoticePeriod.disabled = !renewalRequired.checked;
+            renewalNoticePeriod.parentElement.style.opacity = renewalRequired.checked ? '1' : '0.6';
+        }
+    }
+    
+    if (renewalRequired) {
+        renewalRequired.addEventListener('change', toggleRenewalNoticePeriod);
+        toggleRenewalNoticePeriod(); // Initial state
+    }
+    
+    // File input styling
+    const fileInput = document.getElementById('{{ form.document.id_for_label }}');
+    if (fileInput) {
+        fileInput.addEventListener('change', function(e) {
+            const fileName = e.target.files[0] ? e.target.files[0].name : 'No file chosen';
+            const label = fileInput.nextElementSibling;
+            if (label && label.classList.contains('form-file-text')) {
+                label.textContent = fileName;
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

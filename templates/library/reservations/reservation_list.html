@@ -1,0 +1,296 @@
+{% extends 'library/base.html' %}
+{% load widget_tweaks %}
+
+{% block title %}Reservations - Library Management  {% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+ <div class="row mb-4">
+    <div class="col d-flex justify-content-between align-items-center">
+        <!-- Page Title -->
+        <h1 class="h3 mb-0">Book Reservations</h1>
+
+        <!-- Buttons: New Reservation + Export -->
+        <div class="d-flex gap-2">
+            <!-- New Reservation Button -->
+            <a href="{% url 'library:reservation_create' %}" class="btn btn-primary">
+                <i class="bi bi-plus-lg me-2"></i>New Reservation
+            </a>
+
+            <!-- Export Dropdown -->
+            <div class="dropdown">
+                <button class="btn btn-outline-secondary dropdown-toggle" type="button" 
+                        data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class="bi bi-download me-2"></i>Export
+                </button>
+                <ul class="dropdown-menu">
+                    <li>
+                        <a class="dropdown-item" href="{% url 'library:reservation_export' %}?format=csv{% for key, value in request.GET.items %}{% if key != 'format' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+                            <i class="bi bi-file-earmark-csv me-2"></i>Export as CSV
+                        </a>
+                    </li>
+                    <li>
+                        <a class="dropdown-item" href="{% url 'library:reservation_export' %}?format=excel{% for key, value in request.GET.items %}{% if key != 'format' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+                            <i class="bi bi-file-earmark-excel me-2"></i>Export as Excel
+                        </a>
+                    </li>
+                    <li>
+                        <a class="dropdown-item" href="{% url 'library:reservation_export' %}?format=pdf{% for key, value in request.GET.items %}{% if key != 'format' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+                            <i class="bi bi-file-earmark-pdf me-2"></i>Export as PDF
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+  <!-- Statistics Cards -->
+<div class="row mb-4">
+    <div class="col-xl-2 col-md-4 col-sm-6 mb-3">
+        <div class="card bg-primary text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h6 class="card-title">Total</h6>
+                        <h4>{{ total_reservations }}</h4>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="bi bi-list-ul fs-2"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-xl-2 col-md-4 col-sm-6 mb-3">
+        <div class="card bg-warning text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h6 class="card-title">Pending</h6>
+                        <h4>{{ pending_reservations }}</h4>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="bi bi-clock fs-2"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-xl-2 col-md-4 col-sm-6 mb-3">
+        <div class="card bg-success text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h6 class="card-title">Fulfilled</h6>
+                        <h4>{{ fulfilled_reservations }}</h4>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="bi bi-check-lg fs-2"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-xl-2 col-md-4 col-sm-6 mb-3">
+        <div class="card bg-danger text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h6 class="card-title">Cancelled</h6>
+                        <h4>{{ cancelled_reservations }}</h4>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="bi bi-x-lg fs-2"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-xl-2 col-md-4 col-sm-6 mb-3">
+        <div class="card bg-secondary text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h6 class="card-title">Expired</h6>
+                        <h4>{{ expired_reservations }}</h4>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="bi bi-calendar-x fs-2"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-xl-2 col-md-4 col-sm-6 mb-3">
+        <div class="card bg-info text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h6 class="card-title">Expiring Soon</h6>
+                        <h4>{{ expiring_reservations }}</h4>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="bi bi-exclamation-triangle fs-2"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+    <!-- Filter Form -->
+    <div class="card card-custom mb-4">
+        <div class="card-header detail-card-header">
+            <h5 class="card-title mb-0">Filters</h5>
+        </div>
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-3">
+                    {{ filter_form.search.label_tag }}
+                    {{ filter_form.search|add_class:"form-control" }}
+                </div>
+                <div class="col-md-2">
+                    {{ filter_form.status.label_tag }}
+                    {{ filter_form.status|add_class:"form-control" }}
+                </div>
+                <div class="col-md-2">
+                    {{ filter_form.date_from.label_tag }}
+                    {{ filter_form.date_from|add_class:"form-control" }}
+                </div>
+                <div class="col-md-2">
+                    {{ filter_form.date_to.label_tag }}
+                    {{ filter_form.date_to|add_class:"form-control" }}
+                </div>
+                <div class="col-md-3 align-self-end">
+                    <button type="submit" class="btn btn-primary me-2">
+                        <i class="bi bi-funnel-fill me-1"></i> Apply
+                    </button>
+                    <a href="{% url 'library:reservation_list' %}" class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-clockwise"></i>
+                    </a>
+                </div>
+
+            </form>
+        </div>
+    </div>
+
+    <!-- Reservations Table -->
+    <div class="card card-custom">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table-custom w-100 table-hover">
+                    <thead>
+                        <tr>
+                            <th>Book</th>
+                            <th>User</th>
+                            <th>Reservation Date</th>
+                            <th>Expiry Date</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for reservation in reservations %}
+                        <tr>
+                            <td>
+                                <a href="{% url 'library:reservation_detail' reservation.pk %}">
+                                    {{ reservation.book.title }}
+                                </a>
+                            </td>
+                            <td>{{ reservation.user.get_full_name|default:reservation.user.username }}</td>
+                            <td>{{ reservation.reservation_date|date:"M d, Y H:i" }}</td>
+                            <td>
+                                <span class="{% if reservation.expiry_date < current_time and reservation.status == 'pending' %}text-danger{% endif %}">
+                                    {{ reservation.expiry_date|date:"M d, Y H:i" }}
+                                </span>
+                            </td>
+                            <td>
+                                <span class="badge bg-{% if reservation.status == 'pending' %}warning
+                                                      {% elif reservation.status == 'fulfilled' %}success
+                                                      {% elif reservation.status == 'cancelled' %}danger
+                                                      {% else %}secondary{% endif %}">
+                                    {{ reservation.get_status_display }}
+                                </span>
+                            </td>
+                            <td>
+                               <div class="btn-group btn-group-sm">
+                                <a href="{% url 'library:reservation_detail' reservation.pk %}" class="btn btn-outline-primary">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                                <a href="{% url 'library:reservation_update' reservation.pk %}" class="btn btn-outline-secondary">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                {% if reservation.status == 'pending' %}
+                                <a href="{% url 'library:reservation_fulfill' reservation.pk %}" class="btn btn-outline-success">
+                                    <i class="bi bi-check-lg"></i>
+                                </a>
+                                <a href="{% url 'library:reservation_cancel' reservation.pk %}" class="btn btn-outline-danger">
+                                    <i class="bi bi-x-lg"></i>
+                                </a>
+                                {% endif %}
+                            </div>
+
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="6" class="text-center py-4">No reservations found.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Pagination -->
+            {% if is_paginated %}
+            <nav aria-label="Page navigation">
+                <ul class="pagination justify-content-center">
+                    {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page=1{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">First</a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">Previous</a>
+                    </li>
+                    {% endif %}
+                    
+                    {% for num in page_obj.paginator.page_range %}
+                    {% if page_obj.number == num %}
+                    <li class="page-item active"><a class="page-link" href="#">{{ num }}</a></li>
+                    {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                    <li class="page-item"><a class="page-link" href="?page={{ num }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">{{ num }}</a></li>
+                    {% endif %}
+                    {% endfor %}
+                    
+                    {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.next_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">Next</a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">Last</a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block javascript %}
+<script>
+$(document).ready(function() {
+    // Auto-submit form when filter values change
+    $('.filter-form select, .filter-form input').change(function() {
+        $(this).closest('form').submit();
+    });
+});
+</script>
+{% endblock %}

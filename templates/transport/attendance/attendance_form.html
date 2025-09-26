@@ -1,0 +1,50 @@
+{% extends 'transport/base.html' %}
+
+{% block title %}{{ form.instance.pk|default:"Add" }} Transport Attendance{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="card card-custom p-4">
+        <h3 class="mb-4">{{ form.instance.pk|default:"Add" }} Transport Attendance</h3>
+        <form method="post" novalidate>
+            {% csrf_token %}
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <label for="{{ form.student_transport.id_for_label }}" class="form-label">Student</label>
+                    {{ form.student_transport }}
+                </div>
+                <div class="col-md-4">
+                    <label for="{{ form.date.id_for_label }}" class="form-label">Date</label>
+                    {{ form.date }}
+                </div>
+                <div class="col-md-2">
+                    <label for="{{ form.pickup_status.id_for_label }}" class="form-label">Pickup Status</label>
+                    {{ form.pickup_status }}
+                </div>
+                <div class="col-md-2">
+                    <label for="{{ form.drop_status.id_for_label }}" class="form-label">Drop Status</label>
+                    {{ form.drop_status }}
+                </div>
+                <div class="col-md-3">
+                    <label for="{{ form.pickup_time.id_for_label }}" class="form-label">Pickup Time</label>
+                    {{ form.pickup_time }}
+                </div>
+                <div class="col-md-3">
+                    <label for="{{ form.drop_time.id_for_label }}" class="form-label">Drop Time</label>
+                    {{ form.drop_time }}
+                </div>
+                <div class="col-md-6">
+                    <label for="{{ form.remarks.id_for_label }}" class="form-label">Remarks</label>
+                    {{ form.remarks }}
+                </div>
+            </div>
+            <div class="mt-4">
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-save me-1"></i> Save
+                </button>
+                <a href="{% url 'transport:attendance_list' %}" class="btn btn-outline-secondary ms-2">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

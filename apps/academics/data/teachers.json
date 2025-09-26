@@ -1,0 +1,32 @@
+[
+  {
+    "employee_id": "T001",
+    "first_name": "John",
+    "last_name": "Smith",
+    "email": "john.smith@maincampus.edu",
+    "mobile": "+1234567890",
+    "gender": "male",
+    "dob": "1980-01-15",
+    "qualification": "M.Sc. Mathematics",
+    "experience": 10,
+    "specialization": "Mathematics",
+    "joining_date": "2015-06-01",
+    "is_active": true,
+    "institution_code": "main-campus"
+  },
+  {
+    "employee_id": "T002",
+    "first_name": "Sarah",
+    "last_name": "Johnson",
+    "email": "sarah.johnson@maincampus.edu",
+    "mobile": "+1234567891",
+    "gender": "female",
+    "dob": "1985-05-20",
+    "qualification": "M.Tech Computer Science",
+    "experience": 8,
+    "specialization": "Computer Science",
+    "joining_date": "2017-08-15",
+    "is_active": true,
+    "institution_code": "main-campus"
+  }
+]

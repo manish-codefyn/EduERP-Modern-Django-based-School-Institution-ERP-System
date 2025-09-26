@@ -1,0 +1,588 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Fee Invoices - {{ organization.name|default:"ERP System" }}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
+<link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+
+    <!-- Header -->
+    <div class="header-section">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h1 class="display-6 fw-bold mb-2">Fee Invoice Management</h1>
+                <p class="lead mb-0 opacity-75">Manage and track all fee invoices</p>
+            </div>
+            <div class="col-md-4 text-md-end">
+                {% if perms.finance.add_feeinvoice %}
+                <div class="d-flex gap-2 justify-content-md-end flex-wrap">
+                    <a href="{% url 'finance:fee_invoice_create' %}" class="btn btn-light">
+                        <i class="bi bi-plus-circle me-2"></i>Create
+                    </a>
+                    <button type="button" class="btn btn-outline-light" data-bs-toggle="modal" data-bs-target="#exportModal">
+                        <i class="bi bi-download me-2"></i>Export
+                    </button>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="row g-4 mb-4">
+        <div class="col-xl-3 col-md-6">
+            <div class="card stats-card text-white" style="background: var(--primary-gradient);">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-8">
+                            <h6 class="card-title mb-1 small opacity-75">TOTAL</h6>
+                            <h3 class="mb-0 fw-bold">{{ total_count }}</h3>
+                        </div>
+                        <div class="col-4 text-end">
+                            <div class="stats-icon">
+                                <i class="bi bi-receipt"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card stats-card text-white" style="background: var(--success-gradient);">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-8">
+                            <h6 class="card-title mb-1 small opacity-75">PAID</h6>
+                            <h3 class="mb-0 fw-bold">{{ paid_count }}</h3>
+                        </div>
+                        <div class="col-4 text-end">
+                            <div class="stats-icon">
+                                <i class="bi bi-check-circle"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card stats-card text-white" style="background: var(--warning-gradient);">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-8">
+                            <h6 class="card-title mb-1 small opacity-75">PENDING</h6>
+                            <h3 class="mb-0 fw-bold">{{ pending_count }}</h3>
+                        </div>
+                        <div class="col-4 text-end">
+                            <div class="stats-icon">
+                                <i class="bi bi-clock"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card stats-card text-white" style="background: var(--danger-gradient);">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-8">
+                            <h6 class="card-title mb-1 small opacity-75">OVERDUE</h6>
+                            <h3 class="mb-0 fw-bold">{{ overdue_count }}</h3>
+                        </div>
+                        <div class="col-4 text-end">
+                            <div class="stats-icon">
+                                <i class="bi bi-exclamation-circle"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters Section -->
+    <div class="card card-custom p-3 mb-4 filters-section">
+        <form method="get" class="row g-3">
+            <div class="col-md-3">
+                <label class="form-label">Status</label>
+                <select class="form-select" name="status">
+                    <option value="">All Statuses</option>
+                    {% for status_value, status_name in status_choices %}
+                    <option value="{{ status_value }}" {% if request.GET.status == status_value %}selected{% endif %}>
+                        {{ status_name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Student</label>
+                <select class="form-select" name="student">
+                    <option value="">All Students</option>
+                    {% for student in students %}
+                    <option value="{{ student.id }}" {% if request.GET.student == student.id|stringformat:"s" %}selected{% endif %}>
+                        {{ student.full_name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">From Date</label>
+                <input type="date" class="form-control" name="start_date" value="{{ request.GET.start_date }}">
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">To Date</label>
+                <input type="date" class="form-control" name="end_date" value="{{ request.GET.end_date }}">
+            </div>
+            <div class="col-md-2 d-flex align-items-end">
+                <div class="btn-group w-100">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-filter me-1"></i>Filter
+                    </button>
+                    <a href="{% url 'finance:fee_invoice_list' %}" class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-clockwise"></i>
+                    </a>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- Desktop Table View -->
+    <div class="desktop-view">
+        <div class="card card-custom">
+             <div class="card-header bg-transparent border-0 pt-4 px-4">
+                 <h5 class="card-title mb-0 fw-bold text-custom">Fee Invoices</h5>
+                {% if current_filters.status or current_filters.student or current_filters.start_date or current_filters.end_date %}
+                <span class="badge bg-info">
+                    Filtered: {{ invoices.paginator.count }} results
+                </span>
+                {% endif %}
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    {% if invoices %}
+                    <table id="invoicesTable" class=" w-100 table-custom table-hover align-middle">
+                        <thead>
+                            <tr>
+                                <th>Inv #</th>
+                                <th>Student</th>
+                                <th>Class</th>
+                                <th>Due Date</th>
+                                <th>Total</th>
+                                <th>Paid</th>
+                                <th>Balance</th>
+                                <th>Status</th>
+                                <th class="text-center">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for invoice in invoices %}
+                            <tr>
+                                <td data-order="{{ invoice.invoice_number }}">
+                                    <strong>{{ invoice.invoice_number|slice:"-4:" }}</strong>
+                                </td>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <i class="bi bi-person-circle text-primary me-2"></i>
+                                        <div>
+                                            <div class="fw-semibold">{{ invoice.student.first_name }}</div>
+                                            <small class="text-muted">Roll: {{ invoice.student.roll_number }}</small>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="badge bg-light text-dark">
+                                        {{ invoice.student.current_class.name }}
+                                    </span>
+                                </td>
+                                <td data-order="{{ invoice.due_date|date:'Y-m-d' }}">
+                                    <div class="d-flex flex-column">
+                                        <span>{{ invoice.due_date|date:"d/m/y" }}</span>
+                                        {% if invoice.is_overdue %}
+                                        <span class="badge bg-danger mt-1">Overdue</span>
+                                        {% else %}
+                                        <span class="badge bg-success mt-1">On Time</span>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                                <td class="fw-bold">₹{{ invoice.total_amount }}</td>
+                                <td class="text-success">₹{{ invoice.paid_amount }}</td>
+                                <td class="{% if invoice.balance > 0 %}text-danger{% else %}text-success{% endif %} fw-bold">
+                                    ₹{{ invoice.balance }}
+                                </td>
+                                <td>
+                                    <span class="status-badge badge-{{ invoice.status }}">
+                                        {{ invoice.get_status_display }}
+                                    </span>
+                                </td>
+                                <td>
+                                <div class="compact-action-buttons">
+                                <a href="{% url 'finance:fee_invoice_detail' invoice.id %}" class="btn btn-sm btn-icon btn-primary" data-bs-toggle="tooltip" title="View Details">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                                
+                                {% if perms.finance.change_feeinvoice %}
+                                <a href="{% url 'finance:fee_invoice_update' invoice.id %}" class="btn btn-sm btn-icon btn-warning" data-bs-toggle="tooltip" title="Edit Invoice">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                {% endif %}
+                                
+                                {% if perms.finance.delete_feeinvoice %}
+                                <a href="{% url 'finance:fee_invoice_delete' invoice.id %}" class="btn btn-sm btn-icon btn-danger" data-bs-toggle="tooltip" title="Delete Invoice">
+                                    <i class="bi bi-trash"></i>
+                                </a>
+                                {% endif %}
+                            </div>
+                                  </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                    {% else %}
+                    <div class="empty-state">
+                        <i class="bi bi-receipt display-4 text-muted"></i>
+                        <h4 class="mt-3 mb-2">No Invoices Found</h4>
+                        <p class="text-muted mb-4">Get started by creating your first fee invoice</p>
+                        {% if perms.finance.add_feeinvoice %}
+                        <a href="{% url 'finance:fee_invoice_create' %}" class="btn btn-primary">
+                            <i class="bi bi-plus-circle me-2"></i> Create Invoice
+                        </a>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mobile Card View -->
+    <div class="mobile-view">
+        <div class="card card-custom">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Fee Invoices</h5>
+                {% if current_filters.status or current_filters.student or current_filters.start_date or current_filters.end_date %}
+                <span class="badge bg-info mt-2">
+                    Filtered: {{ invoices.paginator.count }} results
+                </span>
+                {% endif %}
+            </div>
+            <div class="card-body">
+                {% if invoices %}
+                <div class="row">
+                    {% for invoice in invoices %}
+                    <div class="col-12 mb-3">
+                        <div class="invoice-card">
+                            <div class="invoice-header" onclick="toggleInvoiceCard(this)">
+                                <div class="d-flex align-items-center">
+                                    <i class="bi bi-receipt text-primary me-2"></i>
+                                    <div class="mobile-summary">
+                                        <div class="mobile-summary-row">
+                                            <strong>#{{ invoice.invoice_number|slice:"-4:" }}</strong>
+                                            <span class="status-badge badge-{{ invoice.status }}">
+                                                {{ invoice.get_status_display }}
+                                            </span>
+                                        </div>
+                                        <div class="mobile-summary-row">
+                                            <span>{{ invoice.student.first_name }}</span>
+                                            <span class="fw-bold">₹{{ invoice.total_amount }}</span>
+                                        </div>
+                                        <div class="mobile-summary-row">
+                                            <small class="text-muted">{{ invoice.student.current_class.name }}</small>
+                                            <small class="{% if invoice.balance > 0 %}text-danger{% else %}text-success{% endif %}">
+                                                Bal: ₹{{ invoice.balance }}
+                                            </small>
+                                        </div>
+                                    </div>
+                                </div>
+                                <i class="bi bi-chevron-down chevron-icon"></i>
+                            </div>
+                            <div class="invoice-body">
+                                <div class="invoice-details">
+                                    <div class="invoice-detail-item">
+                                        <span class="invoice-detail-label">Invoice Number</span>
+                                        <span class="invoice-detail-value">{{ invoice.invoice_number }}</span>
+                                    </div>
+                                    <div class="invoice-detail-item">
+                                        <span class="invoice-detail-label">Student</span>
+                                        <span class="invoice-detail-value">{{ invoice.student.first_name }} {{ invoice.student.last_name }}</span>
+                                        <small class="text-muted">Roll: {{ invoice.student.roll_number }}</small>
+                                    </div>
+                                    <div class="invoice-detail-item">
+                                        <span class="invoice-detail-label">Class</span>
+                                        <span class="invoice-detail-value">{{ invoice.student.current_class.name }}</span>
+                                    </div>
+                                    <div class="invoice-detail-item">
+                                        <span class="invoice-detail-label">Issue Date</span>
+                                        <span class="invoice-detail-value">{{ invoice.issue_date|date:"d/m/Y" }}</span>
+                                    </div>
+                                    <div class="invoice-detail-item">
+                                        <span class="invoice-detail-label">Due Date</span>
+                                        <span class="invoice-detail-value">{{ invoice.due_date|date:"d/m/Y" }}</span>
+                                        {% if invoice.is_overdue %}
+                                        <span class="badge bg-danger mt-1">Overdue</span>
+                                        {% else %}
+                                        <span class="badge bg-success mt-1">On Time</span>
+                                        {% endif %}
+                                    </div>
+                                    <div class="invoice-detail-item">
+                                        <span class="invoice-detail-label">Total Amount</span>
+                                        <span class="invoice-detail-value fw-bold">₹{{ invoice.total_amount }}</span>
+                                    </div>
+                                    <div class="invoice-detail-item">
+                                        <span class="invoice-detail-label">Paid Amount</span>
+                                        <span class="invoice-detail-value text-success">₹{{ invoice.paid_amount }}</span>
+                                    </div>
+                                    <div class="invoice-detail-item">
+                                        <span class="invoice-detail-label">Balance</span>
+                                        <span class="invoice-detail-value {% if invoice.balance > 0 %}text-danger{% else %}text-success{% endif %} fw-bold">
+                                            ₹{{ invoice.balance }}
+                                        </span>
+                                    </div>
+                                    <div class="invoice-detail-item">
+                                        <span class="invoice-detail-label">Status</span>
+                                        <span class="invoice-detail-value">
+                                            <span class="status-badge badge-{{ invoice.status }}">
+                                                {{ invoice.get_status_display }}
+                                            </span>
+                                        </span>
+                                    </div>
+                                </div>
+                                
+                                <div class="invoice-actions">
+                                    <a href="{% url 'finance:fee_invoice_detail' invoice.id %}" class="action-btn btn btn-outline-primary">
+                                        <i class="bi bi-eye"></i>View
+                                    </a>
+                                    {% if perms.finance.change_feeinvoice %}
+                                    <a href="{% url 'finance:fee_invoice_update' invoice.id %}" class="action-btn btn btn-outline-warning">
+                                        <i class="bi bi-pencil"></i>Edit
+                                    </a>
+                                    {% endif %}
+                                    {% if perms.finance.delete_feeinvoice %}
+                                    <a href="{% url 'finance:fee_invoice_delete' invoice.id %}" class="action-btn btn btn-outline-danger">
+                                        <i class="bi bi-trash"></i>Delete
+                                    </a>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="empty-state">
+                    <i class="bi bi-receipt display-4 text-muted"></i>
+                    <h4 class="mt-3 mb-2">No Invoices Found</h4>
+                    <p class="text-muted mb-4">Get started by creating your first fee invoice</p>
+                    {% if perms.finance.add_feeinvoice %}
+                    <a href="{% url 'finance:fee_invoice_create' %}" class="btn btn-primary">
+                        <i class="bi bi-plus-circle me-2"></i> Create Invoice
+                    </a>
+                    {% endif %}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Export Modal -->
+<div class="modal fade" id="exportModal" tabindex="-1" aria-labelledby="exportModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title fw-bold">Export Fee Invoices</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="get" action="{% url 'finance:fee_invoice_export' %}">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Export Format</label>
+                        <select class="form-select" name="format" required>
+                            <option value="csv">CSV Format</option>
+                            <option value="pdf">PDF Document</option>
+                            <option value="excel">Excel Spreadsheet</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Status</label>
+                        <select class="form-select" name="status">
+                            <option value="">All Statuses</option>
+                            {% for status_value, status_name in status_choices %}
+                            <option value="{{ status_value }}">{{ status_name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Date Range</label>
+                        <div class="row g-2">
+                            <div class="col">
+                                <input type="date" class="form-control" name="start_date" placeholder="From Date">
+                            </div>
+                            <div class="col">
+                                <input type="date" class="form-control" name="end_date" placeholder="To Date">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-3 form-check">
+                        <input type="checkbox" class="form-check-input" name="include_balance" checked>
+                        <label class="form-check-label">Include balance information</label>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-download me-2"></i>Export
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+<script>
+// Function to toggle invoice card expansion
+function toggleInvoiceCard(element) {
+    const cardBody = element.nextElementSibling;
+    const chevron = element.querySelector('.chevron-icon');
+    
+    cardBody.classList.toggle('expanded');
+    chevron.classList.toggle('rotated');
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize DataTable only for desktop view
+    $('#invoicesTable').DataTable({
+        "pageLength": 10,
+        "order": [[0, 'asc']],
+        "language": {
+            "search": "<i class='bi bi-search me-2'></i>Search:",
+            "lengthMenu": "Show _MENU_ entries",
+            "info": "Showing _START_ to _END_ of _TOTAL_ entries",
+            "paginate": {
+                "previous": "<i class='bi bi-chevron-left'></i>",
+                 "next": "<i class='bi bi-chevron-right'></i>"
+            }
+        },
+        "columnDefs": [
+            { 
+                "targets": [-1], 
+                "orderable": false,
+                "className": "dt-center"
+            }
+        ],
+        "responsive": true,
+        "dom": '<"row"<"col-md-6"l><"col-md-6"f>>rt<"row"<"col-md-6"i><"col-md-6"p>>'
+    });
+    
+
+    // Mobile responsiveness
+    function handleMobileView() {
+        if (window.innerWidth < 768) {
+            $('.dataTables_filter').css({
+                'position': 'static',
+                'width': '100%',
+                'text-align': 'center'
+            });
+            $('.dataTables_filter input').css({
+                'width': '100%',
+                'text-align': 'center'
+            });
+        } else {
+            $('.dataTables_filter').css({
+                'text-align': 'right'
+            });
+        }
+    }
+
+    // Initial call and resize listener
+    handleMobileView();
+    window.addEventListener('resize', handleMobileView);
+
+    // Set default dates for export modal
+    var today = new Date();
+    var formattedDate = today.toISOString().substr(0, 10);
+    var oneMonthAgo = new Date();
+    oneMonthAgo.setMonth(today.getMonth() - 1);
+    var formattedStartDate = oneMonthAgo.toISOString().substr(0, 10);
+    
+    $('#exportModal input[name="end_date"]').val(formattedDate);
+    $('#exportModal input[name="start_date"]').val(formattedStartDate);
+    
+    // Clean up modal backdrops
+    document.querySelectorAll('.modal').forEach(modalEl => {
+        modalEl.addEventListener('hidden.bs.modal', function () {
+            document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+            document.body.classList.remove('modal-open');
+        });
+    });
+
+    // Initialize tooltips
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl)
+    });
+
+          // 3) Robust modal cleanup handlers
+    // Remove any leftover backdrop BEFORE a modal opens
+    document.querySelectorAll('.modal').forEach(modalEl => {
+        modalEl.addEventListener('show.bs.modal', function () {
+            // if another leftover backdrop exists, remove it
+            document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+        });
+
+        // on hidden, remove backdrops and restore body scrolling
+        modalEl.addEventListener('hidden.bs.modal', function () {
+            document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+            document.body.classList.remove('modal-open');
+            document.body.style.overflow = '';
+            document.body.style.paddingRight = '';
+        });
+    });
+
+    // 4) Safety-net: if a backdrop exists but there is no visible modal, remove it
+    // (handles cases where Bootstrap failed silently)
+    const observer = new MutationObserver(() => {
+        const backdrop = document.querySelector('.modal-backdrop');
+        const anyShown = !!document.querySelector('.modal.show');
+        if (backdrop && !anyShown) {
+            backdrop.remove();
+            document.body.classList.remove('modal-open');
+            document.body.style.overflow = '';
+            document.body.style.paddingRight = '';
+        }
+    });
+    observer.observe(document.body, { childList: true, subtree: true });
+
+    // 5) Allow manual cleanup by pressing Esc (extra safety)
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+            document.body.classList.remove('modal-open');
+            document.body.style.overflow = '';
+            document.body.style.paddingRight = '';
+            document.querySelectorAll('.modal.show').forEach(m => {
+                try { bootstrap.Modal.getInstance(m)?.hide(); } catch(e) {}
+            });
+        }
+    });
+
+    // 6) Final cleanup in case something stuck earlier
+    setTimeout(() => {
+        document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+        document.body.classList.remove('modal-open');
+        document.body.style.overflow = '';
+        document.body.style.paddingRight = '';
+    }, 500);
+});
+</script>
+{% endblock %}

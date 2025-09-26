@@ -1,0 +1,134 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load crispy_forms_tags %}
+
+{% block title %}{% if object %}Edit{% else %}Add{% endif %} Student {{ organization.name|default:"School ERP System" }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h3 mb-0 text-gray-800">
+        <i class="fas fa-user-plus me-2"></i> {% if object %}Edit{% else %}Add{% endif %} Student
+    </h1>
+    <a href="{% if object %}{% url 'students:student_detail' object.pk %}{% else %}{% url 'students:student_list' %}{% endif %}" class="btn btn-secondary">
+        <i class="fas fa-arrow-left me-2"></i> Cancel
+    </a>
+</div>
+
+<div class="card card-custom">
+    <div class="card-header bg-warning">
+        <h6 class="m-0 font-weight-bold text-white">Student Information</h6>
+    </div>
+    <div class="card-body">
+        <form method="post" novalidate>
+            {% csrf_token %}
+            
+            {% if form.non_field_errors %}
+            <div class="alert alert-danger">
+                {% for error in form.non_field_errors %}
+                {{ error }}
+                {% endfor %}
+            </div>
+            {% endif %}
+            
+            <div class="row">
+                <!-- Loop through form fields -->
+                {% for field in form %}
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">{{ field.label }}{% if field.field.required %} <span class="text-danger">*</span>{% endif %}</label>
+                        {{ field }}
+                        {% if field.errors %}
+                            <div class="text-danger small mt-1">
+                                {{ field.errors|striptags }}
+                            </div>
+                        {% endif %}
+                        {% if field.help_text %}
+                            <small class="form-text text-muted">{{ field.help_text }}</small>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Add row break after every 2 fields for better layout -->
+                    {% if forloop.counter|divisibleby:2 %}
+                        </div><div class="row">
+                    {% endif %}
+                {% endfor %}
+            </div>
+                        
+            <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save me-2"></i> {% if object %}Update{% else %}Create{% endif %} Student
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+    // Function to filter sections based on selected class
+    function filterSections() {
+        var classId = $("#id_current_class").val();
+        if (classId) {
+            $.ajax({
+                url: "{% url 'students:ajax_load_sections' %}",
+                data: {
+                    'class_id': classId
+                },
+                success: function (data) {
+                    var sectionSelect = $("#id_section");
+                    sectionSelect.empty();
+                    sectionSelect.append('<option value="">---------</option>');
+                    $.each(data, function (index, item) {
+                        sectionSelect.append(
+                            '<option value="' + item.id + '">' + item.name + '</option>'
+                        );
+                    });
+                    
+                    // If editing existing student, try to preserve the current section
+                    {% if object and object.section %}
+                        sectionSelect.val("{{ object.section.pk }}");
+                    {% endif %}
+                }
+            });
+        } else {
+            $("#id_section").empty().append('<option value="">---------</option>');
+        }
+    }
+
+    // Initialize on page load
+    $(document).ready(function() {
+        // Add datepicker functionality
+        const dateInputs = document.querySelectorAll('input[type="date"]');
+        dateInputs.forEach(input => {
+            input.classList.add('form-control');
+        });
+        
+        // Set up class change event
+        $("#id_current_class").change(filterSections);
+        
+        // Trigger section filtering on page load if class is already selected
+        {% if form.current_class.value %}
+            filterSections();
+        {% endif %}
+        
+        // Email confirmation validation
+        $("#id_email, #id_confirm_email").on('blur', function() {
+            var email = $("#id_email").val();
+            var confirmEmail = $("#id_confirm_email").val();
+            
+            if (email && confirmEmail && email !== confirmEmail) {
+                $("#id_confirm_email").addClass('is-invalid');
+                if (!$("#email-mismatch-error").length) {
+                    $("#id_confirm_email").after(
+                        '<div id="email-mismatch-error" class="text-danger small mt-1">Email addresses do not match</div>'
+                    );
+                }
+            } else {
+                $("#id_confirm_email").removeClass('is-invalid');
+                $("#email-mismatch-error").remove();
+            }
+        });
+    });
+</script>
+{% endblock %}

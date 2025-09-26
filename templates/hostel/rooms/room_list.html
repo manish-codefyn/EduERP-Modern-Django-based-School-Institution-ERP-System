@@ -1,0 +1,466 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load custom_filters %}
+
+{% block title %}Room Management - {{ organization.name|default:"ERP System" }}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+
+<!-- Header -->
+<div class="header-section">
+    <div class="row align-items-center">
+        <div class="col-12 mb-2">
+            <!-- Breadcrumb -->
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb breadcrumb-dark">
+                    <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'hostel:hostel_list' %}">Hostel</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Room Management</li>
+                
+                </ol>
+            </nav>
+        </div>
+
+        <div class="col-md-8">
+            <div class="d-flex align-items-center">
+                <div class="header-icon me-3">
+                   <i class="bi bi-door-open display-6 text-primary"></i> 
+                </div>
+                <div>
+                    <h1 class="h3 fw-bold mb-1">Room Management</h1>
+                    <p class="text-custom mb-0">Manage hostel rooms, capacity, and maintenance status</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            {% if request.user.is_superadmin or request.user.is_institution_admin or request.user.is_principal %}
+            <div class="d-flex gap-2 justify-content-md-end flex-wrap">
+                <!-- Quick Actions -->
+                <div class="btn-group w-100" role="group">
+                    <a href="{% url 'hostel:room_add' %}" class="btn btn-primary">
+                        <i class="bi bi-plus-circle me-1"></i> New Room
+                    </a>
+                    <button type="button" class="btn btn-primary dropdown-toggle dropdown-toggle-split" 
+                            data-bs-toggle="dropdown" aria-expanded="false">
+                        <span class="visually-hidden">Toggle Dropdown</span>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <li>
+                            <button type="button" class="dropdown-item" data-bs-toggle="modal" data-bs-target="#exportModal">
+                                <i class="bi bi-download me-2"></i> Export Data
+                            </button>
+                        </li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li>
+                            <a class="dropdown-item" href="{% url 'hostel:hostel_list' %}">
+                                <i class="bi bi-buildings me-2"></i> View Hostels
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item" href="{% url 'hostel:allocation_list' %}">
+                                <i class="bi bi-people me-2"></i> View Allocations
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item" href="{% url 'hostel:feestructure_list' %}">
+                                <i class="bi bi-cash-coin me-2"></i> View Fee Structures
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+
+   <!-- Stats Cards -->
+<div class="row g-4 mb-4">
+    <div class="col-xl-3 col-md-6">
+        <div class="card stats-card text-white h-100" style="background: var(--primary-gradient);">
+            <div class="card-body d-flex flex-column justify-content-between">
+                <div class="row align-items-center">
+                    <div class="col-8">
+                        <h6 class="card-title mb-1 small opacity-75">TOTAL ROOMS</h6>
+                        <h3 class="mb-0 fw-bold">{{ total_rooms|default:"0" }}</h3>
+                        <p class="mb-0 small opacity-75">All rooms</p>
+                    </div>
+                    <div class="col-4 text-end">
+                        <div class="stats-icon">
+                            <i class="bi bi-door-open fs-2"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6">
+        <div class="card stats-card text-white h-100" style="background: var(--success-gradient);">
+            <div class="card-body d-flex flex-column justify-content-between">
+                <div class="row align-items-center">
+                    <div class="col-8">
+                        <h6 class="card-title mb-1 small opacity-75">AVAILABLE ROOMS</h6>
+                        <h3 class="mb-0 fw-bold">{{ available_rooms|default:"0" }}</h3>
+                        <p class="mb-0 small opacity-75">Ready for allocation</p>
+                    </div>
+                    <div class="col-4 text-end">
+                        <div class="stats-icon">
+                            <i class="bi bi-check-circle fs-2"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6">
+        <div class="card stats-card text-white h-100" style="background: var(--warning-gradient);">
+            <div class="card-body d-flex flex-column justify-content-between">
+                <div class="row align-items-center">
+                    <div class="col-8">
+                        <h6 class="card-title mb-1 small opacity-75">TOTAL CAPACITY</h6>
+                        <h3 class="mb-0 fw-bold">
+                            {% with total_capacity=rooms|sum_attr:'capacity' %}
+                            {{ total_capacity|default:"0" }}
+                            {% endwith %}
+                        </h3>
+                        <p class="mb-0 small opacity-75">Total beds</p>
+                    </div>
+                    <div class="col-4 text-end">
+                        <div class="stats-icon">
+                            <i class="bi bi-people fs-2"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6">
+        <div class="card stats-card text-white h-100" style="background: var(--danger-gradient);">
+            <div class="card-body d-flex flex-column justify-content-between">
+                <div class="row align-items-center">
+                    <div class="col-8">
+                        <h6 class="card-title mb-1 small opacity-75">MAINTENANCE</h6>
+                        <h3 class="mb-0 fw-bold">{{ maintenance_rooms|default:"0" }}</h3>
+                        <p class="mb-0 small opacity-75">Requires maintenance</p>
+                    </div>
+                    <div class="col-4 text-end">
+                        <div class="stats-icon">
+                            <i class="bi bi-tools fs-2"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+/* Optional: Ensure all stats cards in the row have equal height */
+
+</style>
+
+
+    <!-- Table Section -->
+    <div class="card card-custom">
+        <div class="card-header bg-transparent border-0 pt-4 px-4">
+            <h5 class="card-title mb-0 fw-bold text-custom">All Rooms</h5>
+            <p class="text-custom mb-0">Manage and review all rooms across hostels</p>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                {% if rooms %}
+                <table id="roomTable" class=" w-100 table-custom table-hover align-middle">
+                    <thead>
+                        <tr>
+                            <th>Room Number</th>
+                            <th>Hostel</th>
+                            <th>Floor</th>
+                            <th>Type</th>
+                            <th>Capacity</th>
+                            <th>Occupancy</th>
+                            <th>Status</th>
+                            <th>Maintenance</th>
+                            {% if request.user.is_superadmin or request.user.is_institution_admin or request.user.is_principal %}
+                            <th class="text-center">Actions</th>
+                            {% endif %}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for room in rooms %}
+                        <tr>
+                           <td>
+                            <div class="d-flex align-items-center">
+                                <div class="flex-shrink-0">
+                                    <i class="bi bi-door-closed text-primary fs-5 me-2"></i>
+                                </div>
+                                <div class="flex-grow-1 ms-2">
+                                    <h6 class="mb-0">{{ room.room_number }}</h6>
+                                    <small class="text-custom">Floor {{ room.floor }}</small>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="badge bg-light text-dark">
+                                <i class="bi bi-building me-1 text-primary"></i>
+                                {{ room.hostel.name }}
+                            </span>
+                        </td>
+                        <td>
+                            <span class="fw-bold">{{ room.floor }}</span>
+                        </td>
+                        <td>
+                            {% if room.room_type == 'single' %}
+                                <span class="room-type-badge bg-primary bg-opacity-10 text-primary">
+                                    <i class="bi bi-person me-1"></i>Single
+                                </span>
+                            {% elif room.room_type == 'double' %}
+                                <span class="room-type-badge bg-info bg-opacity-10 text-info">
+                                    <i class="bi bi-people me-1"></i>Double
+                                </span>
+                            {% elif room.room_type == 'triple' %}
+                                <span class="room-type-badge bg-warning bg-opacity-10 text-warning">
+                                    <i class="bi bi-people me-1"></i>Triple
+                                </span>
+                            {% else %}
+                                <span class="room-type-badge bg-secondary bg-opacity-10 text-secondary">
+                                    <i class="bi bi-people me-1"></i>Dormitory
+                                </span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <span class="fw-bold">{{ room.capacity }}</span>
+                        </td>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                <div class="progress me-2">
+                                    <div class="progress-bar {% if room.available_beds == 0 %}bg-danger{% elif room.available_beds <= 1 %}bg-warning{% else %}bg-success{% endif %}" 
+                                         role="progressbar" 
+                                         style="width: {% widthratio room.current_occupancy room.capacity 100 %}%"
+                                         aria-valuenow="{% widthratio room.current_occupancy room.capacity 100 %}" 
+                                         aria-valuemin="0" 
+                                         aria-valuemax="100">
+                                    </div>
+                                </div>
+                                <span class="small">{% widthratio room.current_occupancy room.capacity 100 %}%</span>
+                            </div>
+                            <small class="text-custom">{{ room.current_occupancy }} / {{ room.capacity }}</small>
+                        </td>
+                        <td>
+                            {% if room.is_available %}
+                                <span class="badge bg-success bg-opacity-10 text-success">
+                                    <i class="bi bi-check-circle me-1"></i>Available
+                                </span>
+                            {% else %}
+                                <span class="badge bg-danger bg-opacity-10 text-danger">
+                                    <i class="bi bi-x-circle me-1"></i>Unavailable
+                                </span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if room.maintenance_required %}
+                                <span class="badge bg-warning bg-opacity-10 text-warning">
+                                    <i class="bi bi-tools me-1"></i>Required
+                                </span>
+                            {% else %}
+                                <span class="badge bg-success bg-opacity-10 text-success">
+                                    <i class="bi bi-check-circle me-1"></i>OK
+                                </span>
+                            {% endif %}
+                        </td>
+                        {% if request.user.is_superadmin or request.user.is_institution_admin or request.user.is_principal %}
+                        <td>
+                            <div class="d-flex justify-content-center">
+                                <!-- <a href="#" class="btn btn-sm btn-outline-primary me-1" title="View Details" data-bs-toggle="tooltip">
+                                    <i class="bi bi-eye"></i>
+                                </a> -->
+                                <a href="{% url 'hostel:room_edit' room.id %}" class="btn btn-sm btn-outline-secondary me-1" title="Edit" data-bs-toggle="tooltip">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                <a href="{% url 'hostel:room_delete' room.id %}" class="btn btn-sm btn-outline-danger" title="Delete" data-bs-toggle="tooltip">
+                                    <i class="bi bi-trash"></i>
+                                </a>
+                            </div>
+                        </td>
+                        {% endif %}
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% else %}
+                <div class="empty-state">
+                    <i class="fas fa-door-closed"></i>
+                    <h4 class="mt-3 mb-2">No Rooms Found</h4>
+                    <p class="text-custom mb-4">Get started by creating your first room</p>
+                    {% if request.user.is_superadmin or request.user.is_institution_admin or request.user.is_principal %}
+                    <a href="{% url 'hostel:room_add' %}" class="btn btn-primary">
+                        <i class="fas fa-plus-circle me-2"></i> Add First Room
+                    </a>
+                    {% endif %}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Export Modal -->
+<div class="modal fade" id="exportModal" tabindex="-1" aria-labelledby="exportModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title fw-bold">Export Rooms</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="get" action="{% url 'hostel:room_export'%}">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Export Format</label>
+                        <select class="form-select" name="format" required>
+                            <option value="csv">CSV Format</option>
+                            <option value="pdf">PDF Document</option>
+                            <option value="excel">Excel Spreadsheet</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Hostel</label>
+                        <select class="form-select" name="hostel_id">
+                            <option value="">All Hostels</option>
+                            {% for hostel in hostels %}
+                            <option value="{{ hostel.id }}">{{ hostel.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Room Type</label>
+                        <select class="form-select" name="room_type">
+                            <option value="">All Types</option>
+                            <option value="single">Single</option>
+                            <option value="double">Double</option>
+                            <option value="triple">Triple</option>
+                            <option value="dormitory">Dormitory</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Status</label>
+                        <select class="form-select" name="is_available">
+                            <option value="">All Statuses</option>
+                            <option value="true">Available Only</option>
+                            <option value="false">Unavailable Only</option>
+                        </select>
+                    </div>
+                    <div class="mb-3 form-check">
+                        <input type="checkbox" class="form-check-input" name="include_maintenance" value="true">
+                        <label class="form-check-label">Include maintenance rooms</label>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-download me-2"></i>Export Data
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize DataTable
+    $('#roomTable').DataTable({
+        "pageLength": 10,
+        "order": [[0, 'asc']],
+        "language": {
+            "search": "<i class='fas fa-search me-2'></i>Search:",
+            "lengthMenu": "Show _MENU_ entries",
+            "info": "Showing _START_ to _END_ of _TOTAL_ entries",
+            "paginate": {
+                "previous": "<i class='bi bi-chevron-left'></i>",
+                "next": "<i class='bi bi-chevron-right'></i>"
+            }
+        },
+        "columnDefs": [
+            { 
+                "targets": [-1], 
+                "orderable": false,
+                "className": "dt-center"
+            }
+        ],
+        "responsive": true,
+        "dom": '<"row"<"col-md-6"l><"col-md-6"f>>rt<"row"<"col-md-6"i><"col-md-6"p>>'
+    });
+    
+    // Initialize tooltips
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl)
+    });
+
+      // 3) Robust modal cleanup handlers
+    // Remove any leftover backdrop BEFORE a modal opens
+    document.querySelectorAll('.modal').forEach(modalEl => {
+        modalEl.addEventListener('show.bs.modal', function () {
+            // if another leftover backdrop exists, remove it
+            document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+        });
+
+        // on hidden, remove backdrops and restore body scrolling
+        modalEl.addEventListener('hidden.bs.modal', function () {
+            document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+            document.body.classList.remove('modal-open');
+            document.body.style.overflow = '';
+            document.body.style.paddingRight = '';
+        });
+    });
+
+    // 4) Safety-net: if a backdrop exists but there is no visible modal, remove it
+    // (handles cases where Bootstrap failed silently)
+    const observer = new MutationObserver(() => {
+        const backdrop = document.querySelector('.modal-backdrop');
+        const anyShown = !!document.querySelector('.modal.show');
+        if (backdrop && !anyShown) {
+            backdrop.remove();
+            document.body.classList.remove('modal-open');
+            document.body.style.overflow = '';
+            document.body.style.paddingRight = '';
+        }
+    });
+    observer.observe(document.body, { childList: true, subtree: true });
+
+    // 5) Allow manual cleanup by pressing Esc (extra safety)
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+            document.body.classList.remove('modal-open');
+            document.body.style.overflow = '';
+            document.body.style.paddingRight = '';
+            document.querySelectorAll('.modal.show').forEach(m => {
+                try { bootstrap.Modal.getInstance(m)?.hide(); } catch(e) {}
+            });
+        }
+    });
+
+    // 6) Final cleanup in case something stuck earlier
+    setTimeout(() => {
+        document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+        document.body.classList.remove('modal-open');
+        document.body.style.overflow = '';
+        document.body.style.paddingRight = '';
+    }, 500);
+});
+</script>
+{% endblock %}

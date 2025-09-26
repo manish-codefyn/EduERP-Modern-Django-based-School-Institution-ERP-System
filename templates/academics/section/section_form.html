@@ -1,0 +1,259 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load widget_tweaks %}
+
+{% block title %}{% if form.instance.pk %}Edit{% else %}Add{% endif %} Section - {{ organization.name|default:"ERP System" }}{% endblock %}
+
+{% block extra_css %}
+
+{% endblock %}
+
+{% block content %}
+        <div class="row justify-content-center">
+            <div class="col-lg-12">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div>
+                        <h2 class="h3 mb-1">{% if form.instance.pk %}Edit{% else %}Add New{% endif %} Section</h2>
+                        <p class="text-custom mb-0">
+                            {% if form.instance.pk %}
+                            Update section details for {{ class_obj.name }}
+                            {% else %}
+                            Create a new section for {{ class_obj.name }}
+                            {% endif %}
+                        </p>
+                    </div>
+                <a href="{% url 'academics:section_list' class_obj.id %}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-1"></i> Back to Sections
+        </a>
+
+        </div>
+
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        <div class="card card-custom p-3">
+            <div class="card-header detail-card-header">
+                <h4 class="mb-0">
+                    <i class="bi bi-people me-2"></i>
+                    {% if form.instance.pk %}Edit Section{% else %}Create New Section{% endif %}
+                </h4>
+            </div>
+            <div class="form-body">
+                <form method="post" id="sectionForm">
+                    {% csrf_token %}
+                    
+                    {% if form.non_field_errors %}
+                    <div class="alert alert-danger">
+                        {% for error in form.non_field_errors %}
+                            {{ error }}
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+
+                    <!-- Class Information (Readonly) -->
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <label class="form-label">Class</label>
+                            <div class="form-control bg-light">
+                                <strong>{{ class_obj.name }}</strong> ({{ class_obj.code }})
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Available Capacity</label>
+                            <div class="form-control bg-light">
+                                <strong>{{ class_obj.capacity }}</strong> students total
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group mb-4">
+                                <label for="{{ form.name.id_for_label }}" class="form-label">
+                                    {{ form.name.label }}
+                                    <span class="text-danger">*</span>
+                                </label>
+                                {% render_field form.name class="form-control" placeholder="e.g., Section A, Blue Group" %}
+                                {% if form.name.errors %}
+                                    <div class="invalid-feedback">
+                                        {% for error in form.name.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                                <div class="help-text">Enter a unique name for this section.</div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="form-group mb-4">
+                                <label for="{{ form.capacity.id_for_label }}" class="form-label">
+                                    {{ form.capacity.label }}
+                                    <span class="text-danger">*</span>
+                                </label>
+                                {% render_field form.capacity class="form-control" type="number" min="1" max=class_obj.capacity %}
+                                {% if form.capacity.errors %}
+                                    <div class="invalid-feedback">
+                                        {% for error in form.capacity.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                                <div class="help-text">Maximum number of students in this section.</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group mb-4">
+                        <div class="form-check form-switch">
+                            {% render_field form.is_active class="form-check-input" %}
+                            <label class="form-check-label form-label" for="{{ form.is_active.id_for_label }}">
+                                {{ form.is_active.label }}
+                            </label>
+                        </div>
+                        {% if form.is_active.errors %}
+                            <div class="invalid-feedback">
+                                {% for error in form.is_active.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                        <div class="help-text">Deactivate to hide this section from selection lists.</div>
+                    </div>
+
+                    <div class="d-flex justify-content-between align-items-center mt-5 pt-3 border-top">
+                        <a href="{% url 'academics:section_list' class_obj.id %}" class="btn btn-outline-secondary">
+                            <i class="bi bi-x-circle me-1"></i> Cancel
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-circle me-1"></i> {% if form.instance.pk %}Update{% else %}Create{% endif %} Section
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Capacity Information Card -->
+        <div class="card card-custom mt-4">
+            <div class="card-body">
+                <h5 class="card-title mb-3">
+                    <i class="bi bi-info-circle me-2"></i>Capacity Information
+                </h5>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 40px; height: 40px;">
+                                <i class="bi bi-people"></i>
+                            </div>
+                            <div>
+                                <h6 class="mb-0">Class Capacity</h6>
+                                <p class="text-custom mb-0">{{ class_obj.capacity }} students</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="bg-info text-white rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 40px; height: 40px;">
+                                <i class="bi bi-diagram-3"></i>
+                            </div>
+                            <div>
+                                <h6 class="mb-0">Existing Sections</h6>
+                                <p class="text-custom mb-0">{{ existing_sections_count }} sections</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="progress mb-3" style="height: 10px;">
+                    <div class="progress-bar bg-success" role="progressbar" style="width: {% widthratio used_capacity class_obj.capacity 100 %}%" aria-valuenow="{{ used_capacity }}" aria-valuemin="0" aria-valuemax="{{ class_obj.capacity }}"></div>
+                </div>
+                <div class="d-flex justify-content-between">
+                    <small class="text-custom">{{ used_capacity }} students allocated</small>
+                    <small class="text-custom">{{ remaining_capacity }} students available</small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Form validation
+        const form = document.getElementById('sectionForm');
+        const capacityField = document.getElementById('{{ form.capacity.id_for_label }}');
+        const maxCapacity = {{ class_obj.capacity }};
+
+        // Set max attribute for capacity field
+        capacityField.setAttribute('max', maxCapacity);
+
+        form.addEventListener('submit', function(event) {
+            let isValid = true;
+
+            // Validate required fields
+            const nameField = document.getElementById('{{ form.name.id_for_label }}');
+            if (!nameField.value.trim()) {
+                isValid = false;
+                highlightFieldError(nameField, 'Section name is required.');
+            }
+
+            if (!capacityField.value || parseInt(capacityField.value) < 1) {
+                isValid = false;
+                highlightFieldError(capacityField, 'Please enter a valid capacity (minimum 1).');
+            } else if (parseInt(capacityField.value) > maxCapacity) {
+                isValid = false;
+                highlightFieldError(capacityField, `Capacity cannot exceed class maximum of ${maxCapacity} students.`);
+            }
+
+            if (!isValid) {
+                event.preventDefault();
+                // Scroll to first error
+                const firstError = form.querySelector('.is-invalid');
+                if (firstError) {
+                    firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            }
+        });
+
+        function highlightFieldError(field, message) {
+            field.classList.add('is-invalid');
+            
+            // Check if error message already exists
+            let errorDiv = field.nextElementSibling;
+            if (!errorDiv || !errorDiv.classList.contains('invalid-feedback')) {
+                errorDiv = document.createElement('div');
+                errorDiv.className = 'invalid-feedback';
+                field.parentNode.insertBefore(errorDiv, field.nextSibling);
+            }
+            
+            errorDiv.textContent = message;
+        }
+
+        // Remove validation styles on input
+        const inputs = form.querySelectorAll('input, select, textarea');
+        inputs.forEach(input => {
+            input.addEventListener('input', function() {
+                this.classList.remove('is-invalid');
+                const errorDiv = this.nextElementSibling;
+                if (errorDiv && errorDiv.classList.contains('invalid-feedback')) {
+                    errorDiv.textContent = '';
+                }
+            });
+        });
+
+        // Real-time capacity validation
+        capacityField.addEventListener('input', function() {
+            const value = parseInt(this.value);
+            if (value > maxCapacity) {
+                this.value = maxCapacity;
+            }
+        });
+    });
+</script>
+{% endblock %}

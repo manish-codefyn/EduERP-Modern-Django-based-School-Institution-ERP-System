@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>{{ title }} - {{ organization.name }}</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 1.5cm;
+        }
+        body {
+            font-family: 'DejaVu Sans', Arial, sans-serif;
+            font-size: 12px;
+            line-height: 1.4;
+            color: #333;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #2c3e50;
+            padding-bottom: 15px;
+        }
+        .header h1 {
+            color: #2c3e50;
+            margin: 0;
+            font-size: 24px;
+        }
+        .header .subtitle {
+            color: #7f8c8d;
+            font-size: 14px;
+            margin-top: 5px;
+        }
+        .organization-info {
+            text-align: center;
+            margin-bottom: 15px;
+            font-size: 11px;
+            color: #666;
+        }
+        .summary-cards {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        .summary-card {
+            flex: 1;
+            min-width: 120px;
+            margin: 5px;
+            padding: 10px;
+            border-radius: 5px;
+            text-align: center;
+            background: #f8f9fa;
+            border-left: 4px solid #2c3e50;
+        }
+        .summary-card .count {
+            font-size: 24px;
+            font-weight: bold;
+            margin: 5px 0;
+        }
+        .summary-card .label {
+            font-size: 11px;
+            color: #666;
+        }
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        .table th {
+            background-color: #2c3e50;
+            color: white;
+            padding: 8px;
+            text-align: left;
+            font-size: 10px;
+            border: 1px solid #34495e;
+        }
+        .table td {
+            padding: 6px;
+            border: 1px solid #ddd;
+            font-size: 10px;
+            page-break-inside: avoid;
+        }
+        .table tr:nth-child(even) {
+            background-color: #f8f9fa;
+        }
+        .status-badge {
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 9px;
+            font-weight: bold;
+        }
+        .status-pending { background-color: #fff3cd; color: #856404; }
+        .status-fulfilled { background-color: #d4edda; color: #155724; }
+        .status-cancelled { background-color: #f8d7da; color: #721c24; }
+        .status-expired { background-color: #e2e3e5; color: #383d41; }
+        .footer {
+            margin-top: 30px;
+            padding-top: 10px;
+            border-top: 1px solid #ddd;
+            font-size: 10px;
+            color: #666;
+            text-align: center;
+        }
+        .logo {
+            max-height: 60px;
+            margin-bottom: 10px;
+        }
+        .filters {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+            font-size: 10px;
+        }
+        .filters strong {
+            color: #2c3e50;
+        }
+        .no-data {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        {% if logo %}
+            <img src="{{ logo }}" alt="{{ organization.name }} Logo" class="logo">
+        {% endif %}
+        <h1>{{ title }}</h1>
+        <div class="subtitle">Generated on {{ export_date|date:"F j, Y \a\t g:i A" }}</div>
+    </div>
+
+    <div class="organization-info">
+        {{ organization.name }}<br>
+        {% if organization.address %}{{ organization.address }}<br>{% endif %}
+        {% if organization.phone %}{{ organization.phone }} | {% endif %}
+        {% if organization.email %}{{ organization.email }}{% endif %}
+    </div>
+
+    {% if filters %}
+    <div class="filters">
+        <strong>Filters Applied:</strong>
+        {% for key, value in filters.items %}
+            {% if value and key != 'format' %}
+                {{ key|title }}: {{ value }}{% if not forloop.last %} | {% endif %}
+            {% endif %}
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <div class="summary-cards">
+        <div class="summary-card">
+            <div class="count">{{ total_count }}</div>
+            <div class="label">Total Reservations</div>
+        </div>
+        <div class="summary-card">
+            <div class="count">{{ pending_count }}</div>
+            <div class="label">Pending</div>
+        </div>
+        <div class="summary-card">
+            <div class="count">{{ fulfilled_count }}</div>
+            <div class="label">Fulfilled</div>
+        </div>
+        <div class="summary-card">
+            <div class="count">{{ cancelled_count }}</div>
+            <div class="label">Cancelled</div>
+        </div>
+        <div class="summary-card">
+            <div class="count">{{ expired_count }}</div>
+            <div class="label">Expired</div>
+        </div>
+    </div>
+
+    {% if reservations %}
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Reservation ID</th>
+                <th>Book Title</th>
+                <th>User</th>
+                <th>Reservation Date</th>
+                <th>Expiry Date</th>
+                <th>Status</th>
+                <th>Days Left</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for reservation in reservations %}
+            <tr>
+                <td>{{ reservation.reservation_number|slice:":8" }}...</td>
+                <td>{{ reservation.book.title|truncatewords:5 }}</td>
+                <td>{{ reservation.user.get_full_name|default:reservation.user.username }}</td>
+                <td>{{ reservation.reservation_date|date:"M j, Y H:i" }}</td>
+                <td>{{ reservation.expiry_date|date:"M j, Y H:i" }}</td>
+                <td>
+                    <span class="status-badge status-{{ reservation.status }}">
+                        {{ reservation.get_status_display }}
+                    </span>
+                </td>
+                <td style="text-align: center;">
+                    {% if reservation.status == 'pending' %}
+                        {% with days_remaining=reservation.days_remaining %}
+                            {% if days_remaining > 0 %}
+                                {{ days_remaining }}
+                            {% else %}
+                                <span style="color: #dc3545;">Expired</span>
+                            {% endif %}
+                        {% endwith %}
+                    {% else %}
+                        -
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <div class="no-data">
+        <h3>No reservations found</h3>
+        <p>There are no reservations matching the current criteria.</p>
+    </div>
+    {% endif %}
+
+    <div class="footer">
+        Report generated by {{ organization.name }} Library System<br>
+        Page {{ page_number }} of {{ total_pages }} | {{ export_date|date:"F j, Y \a\t g:i A" }}
+    </div>
+</body>
+</html>

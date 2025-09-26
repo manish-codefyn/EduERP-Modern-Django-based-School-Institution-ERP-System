@@ -1,0 +1,379 @@
+{% extends "library/base.html" %}
+{% load static custom_filters humanize %}
+
+{% block title %} Borrow Record Details - Library Management - {{ organization.name|default:"codefyn" }}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
+<style>
+    .record-detail-card {
+        border-left: 4px solid #0d6efd;
+    }
+    .status-badge {
+        font-size: 0.9rem;
+        padding: 0.5rem 1rem;
+    }
+    .detail-label {
+        font-weight: 600;
+        color: #6c757d;
+    }
+    .action-buttons {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+    }
+    .book-cover {
+        max-width: 150px;
+        border-radius: 8px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+    .timeline {
+        position: relative;
+        padding-left: 2rem;
+    }
+    .timeline::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: 2px;
+        background-color: #e9ecef;
+    }
+    .timeline-item {
+        position: relative;
+        margin-bottom: 1.5rem;
+    }
+    .timeline-item::before {
+        content: '';
+        position: absolute;
+        left: -2rem;
+        top: 0.5rem;
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        background-color: #0d6efd;
+    }
+    .timeline-item.completed::before {
+        background-color: #198754;
+    }
+    .timeline-item.overdue::before {
+        background-color: #dc3545;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+
+    <!-- Header -->
+    <div class="header-section">
+        <div class="row align-items-center">
+            <div class="col-12 mb-2">
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb breadcrumb-dark">
+                        <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Dashboard</a></li>
+                        <li class="breadcrumb-item"><a href="{% url 'library:dashboard' %}">Library</a></li>
+                        <li class="breadcrumb-item"><a href="{% url 'library:borrowrecord_list' %}">Borrow Records</a></li>
+                        <li class="breadcrumb-item active" aria-current="page">Borrow Record Details</li>
+                    </ol>
+                </nav>
+            </div>
+
+            <div class="col-md-8">
+                <div class="d-flex align-items-center">
+                    <div class="header-icon me-3">
+                       <i class="bi bi-journal-check display-6 text-primary"></i> 
+                    </div>
+                    <div>
+                        <h1 class="h3 fw-bold mb-1">Borrow Record Details</h1>
+                        <p class="text-custom mb-0">Detailed view of borrowing transaction</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="d-flex gap-2 justify-content-md-end flex-wrap action-buttons">
+                    <a href="{% url 'library:borrowrecord_list' %}" class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-left me-1"></i> Back to Records
+                    </a>
+                    {% if request.user.is_superuser and not borrow_record.return_date %}
+                    <a href="#" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#returnModal">
+                        <i class="bi bi-check-circle me-1"></i> Mark as Returned
+                    </a>
+                    {% endif %}
+                    {% if request.user.is_superuser %}
+                    <a href="#" class="btn btn-outline-primary">
+                        <i class="bi bi-pencil me-1"></i> Edit Record
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="row mt-4">
+        <!-- Book Information -->
+        <div class="col-lg-4 mb-4">
+            <div class="card card-custom h-100">
+                <div class="card-header bg-transparent border-0 pt-4 px-4">
+                    <h5 class="card-title mb-0 fw-bold text-custom">Book Information</h5>
+                </div>
+                <div class="card-body text-center">
+                    {% if borrow_record.book.cover_image %}
+                    <img src="{{ borrow_record.book.cover_image.url }}" alt="{{ borrow_record.book.title }}" class="book-cover mb-3">
+                    {% else %}
+                    <div class="bg-light rounded d-flex align-items-center justify-content-center mb-3" style="height: 200px; width: 150px; margin: 0 auto;">
+                        <i class="bi bi-book display-4 text-custom"></i>
+                    </div>
+                    {% endif %}
+                    <h4 class="mb-2">{{ borrow_record.book.title }}</h4>
+                    <p class="text-custom mb-2">by {{ borrow_record.book.author|default:"Unknown Author" }}</p>
+                    <p class="text-custom mb-3">ISBN: {{ borrow_record.book.isbn|default:"Not available" }}</p>
+                    <a href="{% url 'library:book_detail' borrow_record.book.id %}" class="btn btn-outline-primary">
+                        <i class="bi bi-eye me-1"></i> View Book Details
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Borrow Details -->
+        <div class="col-lg-8 mb-4">
+            <div class="card card-custom h-100 record-detail-card">
+                <div class="card-header bg-transparent border-0 pt-4 px-4">
+                    <h5 class="card-title mb-0 fw-bold text-custom">Borrowing Details</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <p class="detail-label">Borrower</p>
+                            <h5 class="mb-3">
+                                <i class="bi bi-person me-2 text-primary"></i>
+                                {{ borrow_record.borrower.get_full_name|default:borrow_record.borrower.username }}
+                            </h5>
+                            
+                            <p class="detail-label">Issued By</p>
+                            <p class="mb-3">
+                                <i class="bi bi-person-check me-2 text-primary"></i>
+                                {{ borrow_record.created_by.get_full_name }}
+                            </p>
+                            
+                            <p class="detail-label">Borrow Date</p>
+                            <p class="mb-3">
+                                <i class="bi bi-calendar-event me-2 text-primary"></i>
+                                {{ borrow_record.borrow_date|date:"F d, Y" }}
+                            </p>
+                        </div>
+                        <div class="col-md-6">
+                            <p class="detail-label">Status</p>
+                            <div class="mb-3">
+                                {% if borrow_record.return_date %}
+                                    <span class="badge status-badge bg-success bg-opacity-10 text-success">
+                                        <i class="bi bi-check-circle me-1"></i>Returned
+                                    </span>
+                                {% elif borrow_record.due_date < today %}
+                                    <span class="badge status-badge bg-danger bg-opacity-10 text-danger">
+                                        <i class="bi bi-exclamation-circle me-1"></i>Overdue
+                                    </span>
+                                {% else %}
+                                    <span class="badge status-badge bg-warning bg-opacity-10 text-warning">
+                                        <i class="bi bi-clock me-1"></i>Borrowed
+                                    </span>
+                                {% endif %}
+                            </div>
+                            
+                            <p class="detail-label">Due Date</p>
+                            <p class="mb-3">
+                                <i class="bi bi-calendar-x me-2 text-primary"></i>
+                                {{ borrow_record.due_date|date:"F d, Y" }}
+                            </p>
+                            
+                            {% if borrow_record.return_date %}
+                            <p class="detail-label">Return Date</p>
+                            <p class="mb-3">
+                                <i class="bi bi-calendar-check me-2 text-primary"></i>
+                                {{ borrow_record.return_date|date:"F d, Y" }}
+                            </p>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <!-- Timeline -->
+                    <h6 class="fw-bold text-custom mb-3">Borrowing Timeline</h6>
+                    <div class="timeline">
+                        <div class="timeline-item {% if borrow_record.borrow_date %}completed{% endif %}">
+                            <h6 class="fw-bold">Book Issued</h6>
+                            <p class="text-custom mb-1">{{ borrow_record.borrow_date|date:"F d, Y" }}</p>
+                            <p class="small text-custom">Book was issued to the borrower</p>
+                        </div>
+                        
+                        <div class="timeline-item {% if borrow_record.return_date or borrow_record.due_date < today %}completed{% endif %}">
+                            <h6 class="fw-bold">Due Date</h6>
+                            
+                           {% load humanize %}
+                            <div class="timeline-item {% if borrow_record.return_date or borrow_record.due_date < today %}completed{% endif %}">
+                                <h6 class="fw-bold">Due Date</h6>
+                                <p class="text-custom mb-1">{{ borrow_record.due_date|date:"F d, Y" }}</p>
+
+                                {% if borrow_record.due_date < today and not borrow_record.return_date %}
+                                    <p class="small text-danger">
+                                        Book is overdue by {{ borrow_record.due_date|timesince:today }}
+                                    </p>
+                                {% elif borrow_record.return_date and borrow_record.return_date > borrow_record.due_date %}
+                                    <p class="small text-danger">
+                                        Book was returned {{ borrow_record.return_date|timesince:borrow_record.due_date }} late
+                                    </p>
+                                {% elif borrow_record.return_date and borrow_record.return_date <= borrow_record.due_date %}
+                                    <p class="small text-success">Book was returned on time</p>
+                                {% else %}
+                                    <p class="small text-custom">
+                                        Due in {{ borrow_record.due_date|timeuntil:today }}
+                                    </p>
+                                {% endif %}
+                            </div>
+
+                        
+                        {% if borrow_record.return_date %}
+                        <div class="timeline-item completed">
+                            <h6 class="fw-bold">Book Returned</h6>
+                            <p class="text-custom mb-1">{{ borrow_record.return_date|date:"F d, Y" }}</p>
+                            <p class="small text-custom">Book was returned to the library</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Additional Information -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card card-custom">
+                <div class="card-header bg-transparent border-0 pt-4 px-4">
+                    <h5 class="card-title mb-0 fw-bold text-custom">Additional Information</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p class="detail-label">Record ID</p>
+                            <p class="mb-3">{{ borrow_record.id }}</p>
+                            
+                            <p class="detail-label">Institution</p>
+                            <p class="mb-3">{{ borrow_record.institution.name|default:"Not specified" }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p class="detail-label">Created</p>
+                            <p class="mb-3">{{ borrow_record.created_at|date:"F d, Y H:i" }}</p>
+                            
+                            <p class="detail-label">Last Updated</p>
+                            <p class="mb-3">{{ borrow_record.updated_at|date:"F d, Y H:i" }}</p>
+                        </div>
+                    </div>
+                    
+                    {% if borrow_record.notes %}
+                    <div class="mt-3">
+                        <p class="detail-label">Notes</p>
+                        <div class="border rounded p-3 bg-light">
+                            {{ borrow_record.notes|linebreaks }}
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Return Modal -->
+{% if request.user.is_superuser and not borrow_record.return_date %}
+<div class="modal fade" id="returnModal" tabindex="-1" aria-labelledby="returnModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="returnModalLabel">Mark Book as Returned</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to mark <strong>"{{ borrow_record.book.title }}"</strong> as returned?</p>
+                <p>Borrower: <strong>{{ borrow_record.borrower.get_full_name|default:borrow_record.borrower.username }}</strong></p>
+                
+                <form id="returnForm" method="post" action="{% url 'library:return_book' borrow_record.id %}">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="returnNotes" class="form-label">Return Notes (Optional)</label>
+                        <textarea class="form-control" id="returnNotes" name="notes" rows="3" placeholder="Add any notes about the return..."></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="submit" form="returnForm" class="btn btn-success">Confirm Return</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Any additional JavaScript for this page can go here         // 3) Robust modal cleanup handlers
+    // Remove any leftover backdrop BEFORE a modal opens
+    document.querySelectorAll('.modal').forEach(modalEl => {
+        modalEl.addEventListener('show.bs.modal', function () {
+            // if another leftover backdrop exists, remove it
+            document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+        });
+
+        // on hidden, remove backdrops and restore body scrolling
+        modalEl.addEventListener('hidden.bs.modal', function () {
+            document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+            document.body.classList.remove('modal-open');
+            document.body.style.overflow = '';
+            document.body.style.paddingRight = '';
+        });
+    });
+
+    // 4) Safety-net: if a backdrop exists but there is no visible modal, remove it
+    // (handles cases where Bootstrap failed silently)
+    const observer = new MutationObserver(() => {
+        const backdrop = document.querySelector('.modal-backdrop');
+        const anyShown = !!document.querySelector('.modal.show');
+        if (backdrop && !anyShown) {
+            backdrop.remove();
+            document.body.classList.remove('modal-open');
+            document.body.style.overflow = '';
+            document.body.style.paddingRight = '';
+        }
+    });
+    observer.observe(document.body, { childList: true, subtree: true });
+
+    // 5) Allow manual cleanup by pressing Esc (extra safety)
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+            document.body.classList.remove('modal-open');
+            document.body.style.overflow = '';
+            document.body.style.paddingRight = '';
+            document.querySelectorAll('.modal.show').forEach(m => {
+                try { bootstrap.Modal.getInstance(m)?.hide(); } catch(e) {}
+            });
+        }
+    });
+
+    // 6) Final cleanup in case something stuck earlier
+    setTimeout(() => {
+        document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+        document.body.classList.remove('modal-open');
+        document.body.style.overflow = '';
+        document.body.style.paddingRight = '';
+    }, 500);
+});
+</script>
+{% endblock %}

@@ -1,0 +1,635 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %} Teacher List - {{ organization.name|default:"School ERP System" }}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css">
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+
+    <!-- Header -->
+    <div class="header-section">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb breadcrumb-dark">
+                        <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Dashboard</a></li>
+                        <li class="breadcrumb-item active" aria-current="page">Teacher Management</li>
+                    </ol>
+                </nav>
+                <h1 class="display-6 fw-bold mb-2">Teacher Management</h1>
+                <p class="lead mb-0 opacity-75">Manage all teaching staff and faculty members</p>
+            </div>
+            <div class="col-md-4 text-md-end">
+                <div class="d-flex gap-2 justify-content-md-end flex-wrap">
+                    {% if request.user.is_superadmin %}
+                    <!-- Quick Actions -->
+                    <div class="btn-group w-100" role="group">
+                        <!-- Main Action -->
+                        <a href="{% url 'teacher_add' %}" class="btn btn-primary">
+                            <i class="bi bi-plus-circle me-1"></i> Add Teacher
+                        </a>
+
+                        <!-- Dropdown Toggle -->
+                        <button type="button" class="btn btn-primary dropdown-toggle dropdown-toggle-split"
+                                data-bs-toggle="dropdown" aria-expanded="false">
+                            <span class="visually-hidden">Toggle Dropdown</span>
+                        </button>
+
+                        <!-- Dropdown Menu -->
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><h6 class="dropdown-header">Export Options</h6></li>
+                            <li>
+                                <a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#exportModal">
+                                    <i class="bi bi-gear me-2"></i> Custom Export...
+                                </a>
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <a class="dropdown-item" href="{% url 'export_teachers' %}?{{ request.GET.urlencode }}&format=csv">
+                                    <i class="bi bi-filetype-csv me-2"></i> Export Current CSV
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="{% url 'export_teachers' %}?{{ request.GET.urlencode }}&format=pdf">
+                                    <i class="bi bi-filetype-pdf me-2"></i> Export Current PDF
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="{% url 'export_teachers' %}?{{ request.GET.urlencode }}&format=excel">
+                                    <i class="bi bi-filetype-xlsx me-2"></i> Export Current Excel
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="row g-4 mb-4">
+        <!-- Total Teachers -->
+        <div class="col-xl-3 col-md-6">
+            <div class="card stats-card text-white" style="background: linear-gradient(135deg, #6f42c1 0%, #343a40 100%);">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-8">
+                            <h6 class="card-title mb-1 small opacity-75">TOTAL TEACHERS</h6>
+                            <h3 class="mb-0 fw-bold">{{ teacher_statistics.total_count|default:0 }}</h3>
+                        </div>
+                        <div class="col-4 text-end">
+                            <div class="stats-icon">
+                                <i class="bi bi-people"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Active Teachers -->
+        <div class="col-xl-3 col-md-6">
+            <div class="card stats-card text-white" style="background: linear-gradient(135deg, #00b894 0%, #00a085 100%);">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-8">
+                            <h6 class="card-title mb-1 small opacity-75">ACTIVE TEACHERS</h6>
+                            <h3 class="mb-0 fw-bold">{{ teacher_statistics.active_count|default:0 }}</h3>
+                        </div>
+                        <div class="col-4 text-end">
+                            <div class="stats-icon">
+                                <i class="bi bi-person-check"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Class Teachers -->
+        <div class="col-xl-3 col-md-6">
+            <div class="card stats-card text-white" style="background: linear-gradient(135deg, #fdcb6e 0%, #f39c12 100%);">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-8">
+                            <h6 class="card-title mb-1 small opacity-75">CLASS TEACHERS</h6>
+                            <h3 class="mb-0 fw-bold">{{ class_teacher_count|default:0 }}</h3>
+                        </div>
+                        <div class="col-4 text-end">
+                            <div class="stats-icon">
+                                <i class="bi bi-person-badge"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Average Experience -->
+        <div class="col-xl-3 col-md-6">
+            <div class="card stats-card text-white" style="background: linear-gradient(135deg, #36b9cc 0%, #1f4e5f 100%);">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-8">
+                            <h6 class="card-title mb-1 small opacity-75">AVG EXPERIENCE</h6>
+                            <h3 class="mb-0 fw-bold">{{ teacher_statistics.avg_exp|floatformat:1|default:0 }} yrs</h3>
+                        </div>
+                        <div class="col-4 text-end">
+                            <div class="stats-icon">
+                                <i class="bi bi-clock-history"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters Card -->
+    <div class="card card-custom p-3 mb-4">
+        <form id="filterForm" method="get" class="row g-3">
+            <div class="col-md-3">
+                <label class="form-label">Search</label>
+                <input type="text" name="search" id="search" class="form-control" 
+                       placeholder="Search by name, email, or ID" value="{{ request.GET.search }}">
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Status</label>
+                <select name="status" id="status" class="form-select">
+                    <option value="">All Status</option>
+                    <option value="active" {% if request.GET.status == 'active' %}selected{% endif %}>Active</option>
+                    <option value="inactive" {% if request.GET.status == 'inactive' %}selected{% endif %}>Inactive</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Organization Type</label>
+                <select name="organization_type" id="organization_type" class="form-select">
+                    <option value="">All Types</option>
+                    {% for code, name in organization_types %}
+                    <option value="{{ code }}" {% if request.GET.organization_type == code %}selected{% endif %}>{{ name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Department</label>
+                <select name="department" id="department" class="form-select">
+                    <option value="">All Departments</option>
+                    {% for code, name in departments %}
+                    <option value="{{ code }}" {% if request.GET.department == code %}selected{% endif %}>{{ name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Designation</label>
+                <select name="designation" id="designation" class="form-select">
+                    <option value="">All Designations</option>
+                    {% for code, name in designations %}
+                    <option value="{{ code }}" {% if request.GET.designation == code %}selected{% endif %}>{{ name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Faculty Type</label>
+                <select name="faculty_type" id="faculty_type" class="form-select">
+                    <option value="">All Types</option>
+                    {% for code, name in faculty_types %}
+                    <option value="{{ code }}" {% if request.GET.faculty_type == code %}selected{% endif %}>{{ name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Class Teacher</label>
+                <select name="is_class_teacher" id="is_class_teacher" class="form-select">
+                    <option value="">All</option>
+                    <option value="true" {% if request.GET.is_class_teacher == 'true' %}selected{% endif %}>Yes</option>
+                    <option value="false" {% if request.GET.is_class_teacher == 'false' %}selected{% endif %}>No</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Qualification</label>
+                <select name="qualification" id="qualification" class="form-select">
+                    <option value="">All Qualifications</option>
+                    {% for code, name in qualification_choices %}
+                    <option value="{{ code }}" {% if request.GET.qualification == code %}selected{% endif %}>{{ name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Gender</label>
+                <select name="gender" id="gender" class="form-select">
+                    <option value="">All Genders</option>
+                    {% for code, name in gender_choices %}
+                    <option value="{{ code }}" {% if request.GET.gender == code %}selected{% endif %}>{{ name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-4 d-flex align-items-end gap-2">
+                <button type="submit" class="btn btn-primary w-50">
+                    <i class="bi bi-search me-1"></i> Apply Filters
+                </button>
+                <a href="{% url 'teacher_list' %}" class="btn btn-outline-secondary w-50">
+                    <i class="bi bi-x me-1"></i> Clear All
+                </a>
+            </div>
+        </form>
+    </div>
+
+    <!-- Teachers Table Card -->
+    <div class="card card-custom">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="card-title mb-0">All Teachers</h5>
+            <span class="badge bg-primary">{{ teacher_statistics.total_count|default:"0" }} records</span>
+        </div>
+        <div class="card-body">
+            {% if teachers %}
+            <div class="table-responsive">
+                <table id="teachersTable" class="table-custom w-100 table-hover">
+                    <thead>
+                        <tr>
+                            <th>Employee ID</th>
+                            <th>Name</th>
+                            <!-- <th>Email</th> -->
+                            <th>Mobile</th>
+                            <th>Department</th>
+                            <th>Designation</th>
+                            <th>Status</th>
+                            <th class="text-center">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for teacher in teachers %}
+                        <tr>
+                            <td>
+                                <span class="badge bg-light text-dark">
+                                    <i class="bi bi-id-card me-1"></i>{{ teacher.employee_id }}
+                                </span>
+                            </td>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    {% if teacher.photo %}
+                                    <a href="{% url 'teacher_detail' teacher.pk %}">
+                                        <img src="{{ teacher.photo.url }}" alt="{{ teacher.get_full_name }}" 
+                                             class="rounded-circle me-2" width="32" height="32" style="object-fit: cover;">
+                                    </a>
+                                    {% else %}
+                                    <a href="{% url 'teacher_detail' teacher.pk %}">
+                                        <div class="rounded-circle bg-secondary text-white d-flex align-items-center justify-content-center me-2" 
+                                             style="width: 32px; height: 32px;">
+                                            <i class="bi bi-person"></i>
+                                        </div>
+                                    </a>
+                                    {% endif %}
+                                    <div>
+                                        <div class="fw-bold">{{ teacher.get_full_name }}</div>
+                                        {% if teacher.is_class_teacher %}
+                                        <small class="text-success">
+                                            <i class="bi bi-crown me-1"></i>Class Teacher
+                                        </small>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </td>
+                            <!-- <td>
+                                {% if teacher.email %}
+                                <a href="mailto:{{ teacher.email }}" class="text-decoration-none text-primary">
+                                    {{ teacher.email }}
+                                </a>
+                                {% else %}
+                                <span class="text-muted">-</span>
+                                {% endif %}
+                            </td> -->
+                            <td>
+                                {% if teacher.mobile %}
+                                <a href="tel:{{ teacher.mobile }}" class="text-decoration-none text-primary">
+                                    {{ teacher.mobile }}
+                                </a>
+                                {% else %}
+                                <span class="text-muted">-</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if teacher.department %}
+                                <span class="badge bg-info bg-opacity-10 text-info">
+                                    {{ teacher.get_department_display }}
+                                </span>
+                                {% else %}
+                                <span class="text-muted">-</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <span class="badge bg-warning bg-opacity-10 text-warning">
+                                    {{ teacher.get_designation_display }}
+                                </span>
+                            </td>
+                            <td>
+                                {% if teacher.is_active %}
+                                    <span class="badge bg-success bg-opacity-10 text-success">
+                                        <i class="bi bi-check-circle me-1"></i>Active
+                                    </span>
+                                {% else %}
+                                    <span class="badge bg-secondary bg-opacity-10 text-secondary">
+                                        <i class="bi bi-x-circle me-1"></i>Inactive
+                                    </span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="d-flex justify-content-center gap-1">
+                                    {% if request.user.is_superadmin or request.user.is_teacher or request.user.is_administrative_staff %}
+                                    <a href="{% url 'teacher_detail' teacher.pk %}" class="btn btn-sm btn-outline-primary" 
+                                       data-bs-toggle="tooltip" title="View Details">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                    {% endif %}
+                                    {% if request.user.is_superadmin %}
+                                    <a href="{% url 'export_teacher_detail' teacher.pk %}?format=pdf" class="btn btn-sm btn-outline-warning" 
+                                       data-bs-toggle="tooltip" title="Export Profile">
+                                        <i class="bi bi-download"></i>
+                                    </a>
+                                    <a href="{% url 'teacher_id_card_default' teacher.pk %}" class="btn btn-sm btn-outline-success" 
+                                       data-bs-toggle="tooltip" title="ID Card">
+                                        <i class="bi bi-person-badge"></i>
+                                    </a>
+                                    <a href="{% url 'teacher_edit' teacher.pk %}" class="btn btn-sm btn-outline-info" 
+                                       data-bs-toggle="tooltip" title="Edit Teacher">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                    <a href="{% url 'teacher_delete' teacher.pk %}" class="btn btn-sm btn-outline-danger" 
+                                       data-bs-toggle="tooltip" title="Delete Teacher">
+                                        <i class="bi bi-trash"></i>
+                                    </a>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="text-center py-5">
+                <i class="bi bi-people display-4 text-primary d-block mb-3"></i>
+                <h5 class="text-primary">No teachers found</h5>
+                <p class="text-muted mb-4">Try adjusting your search filters or add a new teacher.</p>
+                {% if request.user.is_superadmin %}
+                <a href="{% url 'teacher_add' %}" class="btn btn-primary">
+                    <i class="bi bi-plus-circle me-1"></i> Add Teacher
+                </a>
+                {% endif %}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Export Modal -->
+<div class="modal fade" id="exportModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <form id="exportForm" method="get" action="{% url 'export_teachers' %}">
+                <div class="modal-header">
+                    <h5 class="modal-title">Export Teachers Data</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <!-- Export Format -->
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Export Format</label>
+                            <select name="format" class="form-select" required>
+                                <option value="csv">CSV</option>
+                                <option value="pdf">PDF</option>
+                                <option value="excel">Excel</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Filters -->
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Organization Type</label>
+                            <select name="organization_type" class="form-select">
+                                <option value="">All Types</option>
+                                {% for code, name in organization_types %}
+                                    <option value="{{ code }}">{{ name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Department</label>
+                            <select name="department" class="form-select">
+                                <option value="">All Departments</option>
+                                {% for code, name in departments %}
+                                    <option value="{{ code }}">{{ name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Designation</label>
+                            <select name="designation" class="form-select">
+                                <option value="">All Designations</option>
+                                {% for code, name in designations %}
+                                    <option value="{{ code }}">{{ name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Faculty Type</label>
+                            <select name="faculty_type" class="form-select">
+                                <option value="">All Types</option>
+                                {% for code, name in faculty_types %}
+                                    <option value="{{ code }}">{{ name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Status</label>
+                            <select name="status" class="form-select">
+                                <option value="">All Status</option>
+                                <option value="active">Active</option>
+                                <option value="inactive">Inactive</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Class Teacher</label>
+                            <select name="is_class_teacher" class="form-select">
+                                <option value="">All</option>
+                                <option value="true">Yes</option>
+                                <option value="false">No</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Qualification</label>
+                            <select name="qualification" class="form-select">
+                                <option value="">All Qualifications</option>
+                                {% for code, name in qualification_choices %}
+                                    <option value="{{ code }}">{{ name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <!-- <div class="col-12">
+                            <label class="form-label">Search</label>
+                            <input type="text" name="search" class="form-control" placeholder="Search by name, email, employee ID, etc.">
+                        </div> -->
+                    </div>
+
+                    <!-- Include Columns -->
+                    <div class="mb-3">
+                        <label class="form-label">Include Columns</label>
+                        <div class="row">
+                            {% for field, label in teacher_fields %}
+                                <div class="col-md-4 mb-2">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="include_{{ field }}" name="columns" value="{{ field }}" checked>
+                                        <label class="form-check-label" for="include_{{ field }}">{{ label }}</label>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-download me-1"></i> Export
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Modals -->
+{% if request.user.is_superadmin %}
+{% for teacher in teachers %}
+<div class="modal fade" id="deleteModal{{ teacher.pk }}" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirm Delete</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                Are you sure you want to delete teacher <strong>{{ teacher.get_full_name }}</strong>?
+                This action cannot be undone.
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form action="{% url 'teacher_delete' teacher.pk %}" method="post" style="display: inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">Delete</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endfor %}
+{% endif %}
+
+
+
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize Select2 for better dropdowns
+    $('.form-select').select2({
+        theme: 'bootstrap-5',
+        width: '100%'
+    });
+
+    // 2) Initialize DataTable
+    try {
+        $('#teachersTable').DataTable({
+            "pageLength": 10,
+            "lengthMenu": [[10, 25, 50, -1], [10, 25, 50, "All"]],
+            "order": [[1, 'asc']],
+            "language": {
+                "search": "<i class='bi bi-search me-2'></i>",
+                "searchPlaceholder": "Search teachers...",
+                "lengthMenu": "Show _MENU_ entries",
+                "info": "Showing _START_ to _END_ of _TOTAL_ entries",
+                "paginate": {
+                    "previous": "<i class='bi bi-chevron-left'></i>",
+                    "next": "<i class='bi bi-chevron-right'></i>"
+                }
+            },
+            "columnDefs": [
+                { "targets": [7], "orderable": false, "searchable": false }
+            ]
+        });
+    } catch (err) {
+        console.error('DataTables init error:', err);
+    }
+
+    // 3) Auto-submit form on filter change
+    $('#status, #organization_type, #department, #designation, #faculty_type, #is_class_teacher, #qualification, #gender').change(function() {
+        $('#filterForm').submit();
+    });
+
+    // Initialize tooltips
+    $('[data-bs-toggle="tooltip"]').tooltip();
+});
+    // 3) Robust modal cleanup handlers
+    // Remove any leftover backdrop BEFORE a modal opens
+    document.querySelectorAll('.modal').forEach(modalEl => {
+        modalEl.addEventListener('show.bs.modal', function () {
+            // if another leftover backdrop exists, remove it
+            document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+        });
+
+        // on hidden, remove backdrops and restore body scrolling
+        modalEl.addEventListener('hidden.bs.modal', function () {
+            document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+            document.body.classList.remove('modal-open');
+            document.body.style.overflow = '';
+            document.body.style.paddingRight = '';
+        });
+    });
+
+    // 4) Safety-net: if a backdrop exists but there is no visible modal, remove it
+    // (handles cases where Bootstrap failed silently)
+    const observer = new MutationObserver(() => {
+        const backdrop = document.querySelector('.modal-backdrop');
+        const anyShown = !!document.querySelector('.modal.show');
+        if (backdrop && !anyShown) {
+            backdrop.remove();
+            document.body.classList.remove('modal-open');
+            document.body.style.overflow = '';
+            document.body.style.paddingRight = '';
+        }
+    });
+    observer.observe(document.body, { childList: true, subtree: true });
+
+    // 5) Allow manual cleanup by pressing Esc (extra safety)
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+            document.body.classList.remove('modal-open');
+            document.body.style.overflow = '';
+            document.body.style.paddingRight = '';
+            document.querySelectorAll('.modal.show').forEach(m => {
+                try { bootstrap.Modal.getInstance(m)?.hide(); } catch(e) {}
+            });
+        }
+    });
+
+    // 6) Final cleanup in case something stuck earlier
+    setTimeout(() => {
+        document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+        document.body.classList.remove('modal-open');
+        document.body.style.overflow = '';
+        document.body.style.paddingRight = '';
+    }, 500);
+</script>
+{% endblock %}

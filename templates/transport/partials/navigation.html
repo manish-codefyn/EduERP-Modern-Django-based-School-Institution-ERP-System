@@ -1,0 +1,76 @@
+<ul class="sidebar-nav nav flex-column">
+
+    <!-- Dashboard -->
+    <li class="nav-item">
+        <a class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}" href="{% url 'dashboard' %}">
+            <i class="bi bi-speedometer2 me-2"></i>
+            <span class="nav-text">Dashboard</span>
+        </a>
+    </li>
+
+    {% if user.is_staff or user.is_super %}
+   <li class="nav-item">
+        <a class="nav-link {% if request.resolver_match.url_name == 'driver_list' %}active{% endif %}" href="{% url 'transport:driver_list' %}">
+           <i class="bi bi bi-map-fill me-2"></i>
+            <span class="nav-text">Driver</span>
+        </a>
+    </li>
+    <!--  -->
+    <li class="nav-item">
+        <a class="nav-link {% if request.resolver_match.url_name == 'vehicle_list' %}active{% endif %}" href="{% url 'transport:vehicle_list' %}">
+            <i class="bi bi-tags me-2"></i>
+            <span class="nav-text">Vehicles</span>
+        </a>
+    </li>
+
+    <!--  -->
+    <li class="nav-item">
+        <a class="nav-link {% if request.resolver_match.url_name == 'attendance_list' %}active{% endif %}" href="{% url 'transport:attendance_list' %}">
+            <i class="bi bi-journal-check me-2"></i>
+            <span class="nav-text">Attendance</span>
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link {% if request.resolver_match.url_name == 'student_transport_list' %}active{% endif %}" href="{% url 'transport:student_transport_list' %}">
+            <i class="bi bi-truck me-2"></i>
+            <span class="nav-text">Student Transport</span>
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link {% if request.resolver_match.url_name == 'assignment_list' %}active{% endif %}" href="{% url 'transport:assignment_list' %}">
+           <i class="bi bi-bus-front me-2"></i>
+            <span class="nav-text">Assignment</span>
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link {% if request.resolver_match.url_name == 'route_list' %}active{% endif %}" href="{% url 'transport:route_list' %}">
+           <i class="bi bi bi-signpost-2 me-2"></i>
+            <span class="nav-text">Route</span>
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link {% if request.resolver_match.url_name == 'route_stop_list' %}active{% endif %}" href="{% url 'transport:route_stop_list' %}">
+           <i class="bi bi bi-map-fill me-2"></i>
+            <span class="nav-text">Route Stop</span>
+        </a>
+    </li>
+   
+
+    {% if user.is_superuser %}
+    <!-- Settings (for admins only) -->
+    <!-- <li class="nav-item">
+        <a class="nav-link" href="#">
+            <i class="bi bi-gear-fill me-2"></i>
+            <span class="nav-text">Settings</span>
+        </a>
+    </li> -->
+    {% endif %}
+
+    {% endif %}
+
+    <!-- Footer -->
+    <div class="sidebar-footer mt-5 p-3 bg-light text-center">
+        <small class="text-muted">Examination Module v1.0.0</small>
+    </div>
+
+</ul>

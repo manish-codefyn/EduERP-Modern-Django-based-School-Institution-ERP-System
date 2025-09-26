@@ -1,0 +1,420 @@
+<!-- hostel/maintenance/maintenance_request_list.html -->
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}  Maintenance Management - {{ organization.name|default:"ERP System" }}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
+{% endblock %}
+
+{% block content %}
+<!-- Header Section -->
+<div class="header-section bg-custom text-white py-4 mb-4">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <div class="d-flex align-items-center">
+                    <div class="header-icon me-3">
+                       <i class="bi bi-tools display-6 text-white"></i> 
+                    </div>
+                    <div>
+                        <h1 class="h3 fw-bold mb-1">Maintenance Requests</h1>
+                        <p class="text-white mb-0 opacity-75">Manage and track maintenance issues</p>
+                    </div>
+                </div>
+            </div>
+                   <div class="col-md-4">
+                <div class="d-flex gap-2 justify-content-md-end flex-wrap">
+                    <!-- Quick Actions -->
+                    <div class="btn-group w-100" role="group">
+                        <a href="{% url 'hostel:maintenance_create' %}" class="btn btn-primary">
+                            <i class="bi bi-plus-circle me-1"></i> New Request
+                        </a>
+                        <button type="button" class="btn btn-primary dropdown-toggle dropdown-toggle-split" 
+                                data-bs-toggle="dropdown" aria-expanded="false">
+                            <span class="visually-hidden">Toggle Dropdown</span>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li>
+                                <a class="dropdown-item" href="{% url 'hostel:maintenance_list' %}?status=pending">
+                                    <i class="bi bi-clock me-2"></i> Pending Requests
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="{% url 'hostel:maintenance_list' %}?status=in_progress">
+                                    <i class="bi bi-gear me-2"></i> In Progress
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="{% url 'hostel:maintenance_list' %}?status=completed">
+                                    <i class="bi bi-check-circle me-2"></i> Completed
+                                </a>
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
+                            
+                            <li class="dropdown-header">Export Requests</li>
+                            <li>
+                                <a class="dropdown-item" href="{% url 'hostel:maintenance_export' %}?format=csv">
+                                    <i class="bi bi-filetype-csv me-2"></i> Export CSV
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="{% url 'hostel:maintenance_export' %}?format=excel">
+                                    <i class="bi bi-file-earmark-excel me-2"></i> Export Excel
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="{% url 'hostel:maintenance_export' %}?format=pdf">
+                                    <i class="bi bi-file-earmark-pdf me-2"></i> Export PDF
+                                </a>
+                            </li>
+
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container">
+    <!-- Stats Cards -->
+    <div class="row g-4 mb-4">
+        <div class="col-xl-3 col-md-6">
+            <div class="card stats-card text-white h-100" style="background: linear-gradient(135deg, #4e54c8, #8f94fb);">
+                <div class="card-body d-flex flex-column justify-content-between">
+                    <div class="row align-items-center">
+                        <div class="col-8">
+                            <h6 class="card-title mb-1 small opacity-75">TOTAL REQUESTS</h6>
+                            <h3 class="mb-0 fw-bold">{{ total_requests|default:"0" }}</h3>
+                            <p class="mb-0 small opacity-75">All time</p>
+                        </div>
+                        <div class="col-4 text-end">
+                            <div class="stats-icon">
+                                <i class="bi bi-clipboard-check fs-2"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6">
+            <div class="card stats-card text-white h-100" style="background: linear-gradient(135deg, #17a2b8, #6adef0);">
+                <div class="card-body d-flex flex-column justify-content-between">
+                    <div class="row align-items-center">
+                        <div class="col-8">
+                            <h6 class="card-title mb-1 small opacity-75">PENDING</h6>
+                            <h3 class="mb-0 fw-bold">{{ pending_requests|default:"0" }}</h3>
+                            <p class="mb-0 small opacity-75">Awaiting action</p>
+                        </div>
+                        <div class="col-4 text-end">
+                            <div class="stats-icon">
+                                <i class="bi bi-clock-history fs-2"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6">
+            <div class="card stats-card text-white h-100" style="background: linear-gradient(135deg, #ffc107, #ffdb70);">
+                <div class="card-body d-flex flex-column justify-content-between">
+                    <div class="row align-items-center">
+                        <div class="col-8">
+                            <h6 class="card-title mb-1 small opacity-75">IN PROGRESS</h6>
+                            <h3 class="mb-0 fw-bold">{{ in_progress_requests|default:"0" }}</h3>
+                            <p class="mb-0 small opacity-75">Being addressed</p>
+                        </div>
+                        <div class="col-4 text-end">
+                            <div class="stats-icon">
+                                <i class="bi bi-gear fs-2"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-xl-3 col-md-6">
+            <div class="card stats-card text-white h-100" style="background: linear-gradient(135deg, #28a745, #7dd856);">
+                <div class="card-body d-flex flex-column justify-content-between">
+                    <div class="row align-items-center">
+                        <div class="col-8">
+                            <h6 class="card-title mb-1 small opacity-75">COMPLETED</h6>
+                            <h3 class="mb-0 fw-bold">{{ completed_requests|default:"0" }}</h3>
+                            <p class="mb-0 small opacity-75">Resolved issues</p>
+                        </div>
+                        <div class="col-4 text-end">
+                            <div class="stats-icon">
+                                <i class="bi bi-check-circle fs-2"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filter Section -->
+    <div class="card card-custom mb-4">
+        <div class="card-header detail-card-header">
+            <h5 class="card-title mb-0">Filter Requests</h5>
+        </div>
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-3">
+                    <label for="status" class="form-label">Status</label>
+                    <select class="form-select" id="status" name="status">
+                        <option value="all" {% if current_status == 'all' or not current_status %}selected{% endif %}>All Statuses</option>
+                        {% for value, label in status_choices %}
+                        <option value="{{ value }}" {% if current_status == value %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div class="col-md-3">
+                    <label for="priority" class="form-label">Priority</label>
+                    <select class="form-select" id="priority" name="priority">
+                        <option value="all" {% if current_priority == 'all' or not current_priority %}selected{% endif %}>All Priorities</option>
+                        {% for value, label in priority_choices %}
+                        <option value="{{ value }}" {% if current_priority == value %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div class="col-md-3">
+                    <label for="hostel" class="form-label">Hostel</label>
+                    <select class="form-select" id="hostel" name="hostel">
+                        <option value="all" {% if current_hostel == 'all' or not current_hostel %}selected{% endif %}>All Hostels</option>
+                        {% for hostel in hostels %}
+                        <option value="{{ hostel.id }}" {% if current_hostel == hostel.id|stringformat:"s" %}selected{% endif %}>{{ hostel.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div class="col-md-3">
+                    <label for="date_filter" class="form-label">Date Range</label>
+                    <select class="form-select" id="date_filter" name="date_filter">
+                        <option value="">All Dates</option>
+                        <option value="today" {% if current_date_filter == 'today' %}selected{% endif %}>Today</option>
+                        <option value="week" {% if current_date_filter == 'week' %}selected{% endif %}>Last 7 Days</option>
+                        <option value="month" {% if current_date_filter == 'month' %}selected{% endif %}>Last 30 Days</option>
+                    </select>
+                </div>
+                
+                <div class="col-md-8">
+                    <label for="search" class="form-label">Search</label>
+                    <input type="text" class="form-control" id="search" name="search" 
+                           placeholder="Search by title, description, or room number" value="{{ current_search }}">
+                </div>
+                
+                <div class="col-md-4 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary me-2">
+                        <i class="bi bi-filter me-1"></i> Apply Filters
+                    </button>
+                    <a href="{% url 'hostel:maintenance_list' %}" class="btn btn-outline-secondary">
+                        <i class="bi bi-x-circle me-1"></i> Clear
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Table Section -->
+    <div class="card card-custom">
+        <div class="card-header bg-transparent border-0 pt-4 px-4">
+            <h5 class="card-title mb-0 fw-bold">Maintenance Requests</h5>
+            <p class="text-custom mb-0">Showing {{ requests|length }} of {{ total_requests }} requests</p>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                {% if requests %}
+                <table id="maintenanceTable" class="table-custom w-100 table-hover align-middle">
+                    <thead>
+                        <tr>
+                            <th>Title</th>
+                            <th>Hostel</th>
+                            <th>Room</th>
+                            <th>Priority</th>
+                            <th>Requested On</th>
+                            <th>Status</th>
+                            <th class="text-center">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for req in requests %}
+                        <tr>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <div class="flex-shrink-0">
+                                        <i class="bi bi-tools text-primary fs-5 me-2"></i>
+                                    </div>
+                                    <div class="flex-grow-1 ms-2">
+                                        <h6 class="mb-0">{{ req.title }}</h6>
+                                        <small class="text-custom">
+                                            {% if req.description %}
+                                                {{ req.description|truncatewords:5 }}
+                                            {% else %}
+                                                No description provided
+                                            {% endif %}
+                                        </small>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>{{ req.hostel.name }}</td>
+                            <td>{% if req.room %}{{ req.room.room_number }}{% else %}N/A{% endif %}</td>
+                            <td>
+                                <span class="badge 
+                                    {% if req.priority == 'urgent' %}bg-danger
+                                    {% elif req.priority == 'high' %}bg-warning
+                                    {% elif req.priority == 'medium' %}bg-info
+                                    {% else %}bg-secondary{% endif %}">
+                                    {{ req.get_priority_display }}
+                                </span>
+                            </td>
+                            <td>{{ req.requested_date|date:"M d, Y" }}</td>
+                            <td>
+                                <span class="badge 
+                                    {% if req.status == 'completed' %}bg-success
+                                    {% elif req.status == 'in_progress' %}bg-primary
+                                    {% elif req.status == 'pending' %}bg-warning
+                                    {% else %}bg-secondary{% endif %}">
+                                    {{ req.get_status_display }}
+                                </span>
+                            </td>
+                            <td class="text-center">
+                                <div class="btn-group">
+                                    <!-- <a href="" class="btn btn-sm btn-outline-primary">
+                                        <i class="bi bi-eye"></i> View
+                                    </a> -->
+                                    <a href="{% url 'hostel:maintenance_update' req.id %}" class="btn btn-sm btn-outline-secondary">
+                                        <i class="bi bi-pencil"></i> Update
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% else %}
+                <div class="text-center py-5">
+                    <i class="bi bi-inbox display-1 text-custom"></i>
+                    <h4 class="mt-3">No maintenance requests found</h4>
+                    <p class="text-custom">Try adjusting your filters or create a new request</p>
+                    <a href="{% url 'hostel:maintenance_create' %}" class="btn btn-primary mt-2">
+                        <i class="bi bi-plus-circle me-1"></i> Create New Request
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+            
+            <!-- Pagination -->
+            {% if is_paginated %}
+            <nav aria-label="Page navigation" class="mt-4">
+                <ul class="pagination justify-content-center">
+                    {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page=1{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">First</a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">Previous</a>
+                    </li>
+                    {% endif %}
+                    
+                    {% for num in page_obj.paginator.page_range %}
+                    {% if page_obj.number == num %}
+                    <li class="page-item active"><a class="page-link" href="#">{{ num }}</a></li>
+                    {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                    <li class="page-item"><a class="page-link" href="?page={{ num }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">{{ num }}</a></li>
+                    {% endif %}
+                    {% endfor %}
+                    
+                    {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.next_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">Next</a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">Last</a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- DataTables JS -->
+<script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+     {% if requests %}
+    // Initialize DataTable
+    $('#maintenanceTable').DataTable({
+        "pageLength": 10,
+        "order": [[0, 'asc']],
+        "language": {
+            "search": "<i class='fas fa-search me-2'></i>Search:",
+            "lengthMenu": "Show _MENU_ entries",
+            "info": "Showing _START_ to _END_ of _TOTAL_ entries",
+            "paginate": {
+                "previous": "<i class='bi bi-chevron-left'></i>",
+                "next": "<i class='bi bi-chevron-right'></i>"
+            }
+        },
+        "columnDefs": [
+            { 
+                "targets": [-1], 
+                "orderable": false,
+                "className": "dt-center"
+            }
+        ],
+        "responsive": true,
+        "dom": '<"row"<"col-md-6"l><"col-md-6"f>>rt<"row"<"col-md-6"i><"col-md-6"p>>'
+    });
+    // Export buttons handler
+    $('.export-btn').on('click', function(e) {
+        e.preventDefault();
+        var format = $(this).data('format');
+        if (format === 'csv') {
+            table.button('.buttons-csv').trigger();
+        } else if (format === 'excel') {
+            table.button('.buttons-excel').trigger();
+        } else if (format === 'pdf') {
+            table.button('.buttons-pdf').trigger();
+        }
+    });
+
+    // Sync DataTable search with form search
+    $('#search').on('keyup', function() {
+        table.search(this.value).draw();
+    });
+
+    // Sync DataTable with form filters
+    $('#status, #priority, #hostel, #date_filter').on('change', function() {
+        $('#filterForm').submit();
+    });
+    {% endif %}
+
+    // Add active styling to table rows
+    const tableRows = document.querySelectorAll('#maintenanceTable tbody tr');
+    tableRows.forEach(row => {
+        row.style.cursor = 'pointer';
+    });
+});
+</script>
+
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+   
+});
+</script>
+{% endblock %}

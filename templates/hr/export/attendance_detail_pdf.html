@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ title }}</title>
+    <style>
+          @page {
+            size: letter portrait;
+            @frame content_frame { left: 25pt; width: 562pt; top: 25pt; height: 742pt; }
+            }
+        body {
+            font-family: Arial, sans-serif;
+            font-size: 12px;
+            color: #333;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            width: 100%;
+            padding: 20px;
+        }
+        .header {
+            text-align: center;
+            border-bottom: 2px solid #3b5998;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        .header img.logo {
+            max-height: 60px;
+            margin-bottom: 10px;
+        }
+        h1 {
+            font-size: 20px;
+            margin: 0;
+            color: #3b5998;
+        }
+        .section {
+            margin-bottom: 20px;
+        }
+        .section h2 {
+            font-size: 14px;
+            margin-bottom: 8px;
+            color: #3b5998;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 3px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 5px;
+        }
+        table, th, td {
+            border: 1px solid #ccc;
+        }
+        th, td {
+            padding: 6px 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f0f0f0;
+            font-weight: bold;
+        }
+        .footer {
+            margin-top: 30px;
+            text-align: center;
+            font-size: 10px;
+            color: #777;
+        }
+        .stamp {
+            max-height: 60px;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+
+    <!-- Header -->
+    <div class="header">
+        {% if logo %}
+            <img src="{{ logo }}" alt="Logo" class="logo" width="210">
+        {% endif %}
+        <h1>{{ organization.name }}</h1>
+        <p>Attendance Detail Report</p>
+        <p><strong>Export Date:</strong> {{ export_date|date:"Y-m-d H:i" }}</p>
+    </div>
+
+    <!-- Employee Details -->
+    <div class="section">
+        <h2>Employee Details</h2>
+        <table>
+            <tr>
+                <th>Employee ID</th>
+                <td>{{ attendance.employee_id }}</td>
+            </tr>
+            <tr>
+                <th>Name</th>
+                <td>{{ attendance.staff_name }}</td>
+            </tr>
+            <tr>
+                <th>Department</th>
+                <td>{{ attendance.staff_department }}</td>
+            </tr>
+            <tr>
+                <th>Designation</th>
+                <td>{{ attendance.staff_designation }}</td>
+            </tr>
+        </table>
+    </div>
+
+    <!-- Attendance Info -->
+    <div class="section">
+        <h2>Attendance Information</h2>
+        <table>
+            <tr>
+                <th>Date</th>
+                <td>{{ attendance.date }}</td>
+            </tr>
+            <tr>
+                <th>Day</th>
+                <td>{{ attendance.day }}</td>
+            </tr>
+            <tr>
+                <th>Check In</th>
+                <td>{{ attendance.check_in }}</td>
+            </tr>
+            <tr>
+                <th>Check Out</th>
+                <td>{{ attendance.check_out }}</td>
+            </tr>
+            <tr>
+                <th>Status</th>
+                <td>{{ attendance.status }}</td>
+            </tr>
+            <tr>
+                <th>Hours Worked</th>
+                <td>{{ attendance.hours_worked }}</td>
+            </tr>
+            <tr>
+                <th>Remarks</th>
+                <td>{{ attendance.remarks|default:"-" }}</td>
+            </tr>
+        </table>
+    </div>
+
+    <!-- Meta Info -->
+    <div class="section">
+        <h2>Record Meta</h2>
+        <table>
+            <tr>
+                <th>Created At</th>
+                <td>{{ attendance.created_at }}</td>
+            </tr>
+            <tr>
+                <th>Updated At</th>
+                <td>{{ attendance.updated_at }}</td>
+            </tr>
+        </table>
+    </div>
+   
+    <tfoot>
+        <tr>
+            <td>
+                <div class="footer">
+                    Generated on {{ export_date }} | Page <pdf:pagenumber> of <pdf:pagecount>
+                </div>
+            </td>
+        </tr>
+    </tfoot>
+</div>
+</body>
+</html>

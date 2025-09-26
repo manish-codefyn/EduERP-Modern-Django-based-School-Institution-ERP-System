@@ -1,0 +1,230 @@
+{% extends 'communications/base.html' %}
+{% load static %}
+
+{% block title %}{{ audience_member.user.get_full_name }} - Notice Audience - {{ organization.name|default:"codefyn" }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="header-section mb-4">
+        <div class="row align-items-center">
+            <div class="col-md-8 d-flex flex-column">
+                <nav aria-label="breadcrumb" class="mb-2">
+                    <ol class="breadcrumb mb-0">
+                        <li class="breadcrumb-item">
+                            <a href="{% url 'communications:dashboard' %}">
+                                <i class="bi bi-house-door me-1"></i> Dashboard
+                            </a>
+                        </li>
+                        <li class="breadcrumb-item">
+                            <a href="{% url 'communications:audience_list' %}">Notice Audience</a>
+                        </li>
+                        <li class="breadcrumb-item active" aria-current="page">Details</li>
+                    </ol>
+                </nav>
+
+                <div class="d-flex align-items-center">
+                    <div class="header-icon me-3">
+                        <div class="avatar-lg">
+                            <div class="avatar-title bg-light text-primary rounded-circle display-6">
+                                {{ audience_member.user.get_full_name|first|upper }}
+                            </div>
+                        </div>
+                    </div>
+                    <div>
+                        <h1 class="h3 fw-bold mb-1">{{ audience_member.user.get_full_name }}</h1>
+                        <p class="text-custom mb-0">Notice audience details and engagement tracking</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="d-flex justify-content-end align-items-center gap-2">
+                    <a href="{% url 'communications:audience_update' audience_member.pk %}" class="btn btn-primary">
+                        <i class="bi bi-pencil me-1"></i> Edit
+                    </a>
+                    <a href="{% url 'communications:audience_list' %}" class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-left me-1"></i> Back to List
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- User Information -->
+        <div class="col-lg-4">
+            <div class="card card-custom mb-4">
+                <div class="card-header bg-transparent border-0">
+                    <h5 class="card-title mb-0 fw-bold text-custom">User Information</h5>
+                </div>
+                <div class="card-body">
+                    <div class="text-center mb-4">
+                        <div class="avatar-xxl mb-3">
+                            <div class="avatar-title bg-light text-primary rounded-circle display-4">
+                                {{ audience_member.user.get_full_name|first|upper }}
+                            </div>
+                        </div>
+                        <h4>{{ audience_member.user.get_full_name }}</h4>
+                        <p class="text-muted">{{ audience_member.user.email }}</p>
+                    </div>
+
+                    <div class="row g-3">
+                        <div class="col-6">
+                            <div class="text-center p-3 border rounded">
+                                <i class="bi bi-envelope text-primary display-6 mb-2"></i>
+                                <h6 class="mb-1">Email</h6>
+                                <p class="text-muted mb-0">{{ audience_member.user.email }}</p>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="text-center p-3 border rounded">
+                                <i class="bi bi-person text-success display-6 mb-2"></i>
+                                <h6 class="mb-1">Role</h6>
+                                <p class="text-muted mb-0">{{ audience_member.user.get_role_display }}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Notice Information -->
+        <div class="col-lg-8">
+            <div class="card card-custom mb-4">
+                <div class="card-header bg-transparent border-0">
+                    <h5 class="card-title mb-0 fw-bold text-custom">Notice Information</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-4">
+                        <div class="col-md-8">
+                            <h4 class="text-primary">{{ audience_member.notice.title }}</h4>
+                            <p class="text-muted">{{ audience_member.notice.content|truncatewords:30 }}</p>
+                            
+                            <div class="row g-3">
+                                <div class="col-6">
+                                    <strong>Priority:</strong>
+                                    <span class="badge bg-{% if audience_member.notice.priority == 'urgent' %}danger{% else %}warning{% endif %} ms-2">
+                                        {{ audience_member.notice.get_priority_display }}
+                                    </span>
+                                </div>
+                                <div class="col-6">
+                                    <strong>Audience:</strong>
+                                    <span class="badge bg-info ms-2">{{ audience_member.notice.get_audience_display }}</span>
+                                </div>
+                                <div class="col-6">
+                                    <strong>Publish Date:</strong>
+                                    <span class="ms-2">{{ audience_member.notice.publish_date|date:"M d, Y H:i" }}</span>
+                                </div>
+                                <div class="col-6">
+                                    <strong>Expiry Date:</strong>
+                                    <span class="ms-2">
+                                        {% if audience_member.notice.expiry_date %}
+                                            {{ audience_member.notice.expiry_date|date:"M d, Y H:i" }}
+                                        {% else %}
+                                            No expiry
+                                        {% endif %}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4 text-center">
+                            <div class="p-3 border rounded">
+                                <i class="bi bi-megaphone text-primary display-4 mb-2"></i>
+                                <h6>Notice Status</h6>
+                                {% if audience_member.notice.is_published %}
+                                    <span class="badge bg-success">Published</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">Draft</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Engagement Tracking -->
+            <div class="card card-custom">
+                <div class="card-header bg-transparent border-0">
+                    <h5 class="card-title mb-0 fw-bold text-custom">Engagement Tracking</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-md-4">
+                            <div class="p-3 border rounded">
+                                <i class="bi bi-eye{% if audience_member.read %}-fill text-success{% else %}-slash text-warning{% endif %} display-4 mb-2"></i>
+                                <h6>Read Status</h6>
+                                {% if audience_member.read %}
+                                    <span class="badge bg-success">Read</span>
+                                    <p class="text-muted mt-2 mb-0">
+                                        <small>Read at: {{ audience_member.read_at|date:"M d, Y H:i" }}</small>
+                                    </p>
+                                {% else %}
+                                    <span class="badge bg-warning">Unread</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="p-3 border rounded">
+                                <i class="bi bi-check-circle{% if audience_member.delivered %}-fill text-info{% else %} text-secondary{% endif %} display-4 mb-2"></i>
+                                <h6>Delivery Status</h6>
+                                {% if audience_member.delivered %}
+                                    <span class="badge bg-info">Delivered</span>
+                                    <p class="text-muted mt-2 mb-0">
+                                        <small>Delivered at: {{ audience_member.delivered_at|date:"M d, Y H:i" }}</small>
+                                    </p>
+                                {% else %}
+                                    <span class="badge bg-secondary">Pending</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="p-3 border rounded">
+                                <i class="bi bi-bell{% if audience_member.notification_sent %}-fill text-success{% else %} text-danger{% endif %} display-4 mb-2"></i>
+                                <h6>Notification</h6>
+                                {% if audience_member.notification_sent %}
+                                    <span class="badge bg-success">Sent</span>
+                                {% else %}
+                                    <span class="badge bg-danger">Not Sent</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Timeline -->
+                    <div class="mt-4">
+                        <h6 class="mb-3">Engagement Timeline</h6>
+                        <div class="timeline">
+                            <div class="timeline-item {% if audience_member.delivered_at %}completed{% endif %}">
+                                <div class="timeline-marker"></div>
+                                <div class="timeline-content">
+                                    <h6>Notice Delivered</h6>
+                                    <p class="text-muted mb-0">
+                                        {% if audience_member.delivered_at %}
+                                            {{ audience_member.delivered_at|date:"M d, Y H:i" }}
+                                        {% else %}
+                                            Pending delivery
+                                        {% endif %}
+                                    </p>
+                                </div>
+                            </div>
+                            <div class="timeline-item {% if audience_member.read_at %}completed{% endif %}">
+                                <div class="timeline-marker"></div>
+                                <div class="timeline-content">
+                                    <h6>Notice Read</h6>
+                                    <p class="text-muted mb-0">
+                                        {% if audience_member.read_at %}
+                                            {{ audience_member.read_at|date:"M d, Y H:i" }}
+                                        {% else %}
+                                            Not yet read
+                                        {% endif %}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

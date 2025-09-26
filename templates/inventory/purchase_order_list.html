@@ -1,0 +1,389 @@
+{% extends "inventory/base.html" %}
+{% load static %}
+
+{% block title %}Purchase Orders - {{ organization.name|default:"Inventory System" }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+
+    <!-- Header Section -->
+    <div class="header-section mb-4">
+        <div class="row align-items-center">
+            <div class="col-md-7 d-flex align-items-center">
+                <div class="header-icon me-3">
+                    <i class="bi bi-cart-check display-6 text-primary"></i>
+                </div>
+                <div>
+                    <h1 class="h3 fw-bold mb-1">Purchase Orders</h1>
+                    <p class="text-custom mb-0">Manage and track all purchase orders</p>
+                </div>
+            </div>
+            <div class="col-md-5">
+                {% if request.user.is_superadmin or request.user.is_institution_admin %}
+                <div class="d-flex justify-content-end align-items-center gap-2">
+                    <a href="{% url 'inventory:purchase_order_create' %}" class="btn btn-primary">
+                        <i class="bi bi-plus-circle me-1"></i> New Purchase Order
+                    </a>
+                    <div class="dropdown">
+                        <button class="btn btn-secondary dropdown-toggle" type="button" id="exportDropdown"
+                            data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="bi bi-download me-1"></i> Export
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="exportDropdown">
+                            <li class="dropdown-header">Export Purchase Orders</li>
+                            <li><a class="dropdown-item" href="?{{ request.GET.urlencode }}&export=csv">
+                                <i class="bi bi-filetype-csv me-2"></i> Export CSV</a></li>
+                            <li><a class="dropdown-item" href="?{{ request.GET.urlencode }}&export=excel">
+                                <i class="bi bi-file-earmark-excel me-2"></i> Export Excel</a></li>
+                            <li><a class="dropdown-item" href="?{{ request.GET.urlencode }}&export=pdf">
+                                <i class="bi bi-file-earmark-pdf me-2"></i> Export PDF</a></li>
+                        </ul>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Filter Section -->
+    <div class="card card-custom p-3 mb-4">
+        <form id="filterForm" method="get" class="row g-3">
+            <div class="col-md-3">
+                <label class="form-label">Search</label>
+                <input type="text" name="search" class="form-control"
+                       placeholder="Search PO number, supplier..." value="{{ request.GET.search }}">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Status</label>
+                <select name="status" class="form-select">
+                    <option value="">All Status</option>
+                    <option value="draft" {% if request.GET.status == 'draft' %}selected{% endif %}>Draft</option>
+                    <option value="submitted" {% if request.GET.status == 'submitted' %}selected{% endif %}>Submitted</option>
+                    <option value="approved" {% if request.GET.status == 'approved' %}selected{% endif %}>Approved</option>
+                    <option value="rejected" {% if request.GET.status == 'rejected' %}selected{% endif %}>Rejected</option>
+                    <option value="ordered" {% if request.GET.status == 'ordered' %}selected{% endif %}>Ordered</option>
+                    <option value="received" {% if request.GET.status == 'received' %}selected{% endif %}>Received</option>
+                    <option value="cancelled" {% if request.GET.status == 'cancelled' %}selected{% endif %}>Cancelled</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Date From</label>
+                <input type="date" name="date_from" class="form-control" value="{{ request.GET.date_from }}">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Date To</label>
+                <input type="date" name="date_to" class="form-control" value="{{ request.GET.date_to }}">
+            </div>
+            <div class="col-12 d-flex align-items-end gap-2">
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-search me-1"></i> Apply Filters
+                </button>
+                <a href="{% url 'inventory:purchase_order_list' %}" class="btn btn-outline-secondary">
+                    <i class="bi bi-x me-1"></i> Clear
+                </a>
+            </div>
+        </form>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="row g-4 mb-4">
+        <div class="col-xl-2 col-md-4 col-6">
+            <div class="card stats-card text-white h-100" style="background: var(--primary-gradient);">
+                <div class="card-body">
+                    <h6 class="card-title mb-1 small opacity-75">TOTAL</h6>
+                    <h3 class="mb-0 fw-bold">{{ total_count|default:"0" }}</h3>
+                    <p class="mb-0 small opacity-75"><i class="bi bi-cart me-1"></i>All POs</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-2 col-md-4 col-6">
+            <div class="card stats-card text-white h-100" style="background: var(--info-gradient);">
+                <div class="card-body">
+                    <h6 class="card-title mb-1 small opacity-75">DRAFT</h6>
+                    <h3 class="mb-0 fw-bold">{{ draft_count|default:"0" }}</h3>
+                    <p class="mb-0 small opacity-75"><i class="bi bi-pencil me-1"></i>In progress</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-2 col-md-4 col-6">
+            <div class="card stats-card text-white h-100" style="background: var(--warning-gradient);">
+                <div class="card-body">
+                    <h6 class="card-title mb-1 small opacity-75">PENDING</h6>
+                    <h3 class="mb-0 fw-bold">{{ pending_count|default:"0" }}</h3>
+                    <p class="mb-0 small opacity-75"><i class="bi bi-clock me-1"></i>Awaiting approval</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-2 col-md-4 col-6">
+            <div class="card stats-card text-white h-100" style="background: var(--success-gradient);">
+                <div class="card-body">
+                    <h6 class="card-title mb-1 small opacity-75">APPROVED</h6>
+                    <h3 class="mb-0 fw-bold">{{ approved_count|default:"0" }}</h3>
+                    <p class="mb-0 small opacity-75"><i class="bi bi-check-circle me-1"></i>Ready to order</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-2 col-md-4 col-6">
+            <div class="card stats-card text-white h-100" style="background: var(--secondary-gradient);">
+                <div class="card-body">
+                    <h6 class="card-title mb-1 small opacity-75">ORDERED</h6>
+                    <h3 class="mb-0 fw-bold">{{ ordered_count|default:"0" }}</h3>
+                    <p class="mb-0 small opacity-75"><i class="bi bi-truck me-1"></i>With supplier</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-2 col-md-4 col-6">
+            <div class="card stats-card text-white h-100" style="background: var(--danger-gradient);">
+                <div class="card-body">
+                    <h6 class="card-title mb-1 small opacity-75">ISSUES</h6>
+                    <h3 class="mb-0 fw-bold">{{ issues_count|default:"0" }}</h3>
+                    <p class="mb-0 small opacity-75"><i class="bi bi-exclamation-triangle me-1"></i>Rejected/Cancelled</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Purchase Orders Table -->
+    <div class="card card-custom">
+        <div class="card-header bg-transparent border-0 pt-4 px-4">
+            <h5 class="card-title mb-0 fw-bold text-custom">All Purchase Orders</h5>
+            <p class="text-custom mb-0">Recent and active purchase orders</p>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                {% if purchase_orders %}
+                <table id="purchaseOrdersTable" class="w-100 table-custom table-hover align-middle">
+                    <thead>
+                        <tr>
+                            <th>PO Number</th>
+                            <th>Supplier</th>
+                            <th>Amount</th>
+                            <th>Status</th>
+                            <th>Order Date</th>
+                            <th>Expected Delivery</th>
+                            <th>Created By</th>
+                            <th>Approved By</th>
+                            <th class="text-center">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for po in purchase_orders %}
+                        <tr>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <i class="bi bi-file-text me-2 text-primary"></i>
+                                    <strong>{{ po.po_number }}</strong>
+                                </div>
+                                <small class="text-custom d-block">Created: {{ po.created_at|date:"d M Y" }}</small>
+                            </td>
+                            <td>
+                                <span class="fw-bold">{{ po.supplier }}</span>
+                                {% if po.notes %}
+                                <small class="text-custom d-block" title="{{ po.notes }}">
+                                    {{ po.notes|truncatewords:3 }}
+                                </small>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <span class="fw-bold text-success">₹{{ po.total_amount }}</span>
+                            </td>
+                            <td>
+                                {% if po.status == 'draft' %}
+                                <span class="badge bg-info bg-opacity-10 text-info">
+                                    <i class="bi bi-pencil me-1"></i>Draft
+                                </span>
+                                {% elif po.status == 'submitted' %}
+                                <span class="badge bg-warning bg-opacity-10 text-warning">
+                                    <i class="bi bi-clock me-1"></i>Submitted
+                                </span>
+                                {% elif po.status == 'approved' %}
+                                <span class="badge bg-success bg-opacity-10 text-success">
+                                    <i class="bi bi-check-circle me-1"></i>Approved
+                                </span>
+                                {% elif po.status == 'rejected' %}
+                                <span class="badge bg-danger bg-opacity-10 text-danger">
+                                    <i class="bi bi-x-circle me-1"></i>Rejected
+                                </span>
+                                {% elif po.status == 'ordered' %}
+                                <span class="badge bg-secondary bg-opacity-10 text-secondary">
+                                    <i class="bi bi-truck me-1"></i>Ordered
+                                </span>
+                                {% elif po.status == 'received' %}
+                                <span class="badge bg-primary bg-opacity-10 text-primary">
+                                    <i class="bi bi-check-lg me-1"></i>Received
+                                </span>
+                                {% elif po.status == 'cancelled' %}
+                                <span class="badge bg-dark bg-opacity-10 text-dark">
+                                    <i class="bi bi-slash-circle me-1"></i>Cancelled
+                                </span>
+                                {% endif %}
+                                
+                                {% if po.expected_delivery and po.status in 'ordered,approved' %}
+                                    {% if po.expected_delivery < today %}
+                                    <small class="text-danger d-block mt-1">
+                                        <i class="bi bi-exclamation-triangle me-1"></i>Overdue
+                                    </small>
+                                    {% elif po.expected_delivery <= soon_date %}
+                                    <small class="text-warning d-block mt-1">
+                                        <i class="bi bi-clock me-1"></i>Due soon
+                                    </small>
+                                    {% endif %}
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if po.order_date %}
+                                {{ po.order_date|date:"d M Y" }}
+                                {% else %}
+                                <span class="text-custom">-</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if po.expected_delivery %}
+                                {{ po.expected_delivery|date:"d M Y" }}
+                                {% else %}
+                                <span class="text-custom">-</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <div class="avatar-sm bg-light rounded-circle d-flex align-items-center justify-content-center me-2">
+                                        <i class="bi bi-person text-muted"></i>
+                                    </div>
+                                    <span>{{ po.created_by.get_full_name|default:po.created_by.username }}</span>
+                                </div>
+                            </td>
+                            <td>
+                                {% if po.approved_by %}
+                                <div class="d-flex align-items-center">
+                                    <div class="avatar-sm bg-light rounded-circle d-flex align-items-center justify-content-center me-2">
+                                        <i class="bi bi-person-check text-success"></i>
+                                    </div>
+                                    <span>{{ po.approved_by.get_full_name|default:po.approved_by.username }}</span>
+                                </div>
+                                {% else %}
+                                <span class="text-custom">-</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-center">
+                                <div class="btn-group" role="group">
+                                    <a href="{% url 'inventory:purchase_order_detail' po.pk %}" class="btn btn-sm btn-outline-primary" title="View Details">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                    {% if po.status in 'draft,submitted,rejected' and request.user.is_superadmin or request.user.is_institution_admin %}
+                                    <a href="{% url 'inventory:purchase_order_update' po.pk %}" class="btn btn-sm btn-outline-secondary" title="Edit">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                    {% endif %}
+                                    {% if po.status == 'approved' and request.user.is_superadmin or request.user.is_institution_admin %}
+                                    <a href="{% url 'inventory:purchase_order_status_update' po.pk %}" class="btn btn-sm btn-outline-success" title="Update Status">
+                                        <i class="bi bi-arrow-up-circle"></i>
+                                    </a>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% else %}
+                <div class="empty-state text-center py-5">
+                    <i class="bi bi-cart-check fs-1 text-muted"></i>
+                    <h4 class="mt-3 mb-2">No Purchase Orders Found</h4>
+                    <p class="text-custom mb-4">Start by creating your first purchase order</p>
+                    {% if request.user.is_superadmin or request.user.is_institution_admin %}
+                    <a href="{% url 'inventory:purchase_order_create' %}" class="btn btn-primary">
+                        <i class="bi bi-plus-circle me-2"></i> Create First PO
+                    </a>
+                    {% endif %}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Pagination -->
+        {% if is_paginated %}
+        <div class="card-footer bg-transparent border-0">
+            <nav aria-label="Purchase orders pagination">
+                <ul class="pagination justify-content-center mb-0">
+                    {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page=1{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">First</a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">Previous</a>
+                    </li>
+                    {% endif %}
+                    
+                    {% for num in page_obj.paginator.page_range %}
+                        {% if page_obj.number == num %}
+                        <li class="page-item active"><a class="page-link" href="#">{{ num }}</a></li>
+                        {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                        <li class="page-item"><a class="page-link" href="?page={{ num }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">{{ num }}</a></li>
+                        {% endif %}
+                    {% endfor %}
+                    
+                    {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.next_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">Next</a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">Last</a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+        </div>
+        {% endif %}
+    </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize DataTable
+    $('#purchaseOrdersTable').DataTable({
+        "pageLength": 20,
+        "order": [[0, 'desc']],
+        "language": {
+            "search": "<i class='bi bi-search me-2'></i>Search:",
+            "lengthMenu": "Show _MENU_ entries",
+            "info": "Showing _START_ to _END_ of _TOTAL_ entries",
+            "paginate": {
+                "previous": "<i class='bi bi-chevron-left'></i>",
+                "next": "<i class='bi bi-chevron-right'></i>"
+            }
+        },
+        "columnDefs": [
+            { "targets": [8], "orderable": false, "className": "dt-center" }
+        ],
+        "responsive": true
+    });
+
+    // Initialize Select2
+    $('select').select2({ theme: 'bootstrap-5', width: '100%' });
+
+    // Date validation
+    const dateFrom = document.querySelector('input[name="date_from"]');
+    const dateTo = document.querySelector('input[name="date_to"]');
+    
+    if (dateFrom && dateTo) {
+        dateFrom.addEventListener('change', function() {
+            if (dateTo.value && this.value > dateTo.value) {
+                dateTo.value = this.value;
+            }
+        });
+        
+        dateTo.addEventListener('change', function() {
+            if (dateFrom.value && this.value < dateFrom.value) {
+                dateFrom.value = this.value;
+            }
+        });
+    }
+});
+</script>
+{% endblock %}
+
+{% block extra_css %}
+{% endblock %}

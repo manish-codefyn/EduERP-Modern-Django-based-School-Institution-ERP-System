@@ -1,0 +1,90 @@
+{% extends "account/base.html" %}
+{% load crispy_forms_tags static %}
+{% block content %}
+
+<section class="d-flex align-items-center justify-content-center min-vh-100 bg-light">
+  <!-- Educational Background Icons -->
+  <div class="edu-bg-icons">
+    <svg class="edu-icon book" viewBox="0 0 24 24" fill="currentColor">
+      <path d="M18 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM6 4h5v8l-2.5-1.5L6 12V4z"/>
+    </svg>
+    <svg class="edu-icon pencil" viewBox="0 0 24 24" fill="currentColor">
+      <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>
+    </svg>
+    <svg class="edu-icon calculator" viewBox="0 0 24 24" fill="currentColor">
+      <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-2h2v2zm0-4H7v-2h2v2zm0-4H7V7h2v2zm4 8h-2v-2h2v2zm0-4h-2v-2h2v2zm0-4h-2V7h2v2zm4 8h-2v-6h2v6zm0-8h-2V7h2v2z"/>
+    </svg>
+    <svg class="edu-icon graduation-cap" viewBox="0 0 24 24" fill="currentColor">
+      <path d="M12 3L1 9l4 2.18v6L12 21l7-3.82v-6l2-1.09V17h2V9L12 3zm6.82 6L12 12.72 5.18 9 12 5.28 18.82 9zM17 15.99l-5 2.73-5-2.73v-3.72L12 15l5-2.73v3.72z"/>
+    </svg>
+  </div>
+
+  <div class="card shadow-lg p-4" style="max-width: 400px; width: 100%;">
+    <div class="text-center">
+      {% if organization.logo %}
+      <img src="{{ organization.logo.url }}" alt="Logo" class="mb-3" style="width: 194px; height: 64px;">
+      {% else %}
+        <!-- Optional: fallback image or text -->
+        <span class="mb-3" style="display:inline-block; width:194px; height:64px; background:#eee; text-align:center; line-height:64px; color:#666;">
+            No Logo
+        </span>
+      {% endif %}
+
+      <h2 class="h4 mb-2 fw-bold text-dark">Welcome Back</h2>
+      <p class="text-muted small">
+        Don't have an account?
+        <a href="{% url 'account_signup' %}" class="fw-semibold text-primary text-decoration-none">Sign up</a>
+      </p>
+    </div>
+
+    {% if form.errors %}
+    <div class="alert alert-danger mt-3" role="alert">
+      <strong>Error:</strong> Invalid email or password. Please try again.
+    </div>
+    {% endif %}
+
+    {% if messages %}
+    <div class="mt-3">
+      {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} text-center small mb-2">
+          {{ message }}
+        </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    <form method="POST" action="{% url 'account_login' %}" class="mt-4">
+      {% csrf_token %}
+      {{ form|crispy }}
+
+      <div class="d-flex justify-content-end mb-3">
+        <a href="{% url 'account_reset_password' %}" class="small text-primary text-decoration-none">Forgot your password?</a>
+      </div>
+
+      <div class="d-grid gap-2">
+        <button type="submit" class="btn btn-primary btn-lg">
+          Sign In
+        </button>
+        <a href="{% url 'dashboard' %}" class="btn btn-outline-secondary">
+          Cancel
+        </a>
+      </div>
+    </form>
+
+    {% if SOCIALACCOUNT_ENABLED %}
+    <div class="my-4 text-center">
+      <div class="d-flex align-items-center">
+        <hr class="flex-grow-1">
+        <span class="px-2 small text-muted">Or continue with</span>
+        <hr class="flex-grow-1">
+      </div>
+
+      <div class="mt-3">
+        {% include "socialaccount/snippets/provider_list.html" with process="login" %}
+      </div>
+    </div>
+    {% endif %}
+  </div>
+</section>
+
+{% endblock %}

@@ -1,0 +1,87 @@
+<!-- templates/hostel/visitor_log/visitor_confirm_delete.html -->
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Delete Visitor Entry - {{ organization.name|default:"ERP System" }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+
+<!-- Header -->
+<div class="header-section">
+    <div class="row align-items-center">
+        <div class="col-12 mb-2">
+            <!-- Breadcrumb -->
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb breadcrumb-dark">
+                    <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'hostel:hostel_list' %}">Hostel</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'hostel:visitor_list' %}">Visitor Log</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Delete Visitor Entry</li>
+                </ol>
+            </nav>
+        </div>
+
+        <div class="col-md-8">
+            <div class="d-flex align-items-center">
+                <div class="header-icon me-3">
+                   <i class="bi bi-exclamation-triangle display-6 text-danger"></i> 
+                </div>
+                <div>
+                    <h1 class="h3 fw-bold mb-1">Delete Visitor Entry</h1>
+                    <p class="text-custom mb-0">Remove visitor entry from the system</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Confirmation Section -->
+<div class="row justify-content-center">
+    <div class="col-lg-6">
+        <div class="card card-custom border-danger">
+            <div class="card-header bg-transparent border-danger text-danger pt-4 px-4">
+                <h5 class="card-title mb-0 fw-bold">Confirm Deletion</h5>
+                <p class="mb-0">This action cannot be undone</p>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-danger">
+                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                    <strong>Warning:</strong> You are about to delete the visitor entry for "{{ object.visitor_name }}".
+                </div>
+                
+                <div class="visitor-details mb-4">
+                    <h6 class="fw-semibold">Visitor Details:</h6>
+                    <div class="row">
+                        <div class="col-6">
+                            <strong>Visitor:</strong> {{ object.visitor_name }}<br>
+                            <strong>Student:</strong> {{ object.student_visited.user.get_full_name }}<br>
+                            <strong>Purpose:</strong> {{ object.purpose }}
+                        </div>
+                        <div class="col-6">
+                            <strong>Entry Time:</strong> {{ object.entry_time|date:"M d, Y h:i A" }}<br>
+                            {% if object.exit_time %}
+                            <strong>Exit Time:</strong> {{ object.exit_time|date:"M d, Y h:i A" }}<br>
+                            {% endif %}
+                            <strong>Recorded By:</strong> {% if object.recorded_by %}{{ object.recorded_by.user.get_full_name }}{% else %}System{% endif %}
+                        </div>
+                    </div>
+                </div>
+                
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="d-flex gap-2 justify-content-end">
+                        <a href="{% url 'hostel:visitor_list' %}" class="btn btn-secondary">
+                            <i class="bi bi-x-circle me-1"></i> Cancel
+                        </a>
+                        <button type="submit" class="btn btn-danger">
+                            <i class="bi bi-trash me-1"></i> Confirm Delete
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+</div>
+{% endblock %}

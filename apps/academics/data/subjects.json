@@ -1,0 +1,24 @@
+[
+  {
+    "name": "Mathematics",
+    "institution_code": "main-campus",
+    "code": "MATH101",
+    "subject_type": "core",
+    "difficulty_level": "basic",
+    "credits": 4,
+    "department_code": "MATH",
+    "description": "Basic mathematics course",
+    "is_active": true
+  },
+  {
+    "name": "Computer Science",
+    "institution_code": "main-campus",
+    "code": "CS101",
+    "subject_type": "core",
+    "difficulty_level": "basic",
+    "credits": 3,
+    "department_code": "CS",
+    "description": "Introduction to computer science",
+    "is_active": true
+  }
+]

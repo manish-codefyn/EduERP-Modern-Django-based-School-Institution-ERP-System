@@ -1,0 +1,144 @@
+<!-- Header Section -->
+<div class="header-section mb-4">
+    <div class="row align-items-center">
+        <div class="col-md-8">
+            <div class="d-flex align-items-center">
+                <div class="header-icon me-3">
+                    <i class="bi bi-people-fill display-6 text-primary"></i>
+                </div>
+                <div>
+                    <h1 class="h3 fw-bold mb-1">HR Dashboard</h1>
+                    <p class="text-custom mb-0">Manage employees, attendance, leaves, and payroll</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="d-flex gap-2 justify-content-md-end flex-wrap">
+                <div class="btn-group w-100" role="group">
+                    <a href="" class="btn btn-primary">
+                        <i class="bi bi-person-plus me-1"></i> New Employee
+                    </a>
+                    <button type="button" class="btn btn-primary dropdown-toggle dropdown-toggle-split" 
+                            data-bs-toggle="dropdown" aria-expanded="false">
+                        <span class="visually-hidden">Toggle Dropdown</span>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <li>
+                            <a class="dropdown-item" href="">
+                                <i class="bi bi-journal-check me-2"></i> View Leave Requests
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item" href="">
+                                <i class="bi bi-cash-stack me-2"></i> View Payroll
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item" href="">
+                                <i class="bi bi-bar-chart-line me-2"></i> Reports
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Stats Cards -->
+<div class="row g-4 mb-4">
+    <!-- Total Employees -->
+    <div class="col-xl-3 col-md-6">
+        <div class="card stats-card text-white" style="background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);">
+            <div class="card-body d-flex align-items-center justify-content-between">
+                <div>
+                    <h6 class="card-title mb-1 small opacity-75">TOTAL EMPLOYEES</h6>
+                    <h3 class="mb-0 fw-bold">{{ total_employees|default:"0" }}</h3>
+                    <p class="mb-0 small opacity-75">All staff</p>
+                </div>
+                <i class="bi bi-people-fill fs-2"></i>
+            </div>
+        </div>
+    </div>
+
+    <!-- Active Employees -->
+    <div class="col-xl-3 col-md-6">
+        <div class="card stats-card text-white" style="background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);">
+            <div class="card-body d-flex align-items-center justify-content-between">
+                <div>
+                    <h6 class="card-title mb-1 small opacity-75">ACTIVE EMPLOYEES</h6>
+                    <h3 class="mb-0 fw-bold">{{ active_employees|default:"0" }}</h3>
+                    <p class="mb-0 small opacity-75">Currently working</p>
+                </div>
+                <i class="bi bi-person-check-fill fs-2"></i>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pending Leave Requests -->
+    <div class="col-xl-3 col-md-6">
+        <div class="card stats-card text-white" style="background: linear-gradient(135deg, #f7971e 0%, #ffd200 100%);">
+            <div class="card-body d-flex align-items-center justify-content-between">
+                <div>
+                    <h6 class="card-title mb-1 small opacity-75">PENDING LEAVES</h6>
+                    <h3 class="mb-0 fw-bold">{{ pending_leaves|default:"0" }}</h3>
+                    <p class="mb-0 small opacity-75">Awaiting approval</p>
+                </div>
+                <i class="bi bi-journal-check fs-2"></i>
+            </div>
+        </div>
+    </div>
+
+    <!-- Payroll Today -->
+    <div class="col-xl-3 col-md-6">
+        <div class="card stats-card text-white" style="background: linear-gradient(135deg, #00c6ff 0%, #0072ff 100%);">
+            <div class="card-body d-flex align-items-center justify-content-between">
+                <div>
+                    <h6 class="card-title mb-1 small opacity-75">PAYROLL TODAY</h6>
+                    <h3 class="mb-0 fw-bold">${{ payroll_today|default:"0" }}</h3>
+                    <p class="mb-0 small opacity-75">Salary disbursed</p>
+                </div>
+                <i class="bi bi-cash-stack fs-2"></i>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Attendance Chart -->
+<div class="row g-3">
+    <div class="col-12">
+        <div class="card shadow-sm" style="background: linear-gradient(135deg, #ff512f 0%, #dd2476 100%); color: white;">
+            <div class="card-body">
+                <h6 class="card-title text-uppercase mb-3">Attendance Overview</h6>
+                <canvas id="attendanceChart" height="100"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Chart.js Script -->
+<script>
+    const ctx = document.getElementById('attendanceChart').getContext('2d');
+    const attendanceChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: {{ attendance_labels|safe }},
+            datasets: [{
+                label: 'Present',
+                data: {{ attendance_data|safe }},
+                backgroundColor: 'rgba(255, 255, 255, 0.6)',
+                borderColor: 'rgba(255, 255, 255, 1)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: { beginAtZero: true, ticks: { color: 'white' } },
+                x: { ticks: { color: 'white' } }
+            },
+            plugins: { legend: { labels: { color: 'white' } } }
+        }
+    });
+</script>

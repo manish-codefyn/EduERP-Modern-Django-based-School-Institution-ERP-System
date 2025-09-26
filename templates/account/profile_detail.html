@@ -1,0 +1,79 @@
+{% extends "account/base.html" %}
+
+{% block title %}My Profile - {{ organization.name }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h4 class="mb-0">Profile Information</h4>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3 text-center">
+                        {% if user.profile.avatar %}
+                        <img src="{{ user.profile.avatar.url }}" class="avatar img-fluid rounded-circle mb-3" alt="Avatar">
+                        {% else %}
+                        <div class="avatar-placeholder rounded-circle mb-3 d-flex align-items-center justify-content-center bg-secondary text-white" style="width: 150px; height: 150px; font-size: 3rem;">
+                            {{ user.email|first|upper }}
+                        </div>
+                        {% endif %}
+                        <a href="{% url 'users:profile_edit' %}" class="btn btn-sm btn-outline-primary">
+                            Edit Profile
+                        </a>
+                    </div>
+                    <div class="col-md-9">
+                        <table class="table table-sm table-borderless">
+                            <tr>
+                                <th width="30%">Email</th>
+                                <td>{{ user.email }}</td>
+                            </tr>
+                            <tr>
+                                <th>Company</th>
+                                <td>{{ user.profile.company_name|default:"Not provided" }}</td>
+                            </tr>
+                            <tr>
+                                <th>Phone</th>
+                                <td>{{ user.profile.phone_number|default:"Not provided" }}</td>
+                            </tr>
+                            <tr>
+                                <th>Timezone</th>
+                                <td>{{ user.profile.timezone }}</td>
+                            </tr>
+                            <tr>
+                                <th>Language</th>
+                                <td>{{ user.profile.get_language_display }}</td>
+                            </tr>
+                            <tr>
+                                <th>Joined</th>
+                                <td>{{ user.date_joined|date:"M j, Y" }}</td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h4 class="mb-0">Account Security</h4>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a href="{% url 'account_change_password' %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-lock me-2"></i> Change Password
+                    </a>
+                    <a href="{% url 'account_email' %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-envelope me-2"></i> Manage Email
+                    </a>
+                    <a href="{% url 'socialaccount_connections' %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-share-alt me-2"></i> Social Connections
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

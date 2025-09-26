@@ -1,0 +1,398 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Classes - {{ organization.name|default:"ERP System" }}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+
+    <!-- Header -->
+    <div class="header-section">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb breadcrumb-dark">
+                        <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Dashboard</a></li>
+                        <li class="breadcrumb-item"><a href="{% url 'academics:class_list' %}">Academics</a></li>
+                        <li class="breadcrumb-item active" aria-current="page">Class Management</li>
+                    </ol>
+                </nav>
+                <h1 class="display-6 fw-bold mb-2">Class Management</h1>
+                <p class="lead mb-0 opacity-75">Manage all classes, sections, and academic settings</p>
+            </div>
+            <div class="col-md-4 text-md-end">
+                <div class="d-flex gap-2 justify-content-md-end flex-wrap">
+                    {% if request.user.is_superadmin or request.user.is_teacher or request.user.is_administrative_staff %}
+                    <a href="{% url 'academics:class_add' %}" class="btn btn-light">
+                        <i class="bi bi-plus-circle me-2"></i>Add New Class
+                    </a>
+                    <button type="button" class="btn btn-outline-light" data-bs-toggle="modal" data-bs-target="#exportModal">
+                        <i class="bi bi-download me-2"></i>Export
+                    </button>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="row g-4 mb-4">
+        <div class="col-xl-3 col-md-6">
+            <div class="card stats-card text-white" style="background: linear-gradient(135deg, #0984e3 0%, #74b9ff 100%);">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-8">
+                            <h6 class="card-title mb-1 small opacity-75">TOTAL CLASSES</h6>
+                            <h3 class="mb-0 fw-bold">{{ object_list.count|default:"0" }}</h3>
+                        </div>
+                        <div class="col-4 text-end">
+                            <div class="stats-icon">
+                                <i class="bi bi-building"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card stats-card text-white" style="background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-8">
+                            <h6 class="card-title mb-1 small opacity-75">TOTAL SECTIONS</h6>
+                            <h3 class="mb-0 fw-bold">{{ total_sections|default:"0" }}</h3>
+                        </div>
+                        <div class="col-4 text-end">
+                            <div class="stats-icon">
+                                <i class="bi bi-diagram-3"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card stats-card text-white" style="background: linear-gradient(135deg, #00b894 0%, #00a085 100%);">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-8">
+                            <h6 class="card-title mb-1 small opacity-75">TOTAL CAPACITY</h6>
+                            <h3 class="mb-0 fw-bold">{{ total_capacity|default:"0" }}</h3>
+                        </div>
+                        <div class="col-4 text-end">
+                            <div class="stats-icon">
+                                <i class="bi bi-people-fill"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card stats-card text-white" style="background: linear-gradient(135deg, #fdcb6e 0%, #f39c12 100%);">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-8">
+                            <h6 class="card-title mb-1 small opacity-75">AVG. PER CLASS</h6>
+                            <h3 class="mb-0 fw-bold">{{ average_capacity|default:"0" }}</h3>
+                        </div>
+                        <div class="col-4 text-end">
+                            <div class="stats-icon">
+                                <i class="bi bi-bar-chart-fill"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="card card-custom p-3 mb-4">
+        <div class="row g-3 align-items-center">
+            <div class="col-md-8">
+                <h6 class="mb-0"><i class="bi bi-lightning me-2 text-warning"></i>Quick Actions</h6>
+            </div>
+            <div class="col-md-4 text-end">
+                <div class="btn-group">
+                    {% if first_class %}
+                    <a href="{% url 'academics:timetable_add' %}" class="btn btn-outline-success btn-sm">
+                        <i class="bi bi-calendar-plus me-1"></i>Timetable
+                    </a>
+                    {% endif %}
+                    <a href="{% url 'academics:subject_list' %}" class="btn btn-outline-primary btn-sm">
+                        <i class="bi bi-book me-1"></i>Subjects
+                    </a>
+                    <a href="{% url 'academics:house_list' %}" class="btn btn-outline-warning btn-sm">
+                        <i class="bi bi-house-door me-1"></i>Houses
+                    </a>
+                    <a href="{% url 'academics:academic_year_list' %}" class="btn btn-outline-info btn-sm">
+                        <i class="bi bi-calendar-check me-1"></i>Academic Years
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters Section -->
+    <div class="card card-custom p-3 mb-4">
+        <div class="row g-3">
+            <div class="col-md-3">
+                <label class="form-label">Status</label>
+                <select class="form-select" id="statusFilter">
+                    <option value="">All Status</option>
+                    <option value="active">Active</option>
+                    <option value="inactive">Inactive</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Capacity</label>
+                <select class="form-select" id="capacityFilter">
+                    <option value="">All Capacity</option>
+                    <option value="0-30">Small (0-30)</option>
+                    <option value="31-50">Medium (31-50)</option>
+                    <option value="51+">Large (51+)</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Search</label>
+                <input type="text" class="form-control" id="searchInput" placeholder="Search classes...">
+            </div>
+            <div class="col-md-3 d-flex align-items-end">
+                <button class="btn btn-outline-secondary w-100" id="resetFilters">
+                    <i class="bi bi-arrow-clockwise me-1"></i> Reset Filters
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Classes Table -->
+    <div class="card card-custom">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="card-title mb-0">All Classes</h5>
+            <span class="badge bg-primary">{{ object_list.count }} classes</span>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table id="classesTable" class="table-custom table-hover w-100">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Code</th>
+                            <th>Capacity</th>
+                            <th>Room Number</th>
+                            <th>Sections</th>
+                            <th class="text-center">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for class in object_list %}
+                        <tr>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <i class="bi bi-building text-primary me-2"></i>
+                                    <strong>{{ class.name }}</strong>
+                                </div>
+                            </td>
+                            <td><span class="badge bg-secondary">{{ class.code }}</span></td>
+                            <td>
+                                <span class="badge bg-light text-dark">
+                                    <i class="bi bi-people me-1"></i>{{ class.capacity }}
+                                </span>
+                            </td>
+                            <td>{{ class.room_number|default:"-" }}</td>
+                            <td>
+                                {% for section in class.sections.all %}
+                                    <span class="section-pill">{{ section.name }}</span>
+                                {% empty %}
+                                    <span class="text-custom small">No sections</span>
+                                {% endfor %}
+                            </td>
+                            <td>
+                                <div class="d-flex justify-content-center gap-1">
+                                    {% if request.user.is_superadmin or request.user.is_teacher or request.user.is_administrative_staff %}
+                                    <a href="{% url 'academics:class_detail' class.id %}" class="btn btn-sm btn-outline-primary" data-bs-toggle="tooltip" title="View Details">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                    <a href="{% url 'academics:class_update' class.id %}" class="btn btn-sm btn-outline-secondary" data-bs-toggle="tooltip" title="Edit Class">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                    <a href="{% url 'academics:section_list' class.id %}" class="btn btn-sm btn-outline-info" data-bs-toggle="tooltip" title="Manage Sections">
+                                        <i class="bi bi-people"></i>
+                                    </a>
+                                    <a href="{% url 'academics:timetable_list' class.id %}" class="btn btn-sm btn-outline-warning" data-bs-toggle="tooltip" title="View Timetable">
+                                        <i class="bi bi-calendar-week"></i>
+                                    </a>
+                                    <a href="{% url 'academics:class_delete' class.id %}" class="btn btn-sm btn-outline-danger" data-bs-toggle="tooltip" title="Delete Class">
+                                        <i class="bi bi-trash"></i>
+                                    </a>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="6" class="text-center py-5">
+                                <div class="empty-state">
+                                    <i class="bi bi-building"></i>
+                                    <h5>No Classes Found</h5>
+                                    <p class="text-custom">Get started by creating your first class</p>
+                                    {% if request.user.is_superadmin or request.user.is_teacher or request.user.is_administrative_staff %}
+                                    <a href="{% url 'academics:class_add' %}" class="btn btn-primary mt-2">
+                                        <i class="bi bi-plus-circle me-2"></i>Add First Class
+                                    </a>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Export Modal -->
+<div class="modal fade" id="exportModal" tabindex="-1" aria-labelledby="exportModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="get" action="{% url 'academics:export-classes' %}">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exportModalLabel">Export Classes Data</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <!-- Export Format -->
+                    <div class="mb-3">
+                        <label for="exportFormat" class="form-label">Export Format</label>
+                        <select class="form-select" id="exportFormat" name="format">
+                            <option value="csv">CSV</option>
+                            <option value="pdf">PDF</option>
+                        </select>
+                    </div>
+                    <!-- Dynamic Columns -->
+                    <div class="mb-3">
+                            <label class="form-label">Include Columns</label>
+                            {% if section_fields %}
+                                {% for field in section_fields %}
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="include_{{ field }}" name="columns" value="{{ field }}" checked>
+                                    <label class="form-check-label" for="include_{{ field }}">{{ field|capfirst }}</label>
+                                </div>
+                                {% endfor %}
+                            {% else %}
+                                <p>No fields available</p>
+                            {% endif %}
+                        </div>
+                   </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" data-bs-dismiss="modal" type="button">Cancel</button>
+                    <button class="btn btn-primary" type="submit">Export Data</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize DataTable
+    $('#classesTable').DataTable({
+        "pageLength": 10,
+        "lengthMenu": [[10, 25, 50, -1], [10, 25, 50, "All"]],
+        "order": [[0, 'asc']],
+        "language": {
+            "search": "<i class='bi bi-search me-2'></i>",
+            "searchPlaceholder": "Search classes...",
+            "lengthMenu": "Show _MENU_ entries",
+            "info": "Showing _START_ to _END_ of _TOTAL_ entries",
+            "infoEmpty": "Showing 0 to 0 of 0 entries",
+            "paginate": {
+                "previous": "<i class='bi bi-chevron-left'></i>",
+                "next": "<i class='bi bi-chevron-right'></i>"
+            }
+        },
+        "columnDefs": [
+            { "targets": [5], "orderable": false, "searchable": false }
+        ]
+    });
+
+    // Initialize tooltips
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl)
+    });
+
+    // Modal cleanup
+    document.querySelectorAll('.modal').forEach(modalEl => {
+        modalEl.addEventListener('hidden.bs.modal', function () {
+            document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+            document.body.classList.remove('modal-open');
+        });
+    });
+
+       // 3) Robust modal cleanup handlers
+    // Remove any leftover backdrop BEFORE a modal opens
+    document.querySelectorAll('.modal').forEach(modalEl => {
+        modalEl.addEventListener('show.bs.modal', function () {
+            // if another leftover backdrop exists, remove it
+            document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+        });
+
+        // on hidden, remove backdrops and restore body scrolling
+        modalEl.addEventListener('hidden.bs.modal', function () {
+            document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+            document.body.classList.remove('modal-open');
+            document.body.style.overflow = '';
+            document.body.style.paddingRight = '';
+        });
+    });
+
+    // 4) Safety-net: if a backdrop exists but there is no visible modal, remove it
+    // (handles cases where Bootstrap failed silently)
+    const observer = new MutationObserver(() => {
+        const backdrop = document.querySelector('.modal-backdrop');
+        const anyShown = !!document.querySelector('.modal.show');
+        if (backdrop && !anyShown) {
+            backdrop.remove();
+            document.body.classList.remove('modal-open');
+            document.body.style.overflow = '';
+            document.body.style.paddingRight = '';
+        }
+    });
+    observer.observe(document.body, { childList: true, subtree: true });
+
+    // 5) Allow manual cleanup by pressing Esc (extra safety)
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+            document.body.classList.remove('modal-open');
+            document.body.style.overflow = '';
+            document.body.style.paddingRight = '';
+            document.querySelectorAll('.modal.show').forEach(m => {
+                try { bootstrap.Modal.getInstance(m)?.hide(); } catch(e) {}
+            });
+        }
+    });
+
+    // 6) Final cleanup in case something stuck earlier
+    setTimeout(() => {
+        document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+        document.body.classList.remove('modal-open');
+        document.body.style.overflow = '';
+        document.body.style.paddingRight = '';
+    }, 500);
+});
+</script>
+{% endblock %}

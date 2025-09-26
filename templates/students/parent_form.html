@@ -1,0 +1,59 @@
+<!-- In each form template (student_form.html, parent_form.html, etc.) -->
+{% extends 'base.html' %}
+{% load i18n crispy_forms_tags %}
+
+
+{% block content %}
+{% include 'students/registration_progress.html' %}
+
+<div class="card card-custom">
+    <div class="card-header">
+        <h4 class="card-title mb-0">
+            {% if request.resolver_match.url_name == 'student_create' %}
+                {% trans "Create Student" %}
+            {% elif request.resolver_match.url_name == 'parent_create' %}
+                {% trans "Add Parent/Guardian" %}
+            {% elif request.resolver_match.url_name == 'document_create' %}
+                {% trans "Add Document" %}
+            {% elif request.resolver_match.url_name == 'history_create' %}
+                {% trans "Add Academic History" %}
+            {% endif %}
+        </h4>
+    </div>
+    <div class="card-body">
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            <!-- Form fields here -->
+                 
+                <div class="row">
+                    <!-- Loop through form fields -->
+                    {% for field in form %}
+                        <div class="col-md-6 mb-3">
+                           
+                            {{ field|as_crispy_field }}
+                            <!-- {% if field.errors %}
+                                <div class="text-danger small mt-1">
+                                    {{ field.errors|striptags }}
+                                </div>
+                            {% endif %} -->
+                            {% if field.help_text %}
+                                <small class="form-text text-custom">{{ field.help_text }}</small>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                </div>
+<!--  -->
+            <div class="d-flex justify-content-between mt-4">
+                {% if request.resolver_match.url_name != 'student_create' %}
+                <a href="{% url 'students:student_detail' student.id %}" class="btn btn-secondary">
+                    {% trans "Skip and Complete Later" %}
+                </a>
+                {% endif %}
+                <button type="submit" class="btn btn-primary">
+                    {% trans "Save and Continue" %}
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

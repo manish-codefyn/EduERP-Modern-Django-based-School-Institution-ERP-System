@@ -1,0 +1,48 @@
+{% extends "student_portal/base.html" %}
+
+{% block title %}{{ page_title }} - {{ organization.name|default:"Codefyn" }}{% endblock %}
+{% block header_name %}{{ student.full_name }}{% endblock %}
+{% block header_avatar %}{{ student_photo|default:"https://i.pravatar.cc/60?img=32" }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <h4 class="mb-4">{{ page_title }}</h4>
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Academic Year</th>
+                            <th>Class</th>
+                            <th>Section</th>
+                            <th class="text-center">Roll Number</th>
+                            <th class="text-center">Final Grade</th>
+                            <th class="text-center">Percentage</th>
+                            <th class="text-center">Result</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for grade in grades %}
+                        <tr>
+                            <td>{{ grade.academic_year.name }}</td>
+                            <td>{{ grade.class_name.name }}</td>
+                            <td>{{ grade.section.name }}</td>
+                            <td class="text-center">{{ grade.roll_number }}</td>
+                            <td class="text-center fw-bold">{{ grade.final_grade|default:"-" }}</td>
+                            <td class="text-center">{{ grade.percentage|default:"-" }}</td>
+                            <td class="text-center">{{ grade.get_result_display }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="7" class="text-center text-muted">No grades available.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

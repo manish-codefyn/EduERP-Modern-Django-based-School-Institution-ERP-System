@@ -1,0 +1,107 @@
+{% extends 'base.html' %} {# Make sure to extend your base template #}
+{% load static crispy_forms_tags %}
+
+{% block title %}  Maintenance Management - {{ organization.name|default:"ERP System" }}{% endblock %}
+
+{% block extra_css %}
+
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="card shadow-sm border-0">
+        <div class="card-header detail-card-header ">
+            <h3 class="mb-0">
+                <i class="bi bi-wrench-adjustable-circle me-2"></i> {{ title }}
+            </h3>
+        </div>
+        <div class="card-body">
+            <form method="post" id="maintenanceForm" 
+                  data-rooms-url="{% url 'hostel:ajax_load_rooms' %}" 
+                  novalidate>
+                {% csrf_token %}
+
+                {% if form.non_field_errors %}
+                <div class="alert alert-danger d-flex align-items-center">
+                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                    <div>{{ form.non_field_errors }}</div>
+                </div>
+                {% endif %}
+
+                <div class="row">
+                    {% for field in form %}
+                        <div class="col-md-6 mb-3">
+                            {{ field|as_crispy_field }}
+
+                            {% if field.errors %}
+                                <div class="text-danger small mt-1">
+                                    {{ field.errors|striptags }}
+                                </div>
+                            {% endif %}
+
+                            {% if field.help_text %}
+                                <small class="form-text text-muted">{{ field.help_text }}</small>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                </div>
+
+                <div class="d-flex gap-2 justify-content-end mt-4 pt-3 border-top">
+                    <a href="{% url 'hostel:maintenance_list' %}" class="btn btn-secondary">
+                        <i class="bi bi-arrow-left me-1"></i> Cancel
+                    </a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-check-circle me-1"></i>
+                        {{ submit_text }}
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const hostelSelect = document.getElementById('{{ form.hostel.id_for_label }}'); // e.g., 'id_hostel'
+    const roomSelect = document.getElementById('{{ form.room.id_for_label }}');     // e.g., 'id_room'
+    const form = document.getElementById('maintenanceForm');
+    const roomsUrl = form.dataset.roomsUrl;
+
+    hostelSelect.addEventListener('change', function() {
+        const hostelId = this.value;
+
+        // Clear previous room options
+        roomSelect.innerHTML = '<option value="">--- Select a hostel first ---</option>';
+        roomSelect.disabled = true;
+
+        if (hostelId) {
+            // Fetch new rooms from the server
+            fetch(`${roomsUrl}?hostel_id=${hostelId}`)
+                .then(response => response.json())
+                .then(data => {
+                    // Re-enable the room select and add a default option
+                    roomSelect.disabled = false;
+                    roomSelect.innerHTML = '<option value="">---------</option>';
+                    
+                    // Populate with new rooms
+                    data.forEach(function(room) {
+                        const option = new Option(room.name, room.id);
+                        roomSelect.add(option);
+                    });
+                })
+                .catch(error => {
+                    console.error('Error loading rooms:', error);
+                    roomSelect.innerHTML = '<option value="">Could not load rooms</option>';
+                });
+        }
+    });
+
+    // Optional: Trigger change on page load if a hostel is already selected (for edit forms)
+    if (hostelSelect.value) {
+        hostelSelect.dispatchEvent(new Event('change'));
+    } else {
+        roomSelect.disabled = true; // Ensure it's disabled on initial load
+    }
+});
+</script>
+{% endblock %}

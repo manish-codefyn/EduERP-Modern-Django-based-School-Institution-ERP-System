@@ -1,0 +1,87 @@
+{% extends 'communications/base.html' %}
+{% block title %}Push Notification Detail - {{ organization.name|default:"Codefyn" }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+
+    <div class="header-section mb-4 d-flex justify-content-between align-items-center">
+        <div>
+            <h1 class="h3 fw-bold mb-1">{{ notification.title }}</h1>
+            <p class="text-muted mb-0">Details of this push notification</p>
+        </div>
+        <div>
+            <a href="{% url 'communications:push_notification_list' %}" class="btn btn-outline-secondary btn-sm">Back to List</a>
+            <a href="{% url 'communications:push_notification_delete' notification.pk %}" class="btn btn-danger btn-sm">Delete</a>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card shadow-sm mb-4">
+                <div class="card-body">
+                    <h5 class="mb-3">Notification Content</h5>
+                    <p>{{ notification.message }}</p>
+
+                    <hr>
+
+                    <h5 class="mb-3">Audience & Priority</h5>
+                    <div class="row">
+                        <div class="col-md-6 mb-2">
+                            <strong>Audience:</strong> {{ notification.get_audience_display }}
+                        </div>
+                        <div class="col-md-6 mb-2">
+                            <strong>Priority:</strong> {{ notification.get_priority_display }}
+                        </div>
+                    </div>
+
+                    <hr>
+
+                    <h5 class="mb-3">Status & Schedule</h5>
+                    <div class="row">
+                        <div class="col-md-6 mb-2">
+                            <strong>Status:</strong> {{ notification.get_status_display }}
+                        </div>
+                        <div class="col-md-6 mb-2">
+                            <strong>Scheduled For:</strong> 
+                            {{ notification.scheduled_for|default:"Immediate" }}
+                        </div>
+                    </div>
+
+                    <hr>
+
+                    <h5 class="mb-3">Timestamps</h5>
+                    <div class="row">
+                        <div class="col-md-6 mb-2">
+                            <strong>Created At:</strong> {{ notification.created_at|date:"d M Y, H:i" }}
+                        </div>
+                        <div class="col-md-6 mb-2">
+                            <strong>Last Updated:</strong> {{ notification.updated_at|date:"d M Y, H:i" }}
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card shadow-sm mb-4">
+                <div class="card-body">
+                    <h5 class="mb-3">Quick Actions</h5>
+                    <a href="{% url 'communications:push_notification_list' %}" class="btn btn-outline-secondary w-100 mb-2">Back to List</a>
+                    <a href="{% url 'communications:push_notification_delete' notification.pk %}" class="btn btn-danger w-100 mb-2">Delete Notification</a>
+                </div>
+            </div>
+
+            <div class="card shadow-sm mb-4">
+                <div class="card-body">
+                    <h5 class="mb-3">Export</h5>
+                    <a href="{% url 'communications:push_notification_export' %}?format=csv" class="btn btn-success w-100 mb-2">Export CSV</a>
+                    <a href="{% url 'communications:push_notification_export' %}?format=excel" class="btn btn-success w-100 mb-2">Export Excel</a>
+                    <a href="{% url 'communications:push_notification_export' %}?format=pdf" class="btn btn-success w-100">Export PDF</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

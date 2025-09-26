@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>{{ data.organization.name|default:"Institution" }} - Report Card</title>
+    <style>
+        @page { size: A4; margin: 20mm; }
+        body { font-family: 'DejaVu Sans', Arial, sans-serif; color: #333; line-height: 1.6; }
+        .header { text-align: center; border-bottom: 3px double #2E86AB; padding-bottom: 20px; margin-bottom: 30px; }
+        .logo { max-width: 120px; max-height: 120px; }
+        .institution-name { font-size: 24px; font-weight: bold; color: #2E86AB; margin: 10px 0; }
+        .report-card-title { font-size: 20px; font-weight: bold; color: #333; }
+        .info-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 20px; }
+        .student-info, .exam-info { padding: 15px; background: #f8f9fa; border-radius: 8px; }
+        .info-item { margin-bottom: 5px; }
+        .info-label { font-weight: bold; color: #555; }
+        table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: center; }
+        th { background: #2E86AB; color: white; }
+        tr:nth-child(even) { background: #f8f9fa; }
+        .pass { color: #28a745; font-weight: bold; }
+        .fail { color: #dc3545; font-weight: bold; }
+        .overall-performance { background: #e8f4f8; padding: 20px; border-radius: 8px; text-align: center; margin: 25px 0; }
+        .overall-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-top: 15px; }
+        .stat-value { font-size: 24px; font-weight: bold; color: #2E86AB; }
+        .stat-label { font-size: 12px; color: #666; }
+        .signature-area { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; text-align: center; margin-top: 50px; }
+        .signature-line { border-top: 1px solid #333; width: 80%; margin: 0 auto; padding-top: 5px; }
+        .footer { text-align: center; font-size: 10px; color: #666; margin-top: 30px; }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    {% if data.organization.logo %}
+    <img src="{{ data.organization.logo }}" alt="Logo" class="logo">
+    {% endif %}
+    <div class="institution-name">{{ data.organization.name|default:"Institution" }}</div>
+    <div class="report-card-title">REPORT CARD</div>
+</div>
+
+<div class="info-grid">
+    <div class="student-info">
+        <h3>Student Information</h3>
+        <div class="info-item"><span class="info-label">Name:</span> {{ data.student.name|default:"N/A" }}</div>
+        <div class="info-item"><span class="info-label">Admission No:</span> {{ data.student.admission_number|default:"N/A" }}</div>
+        <div class="info-item"><span class="info-label">Class:</span> {{ data.student.class|default:"N/A" }}</div>
+        <div class="info-item"><span class="info-label">Section:</span> {{ data.student.section|default:"N/A" }}</div>
+        <div class="info-item"><span class="info-label">Roll No:</span> {{ data.student.roll_number|default:"N/A" }}</div>
+    </div>
+
+    <div class="exam-info">
+        <h3>Exam Information</h3>
+        <table style="width:100%; border:none;">
+            <tr>
+                <td><strong>Exam Name:</strong> {{ data.exam.name|default:"N/A" }}</td>
+                <td><strong>Exam Type:</strong> {{ data.exam.type|default:"N/A" }}</td>
+            </tr>
+            <tr>
+                <td><strong>Academic Year:</strong> {{ data.exam.academic_year|default:"N/A" }}</td>
+                <td><strong>Period:</strong> {{ data.exam.start_date|default:"N/A" }} to {{ data.exam.end_date|default:"N/A" }}</td>
+            </tr>
+        </table>
+    </div>
+</div>
+
+<h3>Subject-wise Performance</h3>
+{% if data.subjects %}
+<table class="performance-table">
+    <thead>
+        <tr>
+            <th>Subject</th>
+            <th>Marks Obtained</th>
+            <th>Max Marks</th>
+            <th>Percentage</th>
+            <th>Grade</th>
+            <th>Status</th>
+            <th>Remarks</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for subject in data.subjects %}
+        <tr>
+            <td>{{ subject.name }}</td>
+            <td>{{ subject.marks_obtained }}</td>
+            <td>{{ subject.max_marks }}</td>
+            <td>{{ subject.percentage|floatformat:2 }}%</td>
+            <td>{{ subject.grade }}</td>
+            <td class="{% if subject.status == 'Pass' %}pass{% else %}fail{% endif %}">{{ subject.status }}</td>
+            <td>{{ subject.remarks|default:"Good" }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<p>No subjects available.</p>
+{% endif %}
+
+<div class="overall-performance">
+    <h3>Overall Performance</h3>
+    <div class="overall-stats">
+        <div class="stat-item">
+            <div class="stat-value">{{ data.overall.total_obtained|default:0|floatformat:2 }}</div>
+            <div class="stat-label">Total Marks</div>
+        </div>
+        <div class="stat-item">
+            <div class="stat-value">{{ data.overall.total_max_marks|default:0|floatformat:2 }}</div>
+            <div class="stat-label">Max Marks</div>
+        </div>
+        <div class="stat-item">
+            <div class="stat-value">{{ data.overall.percentage|default:0|floatformat:2 }}%</div>
+            <div class="stat-label">Percentage</div>
+        </div>
+        <div class="stat-item">
+            <div class="stat-value">{{ data.overall.grade|default:"N/A" }}</div>
+            <div class="stat-label">Overall Grade</div>
+        </div>
+    </div>
+    <div style="margin-top: 15px;">
+        <strong>Pass Subjects:</strong> {{ data.overall.pass_subjects|default:0 }}/{{ data.overall.total_subjects|default:0 }}
+    </div>
+</div>
+
+{% if data.grading_system %}
+<div class="grading-system">
+    <h3>Grading System</h3>
+    <table class="grade-table">
+        <thead>
+            <tr>
+                <th>Grade</th>
+                <th>Percentage Range</th>
+                <th>Remarks</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for grade in data.grading_system %}
+            <tr>
+                <td><strong>{{ grade.grade }}</strong></td>
+                <td>{{ grade.range }}</td>
+                <td>{{ grade.remarks }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endif %}
+
+<div class="signature-area">
+    <div>
+        <div>Class Teacher</div>
+        <div class="signature-line"></div>
+    </div>
+    <div>
+        <div>Principal</div>
+        <div class="signature-line"></div>
+    </div>
+    <div>
+        <div>Parent/Guardian</div>
+        <div class="signature-line"></div>
+    </div>
+</div>
+
+<div class="footer">
+    Generated on: {{ data.export_date|default:"N/A" }} | {{ data.organization.name|default:"Institution" }}
+</div>
+</body>
+</html>

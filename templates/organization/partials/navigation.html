@@ -1,0 +1,70 @@
+<ul class="sidebar-nav nav flex-column">
+
+    <!-- Dashboard -->
+    <li class="nav-item">
+        <a class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}" href="{% url 'dashboard' %}">
+            <i class="bi bi-speedometer2 me-2"></i>
+            <span class="nav-text">Dashboard</span>
+        </a>
+    </li>
+
+    {% if user.is_hr or user.is_staff %}
+
+        <!-- -->
+    <li class="nav-item">
+        <a class="nav-link {% if request.resolver_match.url_name == 'institution_list' %}active{% endif %}" href="{% url 'organization:institution_list' %}">
+            <i class="bi bi-building me-2"></i>
+            <span class="nav-text">Institution</span>
+        </a>
+    </li>
+        <!-- -->
+    <li class="nav-item">
+        <a class="nav-link {% if request.resolver_match.url_name == 'dbranch_list' %}active{% endif %}" href="{% url 'organization:branch_list' %}">
+            <i class="bi bi-diagram-3 me-2"></i>
+            <span class="nav-text">Branch</span>
+        </a>
+    </li>
+        <!-- -->
+    <li class="nav-item">
+        <a class="nav-link {% if request.resolver_match.url_name == 'department_list' %}active{% endif %}" href="{% url 'organization:department_list' %}">
+            <i class="bi bi-diagram-3-fill me-2"></i>
+            <span class="nav-text">Departments</span>
+        </a>
+    </li>
+        <!-- -->
+    <li class="nav-item">
+        <a class="nav-link {% if request.resolver_match.url_name == 'compliance_list' %}active{% endif %}" href="{% url 'organization:compliance_list' %}">
+            <i class="bi bi-award me-2"></i>
+            <span class="nav-text">Compliances</span>
+        </a>
+    </li>
+        <!-- -->
+    <li class="nav-item">
+        <a class="nav-link {% if request.resolver_match.url_name == 'affiliation_list' %}active{% endif %}" href="{% url 'organization:affiliation_list' %}">
+            <i class="bi bi-file-earmark-text me-2"></i>
+            <span class="nav-text">Affiliation</span>
+        </a>
+    </li>
+        <!-- -->
+    <li class="nav-item">
+        <a class="nav-link {% if request.resolver_match.url_name == 'accreditation_list' %}active{% endif %}" href="{% url 'organization:accreditation_list' %}">
+            <i class="bi bi-award me-2"></i>
+            <span class="nav-text">Accreditation</span>
+        </a>
+    </li>
+        <!-- -->
+    <li class="nav-item">
+        <a class="nav-link {% if request.resolver_match.url_name == 'partnership_list' %}active{% endif %}" href="{% url 'organization:partnership_list' %}">
+            <i class="bi bi-award me-2"></i>
+            <span class="nav-text">Partnership</span>
+        </a>
+    </li>
+    
+    {% endif %}
+
+    <!-- Footer -->
+    <!-- <div class="sidebar-footer mt-5 p-3 bg-light text-center">
+        <small class="text-muted">HR Module v1.0.0</small>
+    </div> -->
+
+</ul>

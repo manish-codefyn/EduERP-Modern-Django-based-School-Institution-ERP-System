@@ -1,0 +1,409 @@
+{% extends "library/base.html" %}
+{% load static custom_filters  humanize %}
+
+{% block title %} Return Book - Library Management - {{ organization.name|default:"codefyn" }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .return-card {
+        border-left: 4px solid #198754;
+    }
+    .book-cover {
+        max-width: 150px;
+        border-radius: 8px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+    .borrower-info {
+        background-color: #f8f9fa;
+        border-radius: 8px;
+        padding: 1.5rem;
+    }
+    .status-badge {
+        font-size: 0.9rem;
+        padding: 0.5rem 1rem;
+    }
+    .detail-label {
+        font-weight: 600;
+        color: #6c757d;
+    }
+    .form-section {
+        background-color: #f8f9fa;
+        border-radius: 8px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+    .condition-options {
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+    }
+    .condition-option {
+        flex: 1;
+        min-width: 120px;
+    }
+    .condition-option input[type="radio"] {
+        display: none;
+    }
+    .condition-option label {
+        display: block;
+        padding: 1rem;
+        text-align: center;
+        border: 2px solid #dee2e6;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+    .condition-option input[type="radio"]:checked + label {
+        border-color: #198754;
+        background-color: rgba(25, 135, 84, 0.1);
+    }
+    .fine-details {
+        background-color: #fff3cd;
+        border: 1px solid #ffeaa7;
+        border-radius: 8px;
+        padding: 1rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+
+    <!-- Header -->
+    <div class="header-section">
+        <div class="row align-items-center">
+            <div class="col-12 mb-2">
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb breadcrumb-dark">
+                        <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Dashboard</a></li>
+                        <li class="breadcrumb-item"><a href="{% url 'library:dashboard' %}">Library</a></li>
+                        <li class="breadcrumb-item"><a href="{% url 'library:borrowrecord_list' %}">Borrow Records</a></li>
+                        <li class="breadcrumb-item"><a href="{{ borrow_record_url }}">Borrow Details</a></li>
+                        <li class="breadcrumb-item active" aria-current="page">Return Book</li>
+                    </ol>
+                </nav>
+            </div>
+
+            <div class="col-md-8">
+                <div class="d-flex align-items-center">
+                    <div class="header-icon me-3">
+                       <i class="bi bi-arrow-return-left display-6 text-success"></i> 
+                    </div>
+                    <div>
+                        <h1 class="h3 fw-bold mb-1">Process Book Return</h1>
+                        <p class="text-custom mb-0">Record the return of a borrowed book</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="d-flex gap-2 justify-content-md-end flex-wrap">
+                    <a href="{{borrow_record_url}}" class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-left me-1"></i> Back to Details
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="row mt-4">
+        <!-- Book and Borrower Information -->
+        <div class="col-lg-4 mb-4">
+            <div class="card card-custom h-100">
+                <div class="card-header bg-transparent border-0 pt-4 px-4">
+                    <h5 class="card-title mb-0 fw-bold text-custom">Book Information</h5>
+                </div>
+                <div class="card-body text-center">
+                    {% if borrow_record.book.cover_image %}
+                    <img src="{{ borrow_record.book.cover_image.url }}" alt="{{ borrow_record.book.title }}" class="book-cover mb-3">
+                    {% else %}
+                    <div class="bg-light rounded d-flex align-items-center justify-content-center mb-3" style="height: 200px; width: 150px; margin: 0 auto;">
+                        <i class="bi bi-book display-4 text-custom"></i>
+                    </div>
+                    {% endif %}
+                    <h4 class="mb-2">{{ borrow_record.book.title }}</h4>
+                    <p class="text-custom mb-2">by {{ borrow_record.book.author|default:"Unknown Author" }}</p>
+                    <p class="text-custom mb-3">ISBN: {{ borrow_record.book.isbn|default:"Not available" }}</p>
+                    
+                    <div class="mt-4">
+                        {% if borrow_record.due_date < today %}
+                            <span class="badge status-badge bg-danger bg-opacity-10 text-danger">
+                                <i class="bi bi-exclamation-circle me-1"></i>Overdue
+                            </span>
+                        {% else %}
+                            <span class="badge status-badge bg-success bg-opacity-10 text-success">
+                                <i class="bi bi-check-circle me-1"></i>On Time
+                            </span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Borrower Information -->
+        <div class="col-lg-8 mb-4">
+            <div class="card card-custom h-100">
+                <div class="card-header bg-transparent border-0 pt-4 px-4">
+                    <h5 class="card-title mb-0 fw-bold text-custom">Borrower Information</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p class="detail-label">Borrower Name</p>
+                            <h5 class="mb-3">
+                                <i class="bi bi-person me-2 text-primary"></i>
+                                {{ borrow_record.borrower.get_full_name }}
+                            </h5>
+                            
+                            <p class="detail-label">Email</p>
+                            <p class="mb-3">
+                                <i class="bi bi-envelope me-2 text-primary"></i>
+                                {{ borrow_record.borrower.email|default:"Not available" }}
+                            </p>
+                            
+                            <p class="detail-label">Phone</p>
+                            <p class="mb-3">
+                                <i class="bi bi-telephone me-2 text-primary"></i>
+                                {{ borrow_record.borrower.phone|default:"Not available" }}
+                            </p>
+                        </div>
+                        <div class="col-md-6">
+                            <p class="detail-label">Borrow Date</p>
+                            <p class="mb-3">
+                                <i class="bi bi-calendar-event me-2 text-primary"></i>
+                                {{ borrow_record.borrow_date|date:"F d, Y" }}
+                            </p>
+                            
+                            <p class="detail-label">Due Date</p>
+                            <p class="mb-3">
+                                <i class="bi bi-calendar-x me-2 text-primary"></i>
+                                {{ borrow_record.due_date|date:"F d, Y" }}
+                            </p>
+                            
+                            <p class="detail-label">Days Overdue</p>
+                            {% load humanize %}
+                            <p class="mb-3">
+                                <i class="bi bi-clock me-2 text-primary"></i>
+                                {% if borrow_record.due_date < today %}
+                                    {{ borrow_record.due_date|timesince:today }} overdue
+                                {% else %}
+                                    0 days
+                                {% endif %}
+                            </p>
+
+                        </div>
+                    </div>
+                    
+                    <!-- Fine Calculation (if applicable) -->
+                  
+                    {% if borrow_record.due_date < today %}
+                    <div class="fine-details mt-3">
+                        <h6 class="fw-bold text-warning">
+                            <i class="bi bi-exclamation-triangle me-1"></i>
+                            Overdue Fine Applicable
+                        </h6>
+                        <p class="mb-1">
+                            Overdue period: {{ borrow_record.due_date|timesince:today }}
+                        </p>
+                        <p class="mb-1">Fine rate: ${{ fine_rate_per_day|default:"0.50" }} per day</p>
+                        <p class="mb-0 fw-bold">Calculated fine: ${{ calculated_fine|default:"0.00" }}</p>
+                    </div>
+                    {% endif %}
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Return Form -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card card-custom return-card">
+                <div class="card-header bg-transparent border-0 pt-4 px-4">
+                    <h5 class="card-title mb-0 fw-bold text-custom">Return Details</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post" id="returnForm">
+                        {% csrf_token %}
+                        
+                        <!-- Return Date -->
+                        <div class="form-section">
+                            <h6 class="fw-bold text-custom mb-3">Return Information</h6>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="return_date" class="form-label detail-label">Return Date <span class="text-danger">*</span></label>
+                                        <input type="date" class="form-control" id="return_date" name="return_date" 
+                                               value="{{ today|date:'Y-m-d' }}" required>
+                                        <div class="form-text">The date when the book was returned.</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="returned_by" class="form-label detail-label">Processed By <span class="text-danger">*</span></label>
+                                        <input type="text" class="form-control" id="returned_by" name="returned_by" 
+                                               value="{{ request.user.get_full_name|default:request.user.username }}" readonly>
+                                        <div class="form-text">Library staff processing this return.</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Book Condition -->
+                        <div class="form-section">
+                            <h6 class="fw-bold text-custom mb-3">Book Condition Assessment</h6>
+                            <div class="mb-3">
+                                <label class="form-label detail-label">Condition Upon Return <span class="text-danger">*</span></label>
+                                <div class="condition-options">
+                                    <div class="condition-option">
+                                        <input type="radio" id="condition_excellent" name="book_condition" value="excellent" checked>
+                                        <label for="condition_excellent">
+                                            <i class="bi bi-check-circle-fill text-success display-6"></i>
+                                            <div class="mt-2">Excellent</div>
+                                        </label>
+                                    </div>
+                                    <div class="condition-option">
+                                        <input type="radio" id="condition_good" name="book_condition" value="good">
+                                        <label for="condition_good">
+                                            <i class="bi bi-check-circle text-primary display-6"></i>
+                                            <div class="mt-2">Good</div>
+                                        </label>
+                                    </div>
+                                    <div class="condition-option">
+                                        <input type="radio" id="condition_fair" name="book_condition" value="fair">
+                                        <label for="condition_fair">
+                                            <i class="bi bi-exclamation-triangle text-warning display-6"></i>
+                                            <div class="mt-2">Fair</div>
+                                        </label>
+                                    </div>
+                                    <div class="condition-option">
+                                        <input type="radio" id="condition_poor" name="book_condition" value="poor">
+                                        <label for="condition_poor">
+                                            <i class="bi bi-x-circle text-danger display-6"></i>
+                                            <div class="mt-2">Poor/Damaged</div>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="condition_notes" class="form-label detail-label">Condition Notes</label>
+                                <textarea class="form-control" id="condition_notes" name="condition_notes" rows="3" 
+                                          placeholder="Describe any damage or issues with the returned book..."></textarea>
+                            </div>
+                        </div>
+                        
+                        <!-- Fine Payment -->
+                        {% if borrow_record.due_date < today %}
+                        <div class="form-section">
+                            <h6 class="fw-bold text-custom mb-3">Overdue Fine Payment</h6>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="fine_amount" class="form-label detail-label">Fine Amount</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text">$</span>
+                                            <input type="number" class="form-control" id="fine_amount" name="fine_amount" 
+                                                   value="{{ calculated_fine|default:'0.00' }}" step="0.01" min="0">
+                                        </div>
+                                        <div class="form-text">Calculated fine based on overdue period.</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="payment_status" class="form-label detail-label">Payment Status</label>
+                                        <select class="form-select" id="payment_status" name="payment_status">
+                                            <option value="pending">Pending</option>
+                                            <option value="paid">Paid</option>
+                                            <option value="waived">Waived</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="payment_notes" class="form-label detail-label">Payment Notes</label>
+                                <textarea class="form-control" id="payment_notes" name="payment_notes" rows="2" 
+                                          placeholder="Any notes about the fine payment..."></textarea>
+                            </div>
+                        </div>
+                        {% endif %}
+                        
+                        <!-- Additional Notes -->
+                        <div class="form-section">
+                            <h6 class="fw-bold text-custom mb-3">Additional Information</h6>
+                            <div class="mb-3">
+                                <label for="return_notes" class="form-label detail-label">Return Notes</label>
+                                <textarea class="form-control" id="return_notes" name="return_notes" rows="4" 
+                                          placeholder="Any additional notes about this return..."></textarea>
+                            </div>
+                        </div>
+                        
+                        <!-- Form Actions -->
+                        <div class="d-flex gap-2 justify-content-end mt-4">
+                            <a href="{{borrow_record_url }}" class="btn btn-outline-secondary">
+                                <i class="bi bi-x-circle me-1"></i> Cancel
+                            </a>
+                            <button type="submit" class="btn btn-success">
+                                <i class="bi bi-check-circle me-1"></i> Process Return
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Fine amount calculation based on overdue days
+    function calculateFine() {
+        const dueDate = new Date('{{ borrow_record.due_date|date:"Y-m-d" }}');
+        const returnDateInput = document.getElementById('return_date');
+        const returnDate = new Date(returnDateInput.value);
+        const fineAmountInput = document.getElementById('fine_amount');
+        
+        // Calculate days overdue (only if return date is after due date)
+        if (returnDate > dueDate) {
+            const timeDiff = returnDate - dueDate;
+            const daysOverdue = Math.ceil(timeDiff / (1000 * 60 * 60 * 24));
+            const fineRate = {{ fine_rate_per_day|default:0.5 }};
+            const calculatedFine = (daysOverdue * fineRate).toFixed(2);
+            
+            fineAmountInput.value = calculatedFine;
+        } else {
+            fineAmountInput.value = '0.00';
+        }
+    }
+    
+    // Calculate fine when return date changes
+    const returnDateInput = document.getElementById('return_date');
+    if (returnDateInput) {
+        returnDateInput.addEventListener('change', calculateFine);
+    }
+    
+    // Form validation
+    const form = document.getElementById('returnForm');
+    form.addEventListener('submit', function(e) {
+        const returnDate = new Date(document.getElementById('return_date').value);
+        const borrowDate = new Date('{{ borrow_record.borrow_date|date:"Y-m-d" }}');
+        
+        // Check if return date is before borrow date
+        if (returnDate < borrowDate) {
+            e.preventDefault();
+            alert('Return date cannot be before the borrow date.');
+            return false;
+        }
+        
+        // Confirm submission
+        if (!confirm('Are you sure you want to process this book return? This action cannot be undone.')) {
+            e.preventDefault();
+            return false;
+        }
+    });
+});
+</script>
+{% endblock %}

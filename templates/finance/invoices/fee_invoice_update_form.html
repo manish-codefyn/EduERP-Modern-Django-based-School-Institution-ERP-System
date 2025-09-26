@@ -1,0 +1,341 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Edit Invoice #{{ invoice.invoice_number }} - {{ organization.name|default:"ERP System" }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+
+    <!-- Header -->
+    <div class="header-section">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb breadcrumb-dark">
+                        <li class="breadcrumb-item"><a href="{% url 'finance:fee_invoice_list' %}" class="text-white">Fee Invoices</a></li>
+                        <li class="breadcrumb-item"><a href="{% url 'finance:fee_invoice_detail' invoice.id %}" class="text-white">#{{ invoice.invoice_number }}</a></li>
+                        <li class="breadcrumb-item active text-white" aria-current="page">Edit</li>
+                    </ol>
+                </nav>
+                <h1 class="display-6 fw-bold mb-2">Edit Invoice #{{ invoice.invoice_number }}</h1>
+                <p class="lead mb-0 opacity-75">Update invoice details for {{ invoice.student.full_name }}</p>
+            </div>
+            <div class="col-md-4 text-md-end">
+                <a href="{% url 'finance:fee_invoice_detail' invoice.id %}" class="btn btn-light me-2">
+                    <i class="bi bi-arrow-left me-2"></i>Back to Invoice
+                </a>
+                <a href="{% url 'finance:fee_invoice_list' %}" class="btn btn-outline-light">
+                    <i class="bi bi-list me-2"></i>All Invoices
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Main Form -->
+        <div class="col-lg-8">
+            <div class="card card-custom mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="bi bi-pencil me-2"></i>
+                        Edit Invoice Details
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="post" id="feeInvoiceForm">
+                        {% csrf_token %}
+                        
+                        {% if form.non_field_errors %}
+                        <div class="alert alert-danger">
+                            <i class="bi bi-exclamation-triangle me-2"></i>
+                            {{ form.non_field_errors }}
+                        </div>
+                        {% endif %}
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">
+                                        <i class="bi bi-person me-1"></i>Student
+                                    </label>
+                                    <input type="text" class="form-control" value="{{ invoice.student.full_name }}" disabled>
+                                    <div class="form-text">Student cannot be changed</div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">
+                                        <i class="bi bi-calendar me-1"></i>Academic Year
+                                    </label>
+                                    <input type="text" class="form-control" value="{{ invoice.academic_year.name }}" disabled>
+                                    <div class="form-text">Academic year cannot be changed</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.issue_date.id_for_label }}" class="form-label">
+                                        <i class="bi bi-calendar-plus me-1"></i>Issue Date *
+                                    </label>
+                                    {{ form.issue_date }}
+                                    {% if form.issue_date.errors %}
+                                    <div class="text-danger small mt-1">{{ form.issue_date.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.due_date.id_for_label }}" class="form-label">
+                                        <i class="bi bi-calendar-check me-1"></i>Due Date *
+                                    </label>
+                                    {{ form.due_date }}
+                                    {% if form.due_date.errors %}
+                                    <div class="text-danger small mt-1">{{ form.due_date.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.total_amount.id_for_label }}" class="form-label">
+                                        <i class="bi bi-currency-rupee me-1"></i>Total Amount *
+                                    </label>
+                                    {{ form.total_amount }}
+                                    {% if form.total_amount.errors %}
+                                    <div class="text-danger small mt-1">{{ form.total_amount.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.paid_amount.id_for_label }}" class="form-label">
+                                        <i class="bi bi-cash-coin me-1"></i>Paid Amount
+                                    </label>
+                                    {{ form.paid_amount }}
+                                    {% if form.paid_amount.errors %}
+                                    <div class="text-danger small mt-1">{{ form.paid_amount.errors }}</div>
+                                    {% endif %}
+                                    <div class="form-text">Balance: ₹{{ invoice.balance }}</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.status.id_for_label }}" class="form-label">
+                                        <i class="bi bi-info-circle me-1"></i>Status
+                                    </label>
+                                    {{ form.status }}
+                                    {% if form.status.errors %}
+                                    <div class="text-danger small mt-1">{{ form.status.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ form.remarks.id_for_label }}" class="form-label">
+                                <i class="bi bi-chat-text me-1"></i>Remarks
+                            </label>
+                            {{ form.remarks }}
+                            {% if form.remarks.errors %}
+                            <div class="text-danger small mt-1">{{ form.remarks.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="action-buttons">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-check-circle me-2"></i>
+                                Update Invoice
+                            </button>
+                            <a href="{% url 'finance:fee_invoice_detail' invoice.id %}" class="btn btn-outline-secondary">
+                                <i class="bi bi-x-circle me-2"></i>Cancel
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="col-lg-4">
+            <!-- Invoice Summary -->
+            <div class="card card-custom mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="bi bi-info-circle me-2"></i>Invoice Summary
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="info-item mb-3">
+                        <span class="info-label">Invoice Number</span>
+                        <span class="info-value">{{ invoice.invoice_number }}</span>
+                    </div>
+                    <div class="info-item mb-3">
+                        <span class="info-label">Current Status</span>
+                        <span class="info-value">
+                            {% if invoice.status == 'paid' %}
+                                <span class="badge bg-success">Paid</span>
+                            {% elif invoice.status == 'partial' %}
+                                <span class="badge bg-warning">Partial</span>
+                            {% elif invoice.status == 'issued' %}
+                                <span class="badge bg-info">Issued</span>
+                            {% elif invoice.status == 'cancelled' %}
+                                <span class="badge bg-danger">Cancelled</span>
+                            {% endif %}
+                        </span>
+                    </div>
+                    <div class="info-item mb-3">
+                        <span class="info-label">Total Amount</span>
+                        <span class="info-value">₹{{ invoice.total_amount }}</span>
+                    </div>
+                    <div class="info-item mb-3">
+                        <span class="info-label">Amount Paid</span>
+                        <span class="info-value">₹{{ invoice.paid_amount }}</span>
+                    </div>
+                    <div class="info-item mb-3">
+                        <span class="info-label">Balance Due</span>
+                        <span class="info-value {% if invoice.balance > 0 %}text-danger{% else %}text-success{% endif %}">
+                            ₹{{ invoice.balance }}
+                        </span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Created On</span>
+                        <span class="info-value">{{ invoice.created_at|date:"M d, Y" }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="card card-custom">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="bi bi-lightning me-2"></i>Quick Actions
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if invoice.balance > 0 %}
+                    <a href="{% url 'finance:payment_create' %}?invoice={{ invoice.id }}" class="btn btn-success w-100 mb-2">
+                        <i class="bi bi-cash-coin me-2"></i>Record Payment
+                    </a>
+                    {% endif %}
+                    
+                    <a href="{% url 'finance:fee_invoice_detail' invoice.id %}" class="btn btn-outline-primary w-100 mb-2">
+                        <i class="bi bi-eye me-2"></i>View Details
+                    </a>
+                    
+                    {% if perms.finance.delete_feeinvoice %}
+                    <button type="button" class="btn btn-outline-danger w-100" data-bs-toggle="modal" data-bs-target="#deleteModal">
+                        <i class="bi bi-trash me-2"></i>Delete Invoice
+                    </button>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteModalLabel">Confirm Delete</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete invoice #{{ invoice.invoice_number }} for {{ invoice.student.full_name }}?</p>
+                <p class="text-danger"><strong>This action cannot be undone.</strong></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form method="post" action="{% url 'finance:fee_invoice_delete' invoice.id %}">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">Delete Invoice</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Form validation
+    const form = document.getElementById('feeInvoiceForm');
+    form.addEventListener('submit', function(e) {
+        let isValid = true;
+        const requiredFields = [
+            '{{ form.issue_date.id_for_label }}',
+            '{{ form.due_date.id_for_label }}',
+            '{{ form.total_amount.id_for_label }}'
+        ];
+
+        requiredFields.forEach(fieldId => {
+            const field = document.getElementById(fieldId);
+            if (field && !field.value.trim()) {
+                isValid = false;
+                field.classList.add('is-invalid');
+            } else if (field) {
+                field.classList.remove('is-invalid');
+            }
+        });
+
+        // Validate due date is after issue date
+        const issueDate = new Date(document.getElementById('{{ form.issue_date.id_for_label }}').value);
+        const dueDate = new Date(document.getElementById('{{ form.due_date.id_for_label }}').value);
+        
+        if (dueDate <= issueDate) {
+            isValid = false;
+            document.getElementById('{{ form.due_date.id_for_label }}').classList.add('is-invalid');
+            alert('Due date must be after issue date.');
+        }
+
+        // Validate paid amount doesn't exceed total amount
+        const totalAmount = parseFloat(document.getElementById('{{ form.total_amount.id_for_label }}').value) || 0;
+        const paidAmount = parseFloat(document.getElementById('{{ form.paid_amount.id_for_label }}').value) || 0;
+        
+        if (paidAmount > totalAmount) {
+            isValid = false;
+            document.getElementById('{{ form.paid_amount.id_for_label }}').classList.add('is-invalid');
+            alert('Paid amount cannot exceed total amount.');
+        }
+
+        if (!isValid) {
+            e.preventDefault();
+            // Scroll to first error
+            const firstError = document.querySelector('.is-invalid');
+            if (firstError) {
+                firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        }
+    });
+
+    // Auto-update status based on paid amount
+    const paidAmountField = document.getElementById('{{ form.paid_amount.id_for_label }}');
+    const totalAmountField = document.getElementById('{{ form.total_amount.id_for_label }}');
+    const statusField = document.getElementById('{{ form.status.id_for_label }}');
+
+    if (paidAmountField && totalAmountField && statusField) {
+        paidAmountField.addEventListener('change', function() {
+            const paidAmount = parseFloat(paidAmountField.value) || 0;
+            const totalAmount = parseFloat(totalAmountField.value) || 0;
+            
+            if (paidAmount >= totalAmount) {
+                statusField.value = 'paid';
+            } else if (paidAmount > 0) {
+                statusField.value = 'partial';
+            } else {
+                statusField.value = 'issued';
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

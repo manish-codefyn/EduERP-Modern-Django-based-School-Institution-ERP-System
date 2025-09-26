@@ -1,0 +1,37 @@
+{% extends "library/base.html" %}
+{% load static crispy_forms_tags %}
+
+{% block title %}
+    {% if category %}Edit Category{% else %}Add Category{% endif %} - Library Management - {{ organization.name|default:"codefyn" }}
+{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="card card-custom shadow-sm rounded-4">
+                <div class="card-header detail-card-header ">
+                    <h4 class="mb-0">
+                        {% if category %}Edit Category{% else %}Add Category{% endif %}
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        {{ form|crispy }}
+
+                        <div class="d-flex justify-content-between mt-4">
+                            <a href="{% url 'library:category_list' %}" class="btn btn-secondary">
+                                Cancel
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                {% if category %}Update{% else %}Create{% endif %}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

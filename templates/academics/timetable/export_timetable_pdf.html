@@ -1,0 +1,99 @@
+{% load custom_filters %}
+
+<style>
+    @page {
+        size: A4 landscape;
+        margin: 20mm;
+    }
+    body { 
+        font-family: DejaVu Sans, Arial, Helvetica, sans-serif; 
+        font-size: 12px; 
+        color: #333; 
+        margin: 0; 
+        padding: 0;
+    }
+    table { 
+        width: 100%; 
+        border-collapse: collapse; 
+        margin-bottom: 15px; 
+        table-layout: fixed;
+    }
+    table th, table td { 
+        border: 1px solid #999; 
+        padding: 6px; 
+        text-align: center; 
+        vertical-align: middle;
+        word-wrap: break-word;
+    }
+    table th { 
+        background: #f0f0f0; 
+    }
+    .logo img { height: 80px; margin-bottom: 5px; }
+    .page-break { page-break-after: always; }
+    .header, .footer { width: 100%; text-align: center; }
+    .footer { font-size: 10px; color: #777; margin-top: 20px; }
+</style>
+
+<!-- Header -->
+<div class="header">
+    {% if logo %}
+        <div class="logo">
+            <img src="{{ logo }}" alt="Logo" width="250">
+        </div>
+    {% endif %}
+    <h1>{{ organization.name|default:"ERP System" }}</h1>
+</div>
+
+<!-- Timetable per class -->
+{% for block in class_data %}
+
+<!-- Class, Section, Academic Year, Generated Date Row -->
+<table style="width: 100%; margin-bottom: 10px; border: none;">
+    <tr>
+        <td style="text-align: left; border: none; font-weight: bold;">
+            Class: {{ block.class.name }}
+            {% if block.section %}| Section: {{ block.section.name }}{% endif %}
+        </td>
+        <td style="text-align: center; border: none; font-weight: bold;">
+            {% if academic_year %}Academic Year: {{ academic_year.name }}{% endif %}
+        </td>
+        <td style="text-align: right; border: none; font-size: 12px;">
+            Generated on {{ generated_date|date:"F j, Y \\a\\t H:i" }}
+        </td>
+    </tr>
+</table>
+
+<!-- Timetable Table -->
+<table>
+    <thead>
+        <tr>
+            {% for col in filtered_columns %}
+                <th>{{ col|underscore_to_space|title }}</th>
+            {% endfor %}
+        </tr>
+    </thead>
+    <tbody>
+        {% for entry in block.entries %}
+            <tr>
+                {% for col in filtered_columns %}
+                    <td>{{ entry|dict_get:col|default:"-" }}</td>
+                {% endfor %}
+            </tr>
+        {% empty %}
+            <tr>
+                <td colspan="{{ filtered_columns|length }}">No timetable entries found.</td>
+            </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+{% if not forloop.last %}
+    <div class="page-break"></div>
+{% endif %}
+{% endfor %}
+
+<!-- Footer -->
+<div class="footer">
+    Page <pdf:pagenumber> of <pdf:pagecount> <br>
+    &copy; {{ organization.name|default:"ERP System" }} - Timetable Report
+</div>

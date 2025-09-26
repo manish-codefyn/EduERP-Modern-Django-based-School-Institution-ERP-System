@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Push Notification Report</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            color: #333;
+            line-height: 1.4;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            width: 100%;
+            padding: 20px;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 24px;
+            color: #007bff;
+        }
+        .header p {
+            margin: 0;
+            font-size: 14px;
+            color: #555;
+        }
+        .section {
+            margin-bottom: 20px;
+        }
+        .section h2 {
+            font-size: 18px;
+            color: #007bff;
+            border-bottom: 2px solid #007bff;
+            padding-bottom: 5px;
+            margin-bottom: 10px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 15px;
+        }
+        table th, table td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        table th {
+            background-color: #f2f2f2;
+            color: #333;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 40px;
+            font-size: 12px;
+            color: #999;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+
+    <div class="header">
+        <h1>{{ organization.name|default:"Codefyn" }}</h1>
+        <p>Push Notification Report</p>
+    </div>
+
+    <div class="section">
+        <h2>Notification Details</h2>
+        <table>
+            <tr>
+                <th>Title</th>
+                <td>{{ notification.title }}</td>
+            </tr>
+            <tr>
+                <th>Message</th>
+                <td>{{ notification.message }}</td>
+            </tr>
+            <tr>
+                <th>Audience</th>
+                <td>{{ notification.get_audience_display }}</td>
+            </tr>
+            <tr>
+                <th>Priority</th>
+                <td>{{ notification.get_priority_display }}</td>
+            </tr>
+            <tr>
+                <th>Status</th>
+                <td>{{ notification.get_status_display }}</td>
+            </tr>
+            <tr>
+                <th>Scheduled For</th>
+                <td>{{ notification.scheduled_for|default:"Immediate" }}</td>
+            </tr>
+            <tr>
+                <th>Created At</th>
+                <td>{{ notification.created_at|date:"d M Y, H:i" }}</td>
+            </tr>
+            <tr>
+                <th>Last Updated</th>
+                <td>{{ notification.updated_at|date:"d M Y, H:i" }}</td>
+            </tr>
+        </table>
+    </div>
+
+    {% if notification_logs %}
+    <div class="section">
+        <h2>Notification Logs</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Recipient</th>
+                    <th>Status</th>
+                    <th>Sent At</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for log in notification_logs %}
+                <tr>
+                    <td>{{ log.recipient }}</td>
+                    <td>{{ log.status }}</td>
+                    <td>{{ log.sent_at|date:"d M Y, H:i" }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% endif %}
+
+    <div class="footer">
+        Generated on {{ now|date:"d M Y, H:i" }}
+    </div>
+
+</div>
+
+</body>
+</html>

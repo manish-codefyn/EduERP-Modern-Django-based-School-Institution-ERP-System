@@ -1,0 +1,185 @@
+{% extends 'communications/base.html' %}
+{% load static %}
+
+{% block title %}Broadcasts - {{ organization.name|default:"codefyn" }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header -->
+<div class="header-section mb-4">
+    <div class="row align-items-center">
+        <div class="col-md-7 d-flex flex-column">
+            <!-- Breadcrumb -->
+            <nav aria-label="breadcrumb" class="mb-2">
+                <ol class="breadcrumb mb-0">
+                    <li class="breadcrumb-item">
+                        <a href="{% url 'communications:dashboard' %}">
+                            <i class="bi bi-house-door me-1"></i> Dashboard
+                        </a>
+                    </li>
+                    <li class="breadcrumb-item active" aria-current="page">Broadcasts</li>
+                </ol>
+            </nav>
+
+            <div class="d-flex align-items-center">
+                <div class="header-icon me-3">
+                    <i class="bi bi-megaphone display-6 text-primary"></i>
+                </div>
+                <div>
+                    <h1 class="h3 fw-bold mb-1">Broadcasts</h1>
+                    <p class="text-custom mb-0">Manage and send broadcasts for your institution</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-5">
+            {% if request.user.is_superadmin or request.user.is_institution_admin %}
+            <div class="d-flex justify-content-end align-items-center gap-2">
+                <a href="{% url 'communications:broadcast_create' %}" class="btn btn-primary">
+                    <i class="bi bi-plus-circle me-1"></i> New Broadcast
+                </a>
+                <div class="dropdown">
+                    <button class="btn btn-secondary dropdown-toggle" type="button" id="exportDropdown"
+                        data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="bi bi-download me-1"></i> Export
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="exportDropdown">
+                        <li class="dropdown-header">Export Broadcasts</li>
+                        <li>
+                            <a class="dropdown-item" href="{% url 'communications:broadcast_export' %}?format=csv">
+                                <i class="bi bi-filetype-csv me-2"></i> Export CSV
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item" href="{% url 'communications:broadcast_export' %}?format=excel">
+                                <i class="bi bi-file-earmark-excel me-2"></i> Export Excel
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item" href="{% url 'communications:broadcast_export' %}?format=pdf">
+                                <i class="bi bi-file-earmark-pdf me-2"></i> Export PDF
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+
+    <!-- Filter Form -->
+    <div class="card card-custom p-3 mb-4">
+        <form method="get" class="row g-3">
+            <div class="col-md-4">
+                <label class="form-label">Search</label>
+                <input type="text" name="search" class="form-control" placeholder="Search broadcasts..." value="{{ request.GET.search }}">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Status</label>
+                <select name="status" class="form-select">
+                    <option value="">All</option>
+                    <option value="sent" {% if request.GET.status == 'sent' %}selected{% endif %}>Sent</option>
+                    <option value="draft" {% if request.GET.status == 'draft' %}selected{% endif %}>Draft</option>
+                </select>
+            </div>
+            <div class="col-md-5 d-flex align-items-end gap-2">
+                <button type="submit" class="btn btn-primary w-50">
+                    <i class="bi bi-search me-1"></i> Filter
+                </button>
+                <a href="{% url 'communications:broadcast_list' %}" class="btn btn-outline-secondary w-50">
+                    <i class="bi bi-x me-1"></i> Clear
+                </a>
+            </div>
+        </form>
+    </div>
+
+    <!-- Broadcasts Table -->
+    <div class="card card-custom">
+        <div class="card-header bg-transparent border-0 pt-4 px-4">
+            <h5 class="card-title mb-0 fw-bold text-custom">All Broadcasts</h5>
+            <p class="text-custom mb-0">Manage institutional broadcasts</p>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                {% if broadcasts %}
+                <table id="broadcastsTable" class="w-100 table-custom table-hover align-middle">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Title</th>
+                            <th>Message</th>
+                            <th>Status</th>
+                            <th>Created At</th>
+                            <th>Created By</th>
+                            <th class="text-center">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for broadcast in broadcasts %}
+                        <tr>
+                            <td>{{ forloop.counter }}</td>
+                            <td>{{ broadcast.name }}</td>
+                            <td>{{ broadcast.message|truncatechars:50 }}</td>
+                            <td>
+                                {% if broadcast.status == 'sent' %}
+                                    <span class="badge bg-success">Sent</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">Draft</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ broadcast.created_at|date:"d M Y H:i" }}</td>
+                            <td>{{ broadcast.created_by.get_full_name }}</td>
+                            <td class="text-center">
+                                <a href="{% url 'communications:broadcast_detail' broadcast.pk %}" 
+                                   class="btn btn-sm btn-outline-primary" title="View">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                                <a href="{% url 'communications:broadcast_delete' broadcast.pk %}" 
+                                   class="btn btn-sm btn-outline-danger" title="Delete">
+                                    <i class="bi bi-trash"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% else %}
+                <div class="empty-state text-center py-5">
+                    <i class="bi bi-megaphone fs-1"></i>
+                    <h4 class="mt-3 mb-2">No Broadcasts Found</h4>
+                    <p class="text-custom mb-4">No broadcasts have been created yet.</p>
+                    <a href="{% url 'communications:broadcast_create' %}" class="btn btn-primary">
+                        <i class="bi bi-plus-circle me-1"></i> Create First Broadcast
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    $('#broadcastsTable').DataTable({
+        "pageLength": 10,
+        "order": [[4, 'desc']],
+        "language": {
+            "search": "<i class='bi bi-search me-2'></i>Search:",
+            "lengthMenu": "Show _MENU_ entries",
+            "info": "Showing _START_ to _END_ of _TOTAL_ entries",
+            "paginate": {
+                "previous": "<i class='bi bi-chevron-left'></i>",
+                "next": "<i class='bi bi-chevron-right'></i>"
+            }
+        },
+        "columnDefs": [
+            { "targets": [-1], "orderable": false, "className": "dt-center" }
+        ],
+        "responsive": true
+    });
+});
+</script>
+{% endblock %}

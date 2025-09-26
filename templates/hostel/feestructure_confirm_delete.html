@@ -1,0 +1,165 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Delete Fee Structure - {{ institution.name|default:"ERP System" }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row justify-content-center">
+        <div class="col-md-7 col-lg-6">
+            <!-- Header -->
+            <div class="header-section text-center mb-4">
+                <div class="d-flex align-items-center justify-content-center">
+                    <div class="header-icon me-3">
+                        <i class="bi bi-exclamation-triangle display-6 text-danger"></i> 
+                    </div>
+                    <div>
+                        <h1 class="h3 fw-bold mb-1">Delete Fee Structure</h1>
+                        <p class="text-custom mb-0">Confirm deletion of fee structure record</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Delete Confirmation Card -->
+            <div class="card card-custom">
+                <div class="card-header bg-transparent border-0 pt-4 px-4">
+                    <h5 class="card-title mb-0 fw-bold text-danger">Confirm Deletion</h5>
+                    <p class="text-custom mb-0">Please review the fee structure details before proceeding</p>
+                </div>
+                <div class="card-body">
+                    <!-- Warning Alert -->
+                    <div class="alert alert-danger">
+                        <div class="d-flex">
+                            <div class="flex-shrink-0">
+                                <i class="bi bi-exclamation-octagon-fill me-2"></i>
+                            </div>
+                            <div class="flex-grow-1">
+                                <h6 class="alert-heading">Warning!</h6>
+                                You are about to delete this fee structure. This action cannot be undone.
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Fee Structure Details -->
+                    <div class="border rounded p-3 mb-4">
+                        <h6 class="fw-semibold mb-3">Fee Structure Details</h6>
+                        <div class="row">
+                            <div class="col-6 mb-2">
+                                <small class="text-custom">Hostel:</small>
+                                <p class="fw-semibold mb-0">{{ object.hostel.name }}</p>
+                            </div>
+                            <div class="col-6 mb-2">
+                                <small class="text-custom">Room Type:</small>
+                                <p class="fw-semibold mb-0">{{ object.get_room_type_display }}</p>
+                            </div>
+                            <div class="col-6 mb-2">
+                                <small class="text-custom">Amount:</small>
+                                <p class="fw-semibold mb-0">₹{{ object.amount }}</p>
+                            </div>
+                            <div class="col-6 mb-2">
+                                <small class="text-custom">Frequency:</small>
+                                <p class="fw-semibold mb-0">{{ object.get_frequency_display }}</p>
+                            </div>
+                            <div class="col-6 mb-2">
+                                <small class="text-custom">Effective From:</small>
+                                <p class="fw-semibold mb-0">{{ object.effective_from|date:"d M Y" }}</p>
+                            </div>
+                            <div class="col-6 mb-2">
+                                <small class="text-custom">Effective To:</small>
+                                <p class="fw-semibold mb-0">
+                                    {{ object.effective_to|date:"d M Y"|default:"Ongoing" }}
+                                </p>
+                            </div>
+                            <div class="col-12 mb-2">
+                                <small class="text-custom">Status:</small>
+                                <p class="fw-semibold mb-0">
+                                    {% if object.is_active %}
+                                        <span class="badge bg-success bg-opacity-10 text-success">
+                                            <i class="bi bi-check-circle me-1"></i>Active
+                                        </span>
+                                    {% else %}
+                                        <span class="badge bg-secondary bg-opacity-10 text-secondary">
+                                            <i class="bi bi-x-circle me-1"></i>Inactive
+                                        </span>
+                                    {% endif %}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Delete Form -->
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <div class="mb-3">
+                            <label for="confirmationText" class="form-label fw-semibold">
+                                Type "DELETE" to confirm
+                            </label>
+                            <input type="text" class="form-control" id="confirmationText" 
+                                   placeholder="Enter DELETE to confirm" required
+                                   oninput="toggleDeleteButton()">
+                            <div class="form-text">This action is permanent and cannot be undone.</div>
+                        </div>
+
+                        <div class="d-flex gap-2 justify-content-end">
+                            <a href="{% url 'hostel:feestructure_list' %}" class="btn btn-secondary">
+                                <i class="bi bi-arrow-left me-1"></i> Cancel
+                            </a>
+                            <button type="submit" id="deleteButton" class="btn btn-danger" disabled>
+                                <i class="bi bi-trash me-1"></i> Delete Fee Structure
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Impact Section -->
+            <div class="card card-custom mt-4">
+                <div class="card-header bg-transparent border-0 pt-4 px-4">
+                    <h5 class="card-title mb-0 fw-bold text-custom">Impact of Deletion</h5>
+                    <p class="text-custom mb-0">This deletion may affect the following</p>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="flex-shrink-0">
+                            <i class="bi bi-cash-coin text-primary fs-5"></i>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h6 class="mb-0">Linked Payments / Allocations</h6>
+                            <small class="text-custom">Ensure no pending payments rely on this structure</small>
+                        </div>
+                    </div>
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <i class="bi bi-calendar-check text-primary fs-5"></i>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h6 class="mb-0">Future Dues</h6>
+                            <small class="text-custom">Students assigned to this structure may lose fee reference</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function toggleDeleteButton() {
+    const confirmationText = document.getElementById('confirmationText').value;
+    const deleteButton = document.getElementById('deleteButton');
+    
+    if (confirmationText.toUpperCase() === 'DELETE') {
+        deleteButton.disabled = false;
+    } else {
+        deleteButton.disabled = true;
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    document.getElementById('confirmationText').focus();
+});
+</script>
+{% endblock %}

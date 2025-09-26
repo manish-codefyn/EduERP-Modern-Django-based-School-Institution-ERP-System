@@ -1,0 +1,54 @@
+# Python
+*.pyc
+*.pyo
+__pycache__/
+*.pyd
+*.env
+*.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+*.sqlite3
+extra_template
+# Django
+*.log
+*.pot
+*.pyc
+*.mo
+*.swp
+*.DS_Store
+*.egg-info/
+*.egg
+*.coverage
+htmlcov/
+db.sqlite3
+media/
+staticfiles/
+__pycache__/
+
+# IDEs
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# Environment files
+.env
+.env.local
+.env.*.local
+.env.production
+.env.dev
+
+# MacOS
+.DS_Store
+
+# Logs
+logs/
+*.log
+
+# Docker
+*.dockerignore
+docker-compose.override.yml
+*.tar

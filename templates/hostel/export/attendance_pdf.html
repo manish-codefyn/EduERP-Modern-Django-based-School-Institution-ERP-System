@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ title }}</title>
+    <style>
+        @page {
+            size: A4 landscape;
+            margin: 1.5cm;
+        }
+
+        body {
+            font-family: 'Helvetica', 'Arial', sans-serif;
+            font-size: 10pt;
+            color: #333;
+            margin: 0;
+            padding: 0;
+        }
+
+        /* Fixed Header */
+        .header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 100px;
+            padding-bottom: 10px;
+        }
+
+        .header table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .header .logo {
+            width: 210px;
+            vertical-align: top;
+        }
+
+        .header .logo img {
+            max-width: 100px;
+            max-height: 80px;
+        }
+
+        .header .org-details {
+            width: 85%;
+            text-align: right;
+            vertical-align: top;
+        }
+
+        .header .org-details h2 {
+            margin: 0;
+            font-size: 18pt;
+        }
+
+        .header .org-details p {
+            margin: 2px 0;
+            font-size: 10pt;
+        }
+
+        /* Footer */
+        .footer {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            font-size: 9pt;
+            text-align: right;
+            color: #555;
+        }
+
+        /* Main content */
+        .content {
+            margin-top: 120px; /* space for header */
+            margin-bottom: 50px; /* space for footer */
+        }
+
+        h1.report-title {
+            text-align: center;
+            font-size: 16pt;
+            margin-bottom: 15px;
+            border-bottom: 1px solid #ccc;
+            padding-bottom: 5px;
+        }
+
+        table.data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+
+        table.data-table th, table.data-table td {
+            border: 1px solid #ddd;
+            padding: 6px;
+            font-size: 9pt;
+            text-align: left;
+        }
+
+        table.data-table th {
+            background-color: #f2f2f2;
+            font-weight: bold;
+        }
+
+        table.data-table tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+
+        .status-present {
+            color: #27ae60;
+            font-weight: bold;
+        }
+
+        .status-absent {
+            color: #c0392b;
+            font-weight: bold;
+        }
+
+        .summary {
+            margin-top: 15px;
+            font-size: 10pt;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <table>
+            <tr>
+                <td class="logo">
+                    {% if logo %}
+                        <img src="{{ logo }}" alt="Logo" >
+                    {% endif %}
+                </td>
+                <td class="org-details">
+                    <h2>{{ organization.name|default:"Hostel Management" }}</h2>
+                    {% if organization.address %}
+                        <p>{{ organization.address }}</p>
+                    {% endif %}
+                    <p>Generated on: {{ export_date|date:"F d, Y, H:i" }}</p>
+                </td>
+            </tr>
+        </table>
+    </div>
+
+    <div class="content">
+        <h1 class="report-title">{{ title }}</h1>
+
+        <table class="data-table">
+            <thead>
+                <tr>
+                    {% for col in columns %}
+                        <th>{{ col.name }}</th>
+                    {% endfor %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in attendances %}
+                <tr>
+                    <td>{{ item.student|default:"N/A" }}</td>
+                    <td>{{ item.student_id|default:"N/A" }}</td>
+                    <td>{{ item.date }}</td>
+                    <td>
+                        {% if item.status == "Present" %}
+                            <span class="status-present">Present</span>
+                        {% else %}
+                            <span class="status-absent">Absent</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ item.notes|default:"-" }}</td>
+                    <td>{{ item.recorded_by|default:"N/A" }}</td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="{{ columns|length }}" style="text-align: center; padding: 10px;">
+                        No attendance records found.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <div class="summary">
+            <strong>Total Records:</strong> {{ total_count }}
+        </div>
+    </div>
+
+    <div class="footer">
+        Page {{ page }} of {{ pages }}
+    </div>
+</body>
+</html>

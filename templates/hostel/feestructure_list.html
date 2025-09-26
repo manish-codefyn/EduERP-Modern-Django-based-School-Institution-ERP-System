@@ -1,0 +1,336 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load custom_filters %}
+
+{% block title %}Fee Structures - Hostel Management{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+
+<div class="header-section">
+    <div class="row align-items-center">
+        <div class="col-12 mb-2">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb breadcrumb-dark">
+                    <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'hostel:hostel_list' %}">Hostel Management</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Fee Structures</li>
+                </ol>
+            </nav>
+        </div>
+
+        <div class="col-md-8">
+            <div class="d-flex align-items-center">
+                <div class="header-icon me-3">
+                   <i class="bi bi-cash-coin display-6 text-primary"></i> 
+                </div>
+                <div>
+                    <h1 class="h3 fw-bold mb-1">Hostel Fee Structures</h1>
+                    <p class="text-custom mb-0">Manage fee structures for different hostels and room types</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            {% if request.user.is_superadmin or request.user.is_institution_admin or request.user.is_principal %}
+            <div class="d-flex gap-2 justify-content-md-end flex-wrap">
+                <div class="btn-group w-100" role="group">
+                    <a href="{% url 'hostel:feestructure_add' %}" class="btn btn-primary">
+                        <i class="bi bi-plus-circle me-1"></i> New Structure
+                    </a>
+                    <button type="button" class="btn btn-primary dropdown-toggle dropdown-toggle-split" 
+                            data-bs-toggle="dropdown" aria-expanded="false">
+                        <span class="visually-hidden">Toggle Dropdown</span>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <li>
+                            <button type="button" class="dropdown-item" data-bs-toggle="modal" data-bs-target="#exportModal">
+                                <i class="bi bi-download me-2"></i> Export Data
+                            </button>
+                        </li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li>
+                            <a class="dropdown-item" href="{% url 'hostel:hostel_list' %}">
+                                <i class="bi bi-building me-2"></i> View Hostels
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<div class="row g-4 mb-4">
+    <div class="col-xl-3 col-md-6">
+        <div class="card stats-card text-white h-100" style="background: var(--primary-gradient);">
+            <div class="card-body">
+                <div class="row align-items-center">
+                    <div class="col-8">
+                        <h6 class="card-title mb-1 small opacity-75">TOTAL STRUCTURES</h6>
+                        <h3 class="mb-0 fw-bold">{{ total_fee_structures|default:"0" }}</h3>
+                    </div>
+                    <div class="col-4 text-end">
+                        <div class="stats-icon"><i class="bi bi-files fs-2"></i></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6">
+        <div class="card stats-card text-white h-100" style="background: var(--success-gradient);">
+            <div class="card-body">
+                <div class="row align-items-center">
+                    <div class="col-8">
+                        <h6 class="card-title mb-1 small opacity-75">ACTIVE STRUCTURES</h6>
+                        <h3 class="mb-0 fw-bold">{{ active_fee_structures|default:"0" }}</h3>
+                    </div>
+                    <div class="col-4 text-end">
+                        <div class="stats-icon"><i class="bi bi-check-circle fs-2"></i></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6">
+        <div class="card stats-card text-white h-100" style="background: var(--warning-gradient);">
+            <div class="card-body">
+                <div class="row align-items-center">
+                    <div class="col-8">
+                        <h6 class="card-title mb-1 small opacity-75">TOTAL FEE VALUE</h6>
+                        <h3 class="mb-0 fw-bold">{{ total_fee_value|default:"0"|currency }}</h3>
+                    </div>
+                    <div class="col-4 text-end">
+                        <div class="stats-icon"><i class="bi bi-currency-rupee fs-2"></i></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6">
+        <div class="card stats-card text-white h-100" style="background: var(--danger-gradient);">
+            <div class="card-body">
+                <div class="row align-items-center">
+                    <div class="col-8">
+                        <h6 class="card-title mb-1 small opacity-75">UNIQUE ROOM TYPES</h6>
+                        <h3 class="mb-0 fw-bold">{{ unique_room_types|default:"0" }}</h3>
+                    </div>
+                    <div class="col-4 text-end">
+                        <div class="stats-icon"><i class="bi bi-door-open fs-2"></i></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+    <div class="card card-custom">
+        <div class="card-header bg-transparent border-0 pt-4 px-4">
+            <h5 class="card-title mb-0 fw-bold text-custom">All Fee Structures</h5>
+            <p class="text-custom mb-0">Review and manage all available hostel fee structures</p>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                {% if fee_structures %}
+                <table id="feeStructureTable" class="table-custom w-100 table-custom table-hover align-middle">
+                    <thead>
+                        <tr>
+                            <th>Structure Frequency</th>
+                            <th>Hostel</th>
+                            <th>Room Type</th>
+                            <th>Total Amount</th>
+                            <th>Iffective From</th>
+                            <th>Status</th>
+                            {% if request.user.is_superadmin or request.user.is_institution_admin %}
+                            <th class="text-center">Actions</th>
+                            {% endif %}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for structure in fee_structures %}
+                        <tr>
+                            <td>
+                                <a href="{% url 'hostel:feestructure_detail' structure.id %}" class="fw-bold text-custom">
+                                    {{ structure.frequency }}
+                                </a>
+                            </td>
+                            <td>{{ structure.hostel.name }}</td>
+                            <td>{{ structure.room_type }}</td>
+                            <td>
+                                <span class="fw-bold">₹{{ structure.amount|format_inr }}</span>
+                            </td>
+                            <td>
+                                <span class="badge bg-primary text-custom">{{ structure.effective_to }}</span>
+                            </td>
+                            <td>
+                                {% if structure.is_active %}
+                                    <span class="badge bg-success bg-opacity-10 text-success">
+                                        <i class="bi bi-check-circle me-1"></i>Active
+                                    </span>
+                                {% else %}
+                                    <span class="badge bg-danger bg-opacity-10 text-danger">
+                                        <i class="bi bi-x-circle me-1"></i>Inactive
+                                    </span>
+                                {% endif %}
+                            </td>
+                            {% if request.user.is_superadmin or request.user.is_institution_admin %}
+                            <td>
+                                <div class="d-flex justify-content-center">
+                                    <a href="{% url 'hostel:feestructure_detail' structure.id %}" class="btn btn-sm btn-outline-primary me-1" title="View Details" data-bs-toggle="tooltip">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                    <a href="{% url 'hostel:feestructure_update' structure.id %}" class="btn btn-sm btn-outline-secondary me-1" title="Edit" data-bs-toggle="tooltip">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                    <a href="{% url 'hostel:feestructure_delete' structure.id %}" class="btn btn-sm btn-outline-danger" title="Delete" data-bs-toggle="tooltip">
+                                        <i class="bi bi-trash"></i>
+                                    </a>
+                                </div>
+                            </td>
+                            {% endif %}
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% else %}
+                <div class="empty-state">
+                    <i class="bi bi-receipt"></i>
+                    <h4 class="mt-3 mb-2">No Fee Structures Found</h4>
+                    <p class="text-custom mb-4">Get started by creating your first fee structure</p>
+                    {% if request.user.is_superadmin or request.user.is_institution_admin %}
+                    <a href="{% url 'hostel:feestructure_add' %}" class="btn btn-primary">
+                        <i class="bi bi-plus-circle me-2"></i> Add First Structure
+                    </a>
+                    {% endif %}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="exportModal" tabindex="-1" aria-labelledby="exportModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title fw-bold">Export Fee Structures</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="get" action="{% url 'hostel:feestructure_export' %}">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Export Format</label>
+                        <select class="form-select" name="format" required>
+                            <option value="csv">CSV Format</option>
+                            <option value="pdf">PDF Document</option>
+                            <option value="excel">Excel Spreadsheet</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="hostelFilter" class="form-label fw-semibold">Hostel</label>
+                        <select class="form-select" name="hostel" id="hostelFilter">
+                            <option value="">All Hostels</option>
+                            {% for hostel in all_hostels %}
+                            <option value="{{ hostel.id }}">{{ hostel.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Status</label>
+                        <select class="form-select" name="is_active">
+                            <option value="">All Statuses</option>
+                            <option value="true">Active Only</option>
+                            <option value="false">Inactive Only</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-download me-2"></i>Export Data
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize DataTable
+    $('#feeStructureTable').DataTable({
+        "pageLength": 10,
+        "order": [[0, 'asc']],
+        "language": {
+            "search": "<i class='bi bi-search me-2'></i>Search:",
+            "lengthMenu": "Show _MENU_ entries",
+            "info": "Showing _START_ to _END_ of _TOTAL_ entries",
+            "paginate": {
+                "previous": "<i class='bi bi-chevron-left'></i>",
+                "next": "<i class='bi bi-chevron-right'></i>"
+            }
+        },
+        "columnDefs": [
+            { 
+                "targets": [-1], 
+                "orderable": false,
+                "className": "dt-center"
+            }
+        ],
+        "responsive": true,
+        "dom": '<"row"<"col-md-6"l><"col-md-6"f>>rt<"row"<"col-md-6"i><"col-md-6"p>>'
+    });
+    
+    // Initialize tooltips
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl)
+    });
+
+    // --- Robust Modal Cleanup Handlers ---
+    document.querySelectorAll('.modal').forEach(modalEl => {
+        modalEl.addEventListener('show.bs.modal', function () {
+            document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+        });
+
+        modalEl.addEventListener('hidden.bs.modal', function () {
+            document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+            document.body.classList.remove('modal-open');
+            document.body.style.overflow = '';
+            document.body.style.paddingRight = '';
+        });
+    });
+
+    const observer = new MutationObserver(() => {
+        const backdrop = document.querySelector('.modal-backdrop');
+        const anyShown = !!document.querySelector('.modal.show');
+        if (backdrop && !anyShown) {
+            backdrop.remove();
+            document.body.classList.remove('modal-open');
+            document.body.style.overflow = '';
+            document.body.style.paddingRight = '';
+        }
+    });
+    observer.observe(document.body, { childList: true, subtree: true });
+
+    setTimeout(() => {
+        document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+        document.body.classList.remove('modal-open');
+        document.body.style.overflow = '';
+        document.body.style.paddingRight = '';
+    }, 500);
+});
+</script>
+{% endblock %}

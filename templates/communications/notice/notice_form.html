@@ -1,0 +1,113 @@
+{% extends 'inventory/base.html' %}
+{% load static %}
+
+{% block title %}{% if form.instance.pk %}Edit{% else %}Create{% endif %} Notice - {{ organization.name|default:"codefyn" }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card card-custom">
+                <div class="card-header bg-transparent border-0 pt-4 px-4">
+                    <h5 class="card-title mb-0 fw-bold text-custom">
+                        <i class="bi bi-megaphone me-2"></i>
+                        {% if form.instance.pk %}Edit Notice{% else %}Create New Notice{% endif %}
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        
+                        {% if form.non_field_errors %}
+                        <div class="alert alert-danger">
+                            {% for error in form.non_field_errors %}
+                                {{ error }}
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                        
+                        <div class="row g-3">
+                            <div class="col-md-12">
+                                <label class="form-label">Title *</label>
+                                {{ form.title }}
+                                {% if form.title.errors %}
+                                <div class="text-danger small">{{ form.title.errors }}</div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="col-md-12">
+                                <label class="form-label">Content *</label>
+                                {{ form.content }}
+                                {% if form.content.errors %}
+                                <div class="text-danger small">{{ form.content.errors }}</div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <label class="form-label">Priority</label>
+                                {{ form.priority }}
+                                {% if form.priority.errors %}
+                                <div class="text-danger small">{{ form.priority.errors }}</div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <label class="form-label">Audience</label>
+                                {{ form.audience }}
+                                {% if form.audience.errors %}
+                                <div class="text-danger small">{{ form.audience.errors }}</div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <label class="form-label">Publish Date</label>
+                                {{ form.publish_date }}
+                                {% if form.publish_date.errors %}
+                                <div class="text-danger small">{{ form.publish_date.errors }}</div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <label class="form-label">Expiry Date</label>
+                                {{ form.expiry_date }}
+                                {% if form.expiry_date.errors %}
+                                <div class="text-danger small">{{ form.expiry_date.errors }}</div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="col-md-12">
+                                <label class="form-label">Attachment</label>
+                                {{ form.attachment }}
+                                {% if form.attachment.errors %}
+                                <div class="text-danger small">{{ form.attachment.errors }}</div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="col-md-12">
+                                <div class="form-check form-switch">
+                                    {{ form.is_published }}
+                                    <label class="form-check-label" for="{{ form.is_published.id_for_label }}">
+                                        Publish Immediately
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row mt-4">
+                            <div class="col-12 d-flex justify-content-end gap-2">
+                                <a href="{% url 'communications:notice_list' %}" class="btn btn-outline-secondary">
+                                    <i class="bi bi-arrow-left me-1"></i> Cancel
+                                </a>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="bi bi-check-circle me-1"></i>
+                                    {% if form.instance.pk %}Update Notice{% else %}Create Notice{% endif %}
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

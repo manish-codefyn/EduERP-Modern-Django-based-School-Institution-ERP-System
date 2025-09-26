@@ -1,0 +1,38 @@
+[
+  {
+    "class_name": "Class 10",
+    "section": "A",
+    "day": "monday",
+    "period": 1,
+    "subject": "Mathematics",
+    "teacher": "John Smith",
+    "start_time": "08:00:00",
+    "end_time": "08:45:00",
+    "room": "Room 101",
+    "is_active": true
+  },
+  {
+    "class_name": "Class 10",
+    "section": "A",
+    "day": "monday",
+    "period": 2,
+    "subject": "Science",
+    "teacher": "Jane Doe",
+    "start_time": "08:45:00",
+    "end_time": "09:30:00",
+    "room": "Lab 1",
+    "is_active": true
+  },
+  {
+    "class_name": "Class 10",
+    "section": "B",
+    "day": "monday",
+    "period": 1,
+    "subject": "English",
+    "teacher": "Robert Johnson",
+    "start_time": "08:00:00",
+    "end_time": "08:45:00",
+    "room": "Room 102",
+    "is_active": true
+  }
+]

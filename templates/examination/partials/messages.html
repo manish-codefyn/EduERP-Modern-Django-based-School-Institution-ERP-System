@@ -1,0 +1,158 @@
+{% if messages %}
+<div class="container mt-3">
+    {% for message in messages %}
+    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+        <div class="d-flex align-items-center">
+            {% if message.tags == 'success' %}
+            <i class="bi bi-check-circle-fill me-2"></i>
+            {% elif message.tags == 'warning' %}
+            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+            {% elif message.tags == 'error' %}
+            <i class="bi bi-x-circle-fill me-2"></i>
+            {% elif message.tags == 'info' %}
+            <i class="bi bi-info-circle-fill me-2"></i>
+            {% else %}
+            <i class="bi bi-bell-fill me-2"></i>
+            {% endif %}
+            <div>
+                {{ message }}
+            </div>
+        </div>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- SweetAlert2 for enhanced messages -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    {% for message in messages %}
+    {% if message.tags == 'success' %}
+    Swal.fire({
+        icon: 'success',
+        title: 'Success!',
+        html: `{{ message|escapejs }}`,
+        toast: true,
+        position: 'top-end',
+        showConfirmButton: false,
+        timer: 5000,
+        timerProgressBar: true,
+        background: 'var(--card-bg)',
+        color: 'var(--text-color)',
+        iconColor: 'var(--success)'
+    });
+    {% elif message.tags == 'warning' %}
+    Swal.fire({
+        icon: 'warning',
+        title: 'Notice',
+        html: `{{ message|escapejs }}`,
+        toast: true,
+        position: 'top-end',
+        showConfirmButton: false,
+        timer: 6000,
+        timerProgressBar: true,
+        background: 'var(--card-bg)',
+        color: 'var(--text-color)',
+        iconColor: 'var(--warning)'
+    });
+    {% elif message.tags == 'error' %}
+    Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        html: `{{ message|escapejs }}`,
+        toast: true,
+        position: 'top-end',
+        showConfirmButton: false,
+        timer: 8000,
+        timerProgressBar: true,
+        background: 'var(--card-bg)',
+        color: 'var(--text-color)',
+        iconColor: 'var(--danger)'
+    });
+    {% elif message.tags == 'info' %}
+    Swal.fire({
+        icon: 'info',
+        title: 'Information',
+        html: `{{ message|escapejs }}`,
+        toast: true,
+        position: 'top-end',
+        showConfirmButton: false,
+        timer: 4000,
+        timerProgressBar: true,
+        background: 'var(--card-bg)',
+        color: 'var(--text-color)',
+        iconColor: 'var(--info)'
+    });
+    {% endif %}
+    {% endfor %}
+});
+</script>
+
+<style>
+.alert {
+    border: none;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    margin-bottom: 1rem;
+}
+
+.alert-success {
+    background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+    color: #155724;
+    border-left: 4px solid #28a745;
+}
+
+.alert-warning {
+    background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+    color: #856404;
+    border-left: 4px solid #ffc107;
+}
+
+.alert-error, .alert-danger {
+    background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
+    color: #721c24;
+    border-left: 4px solid #dc3545;
+}
+
+.alert-info {
+    background: linear-gradient(135deg, #d1ecf1 0%, #bee5eb 100%);
+    color: #0c5460;
+    border-left: 4px solid #17a2b8;
+}
+
+.alert i {
+    font-size: 1.2rem;
+}
+
+.btn-close {
+    opacity: 0.7;
+    transition: opacity 0.3s ease;
+}
+
+.btn-close:hover {
+    opacity: 1;
+}
+
+/* SweetAlert2 customization */
+.swal2-popup {
+    background: var(--card-bg) !important;
+    color: var(--text-color) !important;
+    border-radius: 12px !important;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2) !important;
+}
+
+.swal2-title {
+    color: var(--text-color) !important;
+    font-weight: 600 !important;
+}
+
+.swal2-html-container {
+    color: var(--text-muted-color) !important;
+}
+
+.swal2-timer-progress-bar {
+    background: var(--accent-color) !important;
+}
+</style>
+{% endif %}

@@ -1,0 +1,498 @@
+{% extends "inventory/base.html" %}
+{% load static %}
+
+{% block title %}
+    {% if form.instance.pk %}Edit{% else %}Create{% endif %} Purchase Order - {{ organization.name|default:"Inventory System" }}
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+
+    <!-- Header Section -->
+    <div class="header-section mb-4">
+        <div class="row align-items-center">
+            <div class="col-md-7 d-flex align-items-center">
+                <div class="header-icon me-3">
+                    <i class="bi bi-cart-plus display-6 text-primary"></i>
+                </div>
+                <div>
+                    <h1 class="h3 fw-bold mb-1">
+                        {% if form.instance.pk %}
+                            Edit Purchase Order: {{ form.instance.po_number }}
+                        {% else %}
+                            Create New Purchase Order
+                        {% endif %}
+                    </h1>
+                    <p class="text-custom mb-0">
+                        {% if form.instance.pk %}
+                            Update purchase order details and items
+                        {% else %}
+                            Create a new purchase order for inventory items
+                        {% endif %}
+                    </p>
+                </div>
+            </div>
+            <div class="col-md-5">
+                <div class="d-flex justify-content-end align-items-center gap-2">
+                    <a href="{% url 'inventory:purchase_order_list' %}" class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-left me-1"></i> Back to List
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <form method="post" id="purchaseOrderForm" novalidate>
+        {% csrf_token %}
+        
+        <!-- Main Form Card -->
+        <div class="card card-custom mb-4">
+            <div class="card-header bg-transparent border-0 py-3">
+                <h5 class="card-title mb-0 fw-bold text-custom">
+                    <i class="bi bi-info-circle me-2"></i>Purchase Order Information
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if form.non_field_errors %}
+                <div class="alert alert-danger">
+                    {% for error in form.non_field_errors %}
+                        <i class="bi bi-exclamation-triangle me-2"></i>{{ error }}
+                    {% endfor %}
+                </div>
+                {% endif %}
+
+                <div class="row g-3">
+                    <!-- PO Number (Read-only for existing) -->
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">PO Number</label>
+                        {% if form.instance.pk %}
+                        <input type="text" class="form-control bg-light" value="{{ form.instance.po_number }}" readonly>
+                        <small class="text-muted">PO number is auto-generated</small>
+                        {% else %}
+                        <input type="text" class="form-control bg-light" value="Auto-generated when saved" readonly>
+                        {% endif %}
+                    </div>
+
+                    <!-- Status (Read-only) -->
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">Status</label>
+                        {% if form.instance.pk %}
+                        <span class="badge fs-6 
+                            {% if form.instance.status == 'draft' %}bg-info
+                            {% elif form.instance.status == 'submitted' %}bg-warning text-dark
+                            {% elif form.instance.status == 'approved' %}bg-success
+                            {% elif form.instance.status == 'rejected' %}bg-danger
+                            {% elif form.instance.status == 'ordered' %}bg-secondary
+                            {% elif form.instance.status == 'received' %}bg-primary
+                            {% elif form.instance.status == 'cancelled' %}bg-dark
+                            {% endif %}">
+                            {{ form.instance.get_status_display }}
+                        </span>
+                        {% else %}
+                        <span class="badge bg-info fs-6">Draft</span>
+                        {% endif %}
+                    </div>
+
+                    <!-- Supplier -->
+                    <div class="col-md-6">
+                        <label for="{{ form.supplier.id_for_label }}" class="form-label fw-bold">
+                            Supplier <span class="text-danger">*</span>
+                        </label>
+                        {{ form.supplier }}
+                        {% if form.supplier.errors %}
+                        <div class="invalid-feedback d-block">
+                            {% for error in form.supplier.errors %}
+                                {{ error }}
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Order Date -->
+                    <div class="col-md-6">
+                        <label for="{{ form.order_date.id_for_label }}" class="form-label fw-bold">Order Date</label>
+                        {{ form.order_date }}
+                        {% if form.order_date.errors %}
+                        <div class="invalid-feedback d-block">
+                            {% for error in form.order_date.errors %}
+                                {{ error }}
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Expected Delivery -->
+                    <div class="col-md-6">
+                        <label for="{{ form.expected_delivery.id_for_label }}" class="form-label fw-bold">Expected Delivery</label>
+                        {{ form.expected_delivery }}
+                        {% if form.expected_delivery.errors %}
+                        <div class="invalid-feedback d-block">
+                            {% for error in form.expected_delivery.errors %}
+                                {{ error }}
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Total Amount (Calculated) -->
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">Total Amount</label>
+                        <div class="input-group">
+                            <span class="input-group-text">₹</span>
+                            <input type="text" class="form-control bg-light fw-bold text-success" 
+                                   id="totalAmountDisplay" value="0.00" readonly>
+                        </div>
+                        <small class="text-muted">Calculated automatically from line items</small>
+                    </div>
+
+                    <!-- Notes -->
+                    <div class="col-12">
+                        <label for="{{ form.notes.id_for_label }}" class="form-label fw-bold">Notes</label>
+                        {{ form.notes }}
+                        {% if form.notes.errors %}
+                        <div class="invalid-feedback d-block">
+                            {% for error in form.notes.errors %}
+                                {{ error }}
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Line Items Card -->
+        <div class="card card-custom mb-4">
+            <div class="card-header bg-transparent border-0 py-3 d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0 fw-bold text-custom">
+                    <i class="bi bi-list-check me-2"></i>Order Items
+                </h5>
+                <button type="button" class="btn btn-sm btn-primary" id="addItemBtn">
+                    <i class="bi bi-plus-circle me-1"></i> Add Item
+                </button>
+            </div>
+            <div class="card-body">
+                {{ formset.management_form }}
+                
+                <div class="table-responsive">
+                    <table class="table table-bordered" id="itemsTable">
+                        <thead class="table-light">
+                            <tr>
+                                <th width="35%">Item</th>
+                                <th width="15%">Quantity</th>
+                                <th width="20%">Unit Price (₹)</th>
+                                <th width="20%">Total Price (₹)</th>
+                                <th width="10%">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="itemsTableBody">
+                            {% for item_form in formset %}
+                            <tr class="item-row">
+                                <td>
+                                    {{ item_form.id }}
+                                    {{ item_form.item }}
+                                    {% if item_form.item.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in item_form.item.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {{ item_form.quantity }}
+                                    {% if item_form.quantity.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in item_form.quantity.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {{ item_form.unit_price }}
+                                    {% if item_form.unit_price.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in item_form.unit_price.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <input type="text" class="form-control bg-light item-total" 
+                                           value="0.00" readonly>
+                                </td>
+                                <td class="text-center">
+                                    {% if formset.can_delete %}
+                                    {{ item_form.DELETE }}
+                                    <button type="button" class="btn btn-sm btn-outline-danger remove-item" 
+                                            title="Remove item">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                        <tfoot>
+                            <tr class="table-active">
+                                <td colspan="3" class="text-end fw-bold">Grand Total:</td>
+                                <td colspan="2">
+                                    <span class="fw-bold fs-5 text-success" id="grandTotal">₹0.00</span>
+                                </td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+
+                {% if formset.non_form_errors %}
+                <div class="alert alert-danger mt-3">
+                    {% for error in formset.non_form_errors %}
+                        <i class="bi bi-exclamation-triangle me-2"></i>{{ error }}
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="row">
+            <div class="col-12">
+                <div class="d-flex justify-content-between align-items-center">
+                    <a href="{% url 'inventory:purchase_order_list' %}" class="btn btn-outline-secondary">
+                        <i class="bi bi-x-circle me-1"></i> Cancel
+                    </a>
+                    
+                    <div class="btn-group">
+                        <button type="submit" name="save_draft" class="btn btn-primary">
+                            <i class="bi bi-check-circle me-1"></i> 
+                            {% if form.instance.pk %}Update{% else %}Create{% endif %} Draft
+                        </button>
+                        
+                        {% if not form.instance.pk or form.instance.status == 'draft' %}
+                        <button type="submit" name="submit_po" class="btn btn-success">
+                            <i class="bi bi-send-check me-1"></i> Submit for Approval
+                        </button>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.item-row td {
+    vertical-align: middle;
+}
+
+.item-total {
+    font-weight: 600;
+    color: #198754;
+}
+
+#itemsTable th {
+    border-bottom: 2px solid #dee2e6;
+    font-weight: 600;
+}
+
+.required-label::after {
+    content: " *";
+    color: #dc3545;
+}
+
+.form-control:focus, .form-select:focus {
+    border-color: #667eea;
+    box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+}
+
+.card {
+    border: 1px solid #e3e6f0;
+    border-radius: 0.5rem;
+}
+
+.card-header {
+    background-color: #f8f9fc;
+    border-bottom: 1px solid #e3e6f0;
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize Select2 for item selection
+    $('.item-select').select2({
+        theme: 'bootstrap-5',
+        width: '100%',
+        placeholder: 'Select an item...',
+        allowClear: true
+    });
+
+    // Calculate totals when quantities or prices change
+    function calculateTotals() {
+        let grandTotal = 0;
+        
+        $('.item-row').each(function() {
+            const quantity = parseFloat($(this).find('.quantity-input').val()) || 0;
+            const unitPrice = parseFloat($(this).find('.unit-price-input').val()) || 0;
+            const total = quantity * unitPrice;
+            
+            $(this).find('.item-total').val(total.toFixed(2));
+            grandTotal += total;
+        });
+        
+        $('#grandTotal').text('₹' + grandTotal.toFixed(2));
+        $('#totalAmountDisplay').val(grandTotal.toFixed(2));
+        
+        // Update the hidden total amount field if it exists
+        const totalAmountField = $('#id_total_amount');
+        if (totalAmountField.length) {
+            totalAmountField.val(grandTotal.toFixed(2));
+        }
+    }
+
+    // Add new item row
+    $('#addItemBtn').click(function() {
+        const formCount = $('#id_items-TOTAL_FORMS').val();
+        const newRow = $('.item-row:first').clone();
+        
+        // Clear values and update indices
+        newRow.find('input, select').val('');
+        newRow.find('select').val(null).trigger('change');
+        newRow.find('[id$="-item"]').attr('id', 'id_items-' + formCount + '-item');
+        newRow.find('[name$="-item"]').attr('name', 'items-' + formCount + '-item');
+        newRow.find('[id$="-quantity"]').attr('id', 'id_items-' + formCount + '-quantity');
+        newRow.find('[name$="-quantity"]').attr('name', 'items-' + formCount + '-quantity');
+        newRow.find('[id$="-unit_price"]').attr('id', 'id_items-' + formCount + '-unit_price');
+        newRow.find('[name$="-unit_price"]').attr('name', 'items-' + formCount + '-unit_price');
+        newRow.find('[id$="-DELETE"]').attr('id', 'id_items-' + formCount + '-DELETE');
+        newRow.find('[name$="-DELETE"]').attr('name', 'items-' + formCount + '-DELETE');
+        
+        // Remove any existing error messages
+        newRow.find('.invalid-feedback').remove();
+        newRow.find('.is-invalid').removeClass('is-invalid');
+        
+        $('#itemsTableBody').append(newRow);
+        $('#id_items-TOTAL_FORMS').val(parseInt(formCount) + 1);
+        
+        // Reinitialize Select2 for the new row
+        newRow.find('.item-select').select2({
+            theme: 'bootstrap-5',
+            width: '100%',
+            placeholder: 'Select an item...',
+            allowClear: true
+        });
+        
+        calculateTotals();
+    });
+
+    // Remove item row
+    $(document).on('click', '.remove-item', function() {
+        const row = $(this).closest('.item-row');
+        const deleteCheckbox = row.find('input[type="checkbox"][id*="-DELETE"]');
+        
+        if (deleteCheckbox.length) {
+            // For existing items, mark for deletion and hide the row
+            deleteCheckbox.prop('checked', true);
+            row.hide();
+        } else {
+            // For new items, remove the row completely
+            row.remove();
+            // Update the management form count
+            const formCount = $('.item-row').length;
+            $('#id_items-TOTAL_FORMS').val(formCount);
+        }
+        
+        calculateTotals();
+    });
+
+    // Auto-calculate when quantity or price changes
+    $(document).on('input', '.quantity-input, .unit-price-input', function() {
+        calculateTotals();
+    });
+
+    // Auto-fill unit price when item is selected
+    $(document).on('change', '.item-select', function() {
+        const itemId = $(this).val();
+        const row = $(this).closest('.item-row');
+        const unitPriceInput = row.find('.unit-price-input');
+        
+        if (itemId) {
+            // Fetch item price via AJAX (you'll need to implement this endpoint)
+            fetch(`/inventory/api/items/${itemId}/price/`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.price) {
+                        unitPriceInput.val(data.price);
+                        calculateTotals();
+                    }
+                })
+                .catch(error => console.error('Error fetching item price:', error));
+        }
+    });
+
+    // Form validation
+    $('#purchaseOrderForm').on('submit', function(e) {
+        let isValid = true;
+        const supplier = $('#id_supplier').val().trim();
+        
+        // Validate supplier
+        if (!supplier) {
+            $('#id_supplier').addClass('is-invalid');
+            isValid = false;
+        } else {
+            $('#id_supplier').removeClass('is-invalid');
+        }
+        
+        // Validate at least one item
+        const itemCount = $('.item-row:visible').length;
+        if (itemCount === 0) {
+            alert('Please add at least one item to the purchase order.');
+            isValid = false;
+        }
+        
+        // Validate item quantities and prices
+        $('.item-row:visible').each(function() {
+            const item = $(this).find('.item-select').val();
+            const quantity = $(this).find('.quantity-input').val();
+            const unitPrice = $(this).find('.unit-price-input').val();
+            
+            if (!item) {
+                $(this).find('.item-select').addClass('is-invalid');
+                isValid = false;
+            } else {
+                $(this).find('.item-select').removeClass('is-invalid');
+            }
+            
+            if (!quantity || quantity <= 0) {
+                $(this).find('.quantity-input').addClass('is-invalid');
+                isValid = false;
+            } else {
+                $(this).find('.quantity-input').removeClass('is-invalid');
+            }
+            
+            if (!unitPrice || unitPrice < 0) {
+                $(this).find('.unit-price-input').addClass('is-invalid');
+                isValid = false;
+            } else {
+                $(this).find('.unit-price-input').removeClass('is-invalid');
+            }
+        });
+        
+        if (!isValid) {
+            e.preventDefault();
+            // Scroll to first error
+            $('.is-invalid').first().focus();
+        }
+    });
+
+    // Initial calculation
+    calculateTotals();
+});
+</script>
+{% endblock %}

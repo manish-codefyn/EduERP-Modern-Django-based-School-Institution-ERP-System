@@ -1,0 +1,125 @@
+{% extends 'base.html' %}
+{% load i18n %}
+
+{% block title %}{% trans "Change Password" %} - {{ user.get_full_name }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-6">
+            <div class="card card-custom">
+                <div class="card-header detail-card-header">
+                    <h5 class="card-title mb-0">{% trans "Change Password" %}</h5>
+                </div>
+                <div class="card-body">
+                    {% if not user.has_usable_password %}
+                        <div class="alert alert-info">
+                            <i class="bi bi-info-circle me-2"></i>
+                            {% trans "You haven't set a password yet. Please set your password below." %}
+                        </div>
+                    {% endif %}
+                    
+                    <form method="post" action="{% url 'account_change_password' %}">
+                        {% csrf_token %}
+                        
+                        {% if form.errors %}
+                            <div class="alert alert-danger">
+                                <strong>{% trans "Please correct the errors below:" %}</strong>
+                                <ul class="mb-0 mt-2">
+                                    {% for field in form %}
+                                        {% for error in field.errors %}
+                                            <li>{{ error }}</li>
+                                        {% endfor %}
+                                    {% endfor %}
+                                    {% for error in form.non_field_errors %}
+                                        <li>{{ error }}</li>
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                        {% endif %}
+
+                        <!-- Current Password (only for password change, not set) -->
+                        {% if user.has_usable_password %}
+                        <div class="mb-3">
+                            <label class="form-label">{% trans "Current Password" %} *</label>
+                            {{ form.oldpassword }}
+                            {% if form.oldpassword.errors %}
+                                <div class="text-danger small">{{ form.oldpassword.errors }}</div>
+                            {% endif %}
+                        </div>
+                        {% endif %}
+
+                        <div class="mb-3">
+                            <label class="form-label">{% trans "New Password" %} *</label>
+                            {{ form.password1 }}
+                            {% if form.password1.help_text %}
+                                <small class="form-text text-muted">{{ form.password1.help_text }}</small>
+                            {% endif %}
+                            {% if form.password1.errors %}
+                                <div class="text-danger small">{{ form.password1.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">{% trans "New Password Confirmation" %} *</label>
+                            {{ form.password2 }}
+                            {% if form.password2.errors %}
+                                <div class="text-danger small">{{ form.password2.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label">{% trans "Confirm New Password" %} *</label>
+                            {{ form.confirm_new_password }}
+                            {% if form.confirm_new_password.errors %}
+                                <div class="text-danger small">{{ form.confirm_new_password.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="d-flex gap-2 justify-content-between align-items-center">
+                            <a href="{% url 'users_profile' %}" class="btn btn-secondary">
+                                {% trans "Cancel" %}
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-shield-lock me-1"></i>
+                                {% if user.has_usable_password %}
+                                    {% trans "Change Password" %}
+                                {% else %}
+                                    {% trans "Set Password" %}
+                                {% endif %}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Security Tips -->
+            <div class="card card-custom mt-4">
+                <div class="card-header detail-card-header">
+                    <h6 class="mb-0"><i class="bi bi-lightbulb me-2"></i>{% trans "Security Tips" %}</h6>
+                </div>
+                <div class="card-body">
+                    <ul class="list-unstyled small mb-0">
+                        <li class="mb-2">
+                            <i class="bi bi-check-circle text-success me-2"></i>
+                            {% trans "Use a strong, unique password that you don't use elsewhere" %}
+                        </li>
+                        <li class="mb-2">
+                            <i class="bi bi-check-circle text-success me-2"></i>
+                            {% trans "Consider using a password manager to generate and store passwords" %}
+                        </li>
+                        <li class="mb-2">
+                            <i class="bi bi-check-circle text-success me-2"></i>
+                            {% trans "Avoid using personal information in your password" %}
+                        </li>
+                        <li class="mb-0">
+                            <i class="bi bi-check-circle text-success me-2"></i>
+                            {% trans "Change your password regularly for better security" %}
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

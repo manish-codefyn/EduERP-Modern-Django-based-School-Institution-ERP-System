@@ -1,0 +1,76 @@
+{% extends 'organization/base.html' %}
+{% load static %}
+
+{% block title %}Compliance Records{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between mb-3">
+    <h3>Compliance Records</h3>
+    <a href="{% url 'organization:compliance_create' %}" class="btn btn-primary">
+        <i class="bi bi-plus-circle me-1"></i> New Compliance
+    </a>
+</div>
+
+<div class="mb-3">
+    <!-- <div class="dropdown">
+        <button class="btn btn-secondary dropdown-toggle" type="button" id="exportDropdown" data-bs-toggle="dropdown">
+            <i class="bi bi-download me-1"></i> Export
+        </button>
+        <ul class="dropdown-menu">
+            <li><a class="dropdown-item" href="{% url 'organization:compliance_export' %}?format=csv">
+                CSV</a></li>
+            <li><a class="dropdown-item" href="{% url 'organization:compliance_export' %}?format=excel">
+                Excel</a></li>
+        </ul>
+    </div> -->
+</div>
+
+<table id="complianceTable" class="table table-hover table-striped">
+    <thead>
+        <tr>
+            <th>Institution</th>
+            <th>GST</th>
+            <th>PAN</th>
+            <th>TAN</th>
+            <th>PF</th>
+            <th>ESI</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for c in compliances %}
+        <tr>
+            <td>{{ c.institution.name }}</td>
+            <td>{{ c.gst_number }}</td>
+            <td>{{ c.pan_number }}</td>
+            <td>{{ c.tan_number }}</td>
+            <td>{{ c.pf_registration_no }}</td>
+            <td>{{ c.esi_registration_no }}</td>
+            <td>
+                <a href="{% url 'organization:compliance_detail' c.pk %}" class="btn btn-sm btn-outline-primary">
+                    <i class="bi bi-eye"></i>
+                </a>
+                <a href="{% url 'organization:compliance_update' c.pk %}" class="btn btn-sm btn-outline-secondary">
+                    <i class="bi bi-pencil"></i>
+                </a>
+                <a href="{% url 'organization:compliance_delete' c.pk %}" class="btn btn-sm btn-outline-danger">
+                    <i class="bi bi-trash"></i>
+                </a>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    $('#complianceTable').DataTable({
+        "pageLength": 10,
+        "columnDefs": [{ "targets": -1, "orderable": false }],
+        "responsive": true
+    });
+});
+</script>
+{% endblock %}

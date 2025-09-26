@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+{% load custom_filters %}
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Houses Report</title>
+    <style>
+        body { 
+            font-family: DejaVu Sans, Arial, Helvetica, sans-serif; 
+            font-size: 12px; 
+            color: #333; 
+            margin: 0; 
+            padding: 0;
+        }
+        .header, .footer { 
+            text-align: center; 
+            width: 100%; 
+        }
+        .header { margin-bottom: 20px; }
+        .footer { 
+            font-size: 10px; 
+            color: #777; 
+            margin-top: 20px; 
+        }
+        h1, h2, h3 { margin: 5px 0; color: #2c3e50; }
+        table { 
+            width: 100%; 
+            border-collapse: collapse; 
+            margin-bottom: 15px; 
+        }
+        table th, table td { 
+            border: 1px solid #999; 
+            padding: 6px; 
+            text-align: left; 
+        }
+        table th { 
+            background: #f0f0f0; 
+        }
+        .logo img { height: 80px; margin-bottom: 5px; }
+    </style>
+</head>
+<body>
+
+    <!-- Header -->
+    <div class="header">
+        {% if logo %}
+            <div class="logo">
+                <img src="{{ logo }}" alt="Logo" width="210">
+            </div>
+        {% endif %}
+        <h1>Houses Report</h1>
+        <p>{{ organization.name|default:"ERP System" }}</p>
+        <p><small>Generated on {{ generated_date|date:"F j, Y \\a\\t H:i" }}</small></p>
+    </div>
+
+    <!-- Table Content -->
+    <table>
+        <thead>
+            <tr>
+                {% for col in columns %}
+                    <th>{{ col|underscore_to_space|title }}</th>
+                {% endfor %}
+            </tr>
+        </thead>
+        <tbody>
+            {% for h in houses %}
+                <tr>
+                    {% for col in columns %}
+                        <td>{{ h|get_item:col|default:"" }}</td>
+                    {% endfor %}
+                </tr>
+            {% empty %}
+                <tr>
+                    <td colspan="{{ columns|length }}">No houses found.</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <!-- Footer -->
+    <div class="footer">
+        Generated on {{ generated_date|date:"F j, Y \\a\\t H:i" }} |
+        Page <pdf:pagenumber> of <pdf:pagecount> <br>
+        &copy; {{ organization.name|default:"ERP System" }} - Houses Report
+    </div>
+
+</body>
+</html>

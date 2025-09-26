@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>ID Card</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 20mm;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            font-size: 12px;
+        }
+
+        table.page {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        /* Each ID card */
+        table.id-card {
+            width: 2in;
+            height: 3in;
+            border: 1px solid #000;
+            margin: 5px;
+            text-align: center;
+            vertical-align: middle;
+        }
+
+        table.id-card td {
+            padding: 3px;
+        }
+
+        .photo {
+            height: 1.2in;
+            width: 1in;
+        }
+
+        .logo {
+            height: 0.8in;
+        }
+
+        .qr {
+            height: 0.8in;
+        }
+    </style>
+</head>
+<body>
+    <table class="page">
+        <tr>
+            <td>
+                <table class="id-card">
+                    <tr>
+                        <td colspan="2">
+                            {% if logo_url %}
+                                <img src="{{ logo_url }}" class="logo">
+                            {% endif %}
+                            <br>
+                            <strong>{{ organization.name }}</strong>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td colspan="2">
+                            {% if photo_url %}
+                                <img src="{{ photo_url }}" class="photo">
+                            {% else %}
+                                <span>No Photo</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td colspan="2"><strong>{{ teacher.get_full_name }}</strong></td>
+                    </tr>
+                    <tr>
+                        <td colspan="2">{{ teacher.email }}</td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <small>Issue: {{ issue_date }}</small>
+                        </td>
+                        <td>
+                            <small>Valid: {{ valid_until }}</small>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td colspan="2">
+                            {% if qr_code %}
+                                <img src="data:image/png;base64,{{ qr_code }}" class="qr">
+                            {% endif %}
+                        </td>
+                    </tr>
+                </table>
+            </td>
+           
+        </tr>
+       
+           
+    </table>
+</body>
+</html>

@@ -1,0 +1,329 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Timetable - {{ class_obj.name }} - {{ organization.name|default:"ERP System" }}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
+<style>
+    .timetable-grid {
+        display: grid;
+        grid-template-columns: 120px repeat({{ periods|length }}, 1fr);
+        gap: 1px;
+        background-color: #e9ecef;
+        border-radius: 8px;
+        overflow: hidden;
+    }
+    
+    .timetable-header {
+        background: linear-gradient(135deg, #0984e3 0%, #74b9ff 100%);
+        color: white;
+        padding: 15px 10px;
+        text-align: center;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .period-header {
+        background: linear-gradient(135deg, #6c5ce7 0%, #a29bfe 100%);
+    }
+    
+    .timetable-cell {
+        background: white;
+        padding: 10px;
+        min-height: 120px;
+        border: 1px solid #dee2e6;
+    }
+    
+    .timetable-entry {
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        border: 1px solid #dee2e6;
+        border-radius: 6px;
+        padding: 10px;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+    }
+    
+    .subject {
+        font-weight: 600;
+        color: #2c3e50;
+        font-size: 14px;
+    }
+    
+    .teacher {
+        color: #6c757d;
+        font-size: 12px;
+        margin: 2px 0;
+    }
+    
+    .time {
+        color: #0984e3;
+        font-size: 11px;
+        font-weight: 500;
+    }
+    
+    .room {
+        color: #00b894;
+        font-size: 11px;
+        font-weight: 500;
+    }
+    
+    .actions {
+        display: flex;
+        gap: 4px;
+        justify-content: center;
+        margin-top: 8px;
+    }
+    
+    .empty-timetable {
+        grid-column: 1 / -1;
+        text-align: center;
+        padding: 40px;
+        background: white;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+
+    <!-- Header -->
+    <div class="header-section">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb breadcrumb-dark">
+                        <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Dashboard</a></li>
+                        <li class="breadcrumb-item"><a href="{% url 'academics:class_list' %}">Classes</a></li>
+                        <li class="breadcrumb-item active" aria-current="page">Timetable - {{ class_obj.name }}</li>
+                    </ol>
+                </nav>
+                <h1 class="display-6 fw-bold mb-2">Timetable - {{ class_obj.name }}</h1>
+                <p class="lead mb-0 opacity-75">Class schedule for {{ current_year.name|default:"Current Academic Year" }}</p>
+            </div>
+            <div class="col-md-4 text-md-end">
+                <div class="d-flex gap-2 justify-content-md-end flex-wrap">
+                    <!-- Quick Actions -->
+                    <div class="btn-group w-100" role="group">
+                        <!-- Main Action -->
+                        <a href="{% url 'academics:timetable_add' %}" class="btn btn-primary">
+                            <i class="bi bi-plus-circle me-1"></i> Add Entry
+                        </a>
+
+                        <!-- Dropdown Toggle -->
+                        <button type="button" class="btn btn-primary dropdown-toggle dropdown-toggle-split"
+                                data-bs-toggle="dropdown" aria-expanded="false">
+                            <span class="visually-hidden">Toggle Dropdown</span>
+                        </button>
+
+                        <!-- Dropdown Menu -->
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li>
+                                <button type="button" class="dropdown-item" data-bs-toggle="modal" data-bs-target="#TimeTableexportModal">
+                                    <i class="bi bi-download me-2"></i> Export Timetable
+                                </button>
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <a class="dropdown-item" href="{% url 'academics:class_list' %}">
+                                    <i class="bi bi-arrow-left me-2"></i> Back to Classes
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Timetable Grid -->
+    <div class="card card-custom">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="card-title mb-0">Class Schedule</h5>
+            <span class="badge bg-primary">{{ timetable_entries.count }} entries</span>
+        </div>
+        <div class="card-body p-0">
+            {% if timetable_entries %}
+            <div class="timetable-grid">
+                <!-- Header row -->
+                <div class="timetable-header">Time/Day</div>
+                {% for period in periods %}
+                <div class="timetable-header period-header">Period {{ period }}</div>
+                {% endfor %}
+
+                <!-- Data rows -->
+                {% for day in days %}
+                <div class="timetable-header">{{ day|title }}</div>
+                {% for period in periods %}
+                <div class="timetable-cell">
+                    {% for entry in timetable_entries %}
+                        {% if entry.day == day and entry.period == period %}
+                        <div class="timetable-entry">
+                            <div class="subject">{{ entry.subject.name }}</div>
+                            <div class="teacher">{{ entry.teacher.get_full_name }}</div>
+                            <div class="time">{{ entry.start_time|time:"H:i" }} - {{ entry.end_time|time:"H:i" }}</div>
+                            <div class="room">{{ entry.room|default:"No room" }}</div>
+                            <div class="actions">
+                                <a href="{% url 'academics:timetable_edit' entry.id %}" class="btn btn-sm btn-outline-primary py-0" data-bs-toggle="tooltip" title="Edit">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                <a href="{% url 'academics:timetable_delete' entry.id %}" class="btn btn-sm btn-outline-danger py-0" data-bs-toggle="tooltip" title="Delete">
+                                    <i class="bi bi-trash"></i>
+                                </a>
+                            </div>
+                        </div>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+                {% endfor %}
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="empty-timetable">
+                <i class="bi bi-calendar display-4 text-primary d-block mb-3"></i>
+                <h5 class="text-primary">No timetable entries found</h5>
+                <p class="text-muted mb-4">Get started by adding timetable entries for this class</p>
+                <a href="{% url 'academics:timetable_add' %}" class="btn btn-primary">
+                    <i class="bi bi-plus-circle me-1"></i>Add Timetable Entry
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Export Modal -->
+<div class="modal fade" id="TimeTableexportModal" tabindex="-1" aria-labelledby="exportModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <!-- Use GET so parameters go in querystring -->
+            <form method="get" action="{% url 'academics:class_timetable_export' class_obj.id %}">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exportModalLabel">Export Timetable Data</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+
+                <div class="modal-body">
+                    <!-- Export Format -->
+                    <div class="mb-3">
+                        <label for="exportFormat" class="form-label">Export Format</label>
+                        <select class="form-select" id="exportFormat" name="format">
+                            <option value="csv">CSV</option>
+                            <option value="pdf">PDF</option>
+                        </select>
+                    </div>
+
+                    <!-- Academic Year Filter -->
+                    <div class="mb-3">
+                        <label for="academicYear" class="form-label">Academic Year</label>
+                        <select class="form-select" id="academicYear" name="academic_year_id">
+                            <option value="">All Years</option>
+                            {% for year in academic_years %}
+                            <option value="{{ year.id }}">{{ year.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <!-- Section Filter -->
+                    <div class="mb-3">
+                        <label for="sectionSelect" class="form-label">Section</label>
+                        <select class="form-select" id="sectionSelect" name="section_id">
+                            <option value="">All Sections</option>
+                            {% for sec in class_obj.sections.all %}
+                                <option value="{{ sec.id }}">{{ sec.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <!-- Dynamic Columns -->
+                    <div class="mb-3">
+                        <label class="form-label">Include Columns</label>
+                        {% for field in class_fields %}
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="include_{{ field }}" name="columns" value="{{ field }}" checked>
+                            <label class="form-check-label" for="include_{{ field }}">{{ field|capfirst }}</label>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" data-bs-dismiss="modal" type="button">Cancel</button>
+                    <button class="btn btn-primary" type="submit">Export Data</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+
+    // 1) Remove any stray backdrops and restore body state on load (force cleanup)
+    (function cleanup() {
+        document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+        document.body.classList.remove('modal-open');
+        document.body.style.overflow = '';
+        document.body.style.paddingRight = '';
+    })();
+
+    // 3) Robust modal cleanup handlers
+    document.querySelectorAll('.modal').forEach(modalEl => {
+        modalEl.addEventListener('show.bs.modal', function () {
+            document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+        });
+
+        modalEl.addEventListener('hidden.bs.modal', function () {
+            document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+            document.body.classList.remove('modal-open');
+            document.body.style.overflow = '';
+            document.body.style.paddingRight = '';
+        });
+    });
+
+    // 4) Safety-net: if a backdrop exists but there is no visible modal, remove it
+    const observer = new MutationObserver(() => {
+        const backdrop = document.querySelector('.modal-backdrop');
+        const anyShown = !!document.querySelector('.modal.show');
+        if (backdrop && !anyShown) {
+            backdrop.remove();
+            document.body.classList.remove('modal-open');
+            document.body.style.overflow = '';
+            document.body.style.paddingRight = '';
+        }
+    });
+    observer.observe(document.body, { childList: true, subtree: true });
+
+    // 5) Allow manual cleanup by pressing Esc (extra safety)
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+            document.body.classList.remove('modal-open');
+            document.body.style.overflow = '';
+            document.body.style.paddingRight = '';
+            document.querySelectorAll('.modal.show').forEach(m => {
+                try { bootstrap.Modal.getInstance(m)?.hide(); } catch(e) {}
+            });
+        }
+    });
+
+    // 6) Final cleanup in case something stuck earlier
+    setTimeout(() => {
+        document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+        document.body.classList.remove('modal-open');
+        document.body.style.overflow = '';
+        document.body.style.paddingRight = '';
+    }, 500);
+    
+    // Initialize tooltips
+    $('[data-bs-toggle="tooltip"]').tooltip();
+});
+</script>
+{% endblock %}

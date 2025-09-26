@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Attendance Record - {{ organization.name }}</title>
+    <style>
+        @page {
+            size: A4 portrait;
+            margin: 15mm;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            font-size: 12px;
+            color: #2c3e50;
+            margin: 0;
+            padding: 0;
+            -webkit-print-color-adjust: exact;
+        }
+        .attendance-container {
+            width: 100%;
+            max-width: 170mm;
+            margin: 0 auto;
+            background: white;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 8px 0;
+        }
+        th, td {
+            padding: 8px 6px;
+            text-align: left;
+            vertical-align: top;
+            border: 1px solid #e9ecef;
+        }
+        th {
+            background: #f8f9fa;
+            font-weight: 600;
+            color: #495057;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 3px solid #3498db;
+        }
+        .org-name {
+            font-size: 20px;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 5px;
+        }
+        .org-details {
+            font-size: 10px;
+            color: #7f8c8d;
+            line-height: 1.4;
+        }
+        .attendance-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #e74c3c;
+            margin: 15px 0;
+            text-align: center;
+        }
+        .status-badge {
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 10px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        .status-present { background: #d4edda; color: #155724; }
+        .status-absent { background: #f8d7da; color: #721c24; }
+        .status-late { background: #fff3cd; color: #856404; }
+        .status-half_day { background: #cce5ff; color: #004085; }
+        .status-excused { background: #d1ecf1; color: #0c5460; }
+        .footer {
+            margin-top: 30px;
+            padding-top: 15px;
+            border-top: 2px dashed #bdc3c7;
+            text-align: center;
+            font-size: 10px;
+            color: #7f8c8d;
+        }
+        .logo {
+            max-height: 50px;
+            margin-bottom: 10px;
+        }
+        .student-header {
+            text-align: center;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid #3498db;
+        }
+    </style>
+</head>
+<body>
+    <div class="attendance-container">
+        <!-- Header -->
+        <div class="header">
+            {% if organization.logo %}
+            <img src="{{ organization.logo }}" alt="{{ organization.name }} Logo" class="logo">
+            {% endif %}
+            <div class="org-name">{{ organization.name }}</div>
+            <div class="org-details">
+                {% if organization.address %}{{ organization.address }} • {% endif %}
+                {% if organization.phone %}📞 {{ organization.phone }} • {% endif %}
+                {% if organization.email %}✉️ {{ organization.email }}{% endif %}
+            </div>
+        </div>
+
+        <!-- Title -->
+        <div class="attendance-title">ATTENDANCE RECORD</div>
+
+        <!-- Student Information -->
+        <div class="student-header">
+            <h3>{{ attendance.student_name }}</h3>
+            <p class="text-muted">
+                Roll No: {{ attendance.roll_number }} • 
+                Class: {{ attendance.class_name }} • 
+                Section: {{ attendance.section }}
+            </p>
+        </div>
+
+        <!-- Attendance Details -->
+        <table>
+            <tr>
+                <th style="width: 30%;">Field</th>
+                <th style="width: 70%;">Details</th>
+            </tr>
+            <tr>
+                <td><strong>Student Name</strong></td>
+                <td>{{ attendance.student_name }}</td>
+            </tr>
+            <tr>
+                <td><strong>Roll Number</strong></td>
+                <td>{{ attendance.roll_number }}</td>
+            </tr>
+            <tr>
+                <td><strong>Class</strong></td>
+                <td>{{ attendance.class_name }}</td>
+            </tr>
+            <tr>
+                <td><strong>Section</strong></td>
+                <td>{{ attendance.section }}</td>
+            </tr>
+            <tr>
+                <td><strong>Date</strong></td>
+                <td>{{ attendance.date }}</td>
+            </tr>
+            <tr>
+                <td><strong>Status</strong></td>
+                <td>
+                    <span class="status-badge status-{{ attendance.status_code|lower }}">
+                        {{ attendance.status }}
+                    </span>
+                </td>
+            </tr>
+            <tr>
+                <td><strong>Remarks</strong></td>
+                <td>{{ attendance.remarks }}</td>
+            </tr>
+            <tr>
+                <td><strong>Marked By</strong></td>
+                <td>{{ attendance.marked_by }}</td>
+            </tr>
+            <tr>
+                <td><strong>Institution</strong></td>
+                <td>{{ attendance.institution }}</td>
+            </tr>
+            <tr>
+                <td><strong>Record Created</strong></td>
+                <td>{{ attendance.created_at }}</td>
+            </tr>
+            <tr>
+                <td><strong>Last Updated</strong></td>
+                <td>{{ attendance.updated_at }}</td>
+            </tr>
+        </table>
+
+        <!-- Footer -->
+        <div class="footer">
+            <div>This is a computer generated attendance record • Valid without signature</div>
+            <div>{{ organization.name }} • {{ generated_date|date:"Y" }}</div>
+            <div>Generated on: {{ generated_date|date:"M d, Y H:i" }}</div>
+            <div>Page <pdf:pagenumber> of <pdf:pagecount></div>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,54 @@
+{% extends 'organization/base.html' %}
+{% load static %}
+{% load crispy_forms_tags %}
+
+{% block title %}
+{% if form.instance.pk %}Edit Partnership{% else %}New Partnership{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="header-section mb-4">
+    <div class="row align-items-center">
+        <div class="col-md-7 d-flex align-items-center">
+            <div class="header-icon me-3">
+                <i class="bi bi-people display-6 text-primary"></i>
+            </div>
+            <div>
+                <h1 class="h3 fw-bold mb-1">
+                    {% if form.instance.pk %}Edit Partnership{% else %}New Partnership{% endif %}
+                </h1>
+                <p class="text-custom mb-0">Manage organizational partnerships</p>
+            </div>
+        </div>
+        <div class="col-md-5 text-end">
+            <a href="{% url 'organization:partnership_list' %}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left-circle me-1"></i> Back to List
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="card card-custom p-4">
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        {{ form|crispy }}
+
+        <div class="mt-4 d-flex gap-2 justify-content-end">
+            <button type="submit" class="btn btn-primary">
+                <i class="bi bi-save me-1"></i> Save
+            </button>
+            <a href="{% url 'organization:partnership_list' %}" class="btn btn-outline-secondary">
+                <i class="bi bi-x-circle me-1"></i> Cancel
+            </a>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    $('select').select2({ theme: 'bootstrap-5', width: '100%' });
+});
+</script>
+{% endblock %}

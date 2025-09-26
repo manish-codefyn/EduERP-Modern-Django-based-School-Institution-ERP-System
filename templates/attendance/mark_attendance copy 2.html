@@ -1,0 +1,690 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Mark Student Attendance{% endblock %}
+
+{% block extra_css %}
+<style>
+.attendance-container {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.student-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 1.5rem;
+    margin: 2rem 0;
+}
+
+.student-card {
+    position: relative;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border-radius: 15px;
+    padding: 1rem;
+}
+
+.student-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+}
+
+.student-avatar {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 3px solid #dee2e6;
+    transition: all 0.3s ease;
+}
+
+.student-info {
+    margin-top: 0.5rem;
+}
+
+.student-name {
+    font-weight: 600;
+    font-size: 0.9rem;
+    margin-bottom: 0.2rem;
+}
+
+.student-roll {
+    font-size: 0.8rem;
+    color: #6c757d;
+}
+
+.status-indicator {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    border: 2px solid #fff;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+
+.status-present { background-color: #28a745; }
+.status-absent { background-color: #dc3545; }
+.status-late { background-color: #ffc107; }
+.status-half_day { background-color: #fd7e14; }
+.status-excused { background-color: #6f42c1; }
+
+.attendance-summary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-radius: 15px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.summary-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 1rem;
+    text-align: center;
+}
+
+.stat-item {
+    padding: 1rem;
+    background: rgba(255,255,255,0.1);
+    border-radius: 10px;
+    backdrop-filter: blur(10px);
+}
+
+.stat-number {
+    font-size: 2rem;
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+}
+
+.attendance-controls {
+    position: sticky;
+    bottom: 0;
+    background: white;
+    padding: 1.5rem;
+    border-top: 1px solid #dee2e6;
+    box-shadow: 0 -4px 20px rgba(0,0,0,0.1);
+}
+
+.bulk-actions {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
+}
+
+.bulk-btn {
+    padding: 0.5rem 1rem;
+    border: none;
+    border-radius: 25px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.bulk-btn:hover {
+    transform: translateY(-2px);
+}
+
+.student-card.selected {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border: 2px solid #007bff;
+}
+
+.student-card.selected .student-avatar {
+    border-color: #007bff;
+}
+
+.attendance-modal .modal-content {
+    border-radius: 15px;
+    border: none;
+}
+
+.attendance-modal .modal-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-radius: 15px 15px 0 0;
+}
+
+.status-options {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 1rem;
+    margin: 1rem 0;
+}
+
+.status-option {
+    padding: 1rem;
+    border: 2px solid #dee2e6;
+    border-radius: 10px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.status-option:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+
+.status-option.selected {
+    border-color: #007bff;
+    background-color: #f8f9fa;
+}
+
+.search-box {
+    position: relative;
+    margin-bottom: 2rem;
+}
+
+.search-box input {
+    border-radius: 25px;
+    padding-left: 3rem;
+}
+
+.search-box i {
+    position: absolute;
+    left: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #6c757d;
+}
+
+@media (max-width: 768px) {
+    .student-grid {
+        grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+        gap: 1rem;
+    }
+    
+    .student-avatar {
+        width: 60px;
+        height: 60px;
+    }
+    
+    .summary-stats {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+/* Custom colors for attendance status */
+.text-purple {
+    color: #6f42c1 !important;
+}
+
+.bg-purple {
+    background-color: #6f42c1 !important;
+}
+
+/* Animation for status indicators */
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+    100% { transform: scale(1); }
+}
+
+.status-indicator {
+    animation: pulse 0.5s ease;
+}
+
+/* Hover effects */
+.student-card {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.student-card:hover {
+    transform: translateY(-8px) scale(1.02);
+    box-shadow: 0 12px 30px rgba(0,0,0,0.2);
+}
+
+/* Gradient backgrounds for status options */
+.status-option[data-status="present"]:hover {
+    background: linear-gradient(135deg, #28a74520, #28a74510);
+}
+
+.status-option[data-status="absent"]:hover {
+    background: linear-gradient(135deg, #dc354520, #dc354510);
+}
+
+.status-option[data-status="late"]:hover {
+    background: linear-gradient(135deg, #ffc10720, #ffc10710);
+}
+
+.status-option[data-status="half_day"]:hover {
+    background: linear-gradient(135deg, #fd7e1420, #fd7e1410);
+}
+
+.status-option[data-status="excused"]:hover {
+    background: linear-gradient(135deg, #6f42c120, #6f42c110);
+}
+
+/* Responsive design */
+@media (max-width: 576px) {
+    .student-grid {
+        grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)) !important;
+        gap: 1rem !important;
+    }
+    
+    .student-avatar {
+        width: 60px !important;
+        height: 60px !important;
+    }
+    
+    .summary-stats {
+        grid-template-columns: repeat(2, 1fr) !important;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid attendance-container">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 mb-0">
+            <i class="bi bi-calendar-check me-2"></i>Mark Attendance
+        </h1>
+        <div>
+            <a href="{% url 'attendance:attendance_list' %}" class="btn btn-outline-secondary me-2">
+                <i class="bi bi-arrow-left me-1"></i> Back to List
+            </a>
+            <button class="btn btn-primary" onclick="submitAttendance()">
+                <i class="bi bi-check2-circle me-1"></i> Submit Attendance
+            </button>
+        </div>
+    </div>
+
+    <!-- Attendance Summary -->
+    <div class="attendance-summary">
+        <div class="row align-items-center">
+            <div class="col-md-6">
+                <h4 class="mb-3">Class: {{ class_name }}</h4>
+                <p class="mb-0">
+                    <i class="bi bi-calendar me-1"></i> {{ selected_date|date:"F j, Y" }}
+                </p>
+            </div>
+            <div class="col-md-6">
+                <div class="summary-stats">
+                    <div class="stat-item">
+                        <div class="stat-number" id="total-students">0</div>
+                        <div>Total</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number text-success" id="present-count">0</div>
+                        <div>Present</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number text-danger" id="absent-count">0</div>
+                        <div>Absent</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number text-warning" id="late-count">0</div>
+                        <div>Late</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Search and Filters -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="search-box">
+                <i class="bi bi-search"></i>
+                <input type="text" id="student-search" class="form-control" placeholder="Search students...">
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="d-flex gap-2">
+                <select class="form-select" id="status-filter">
+                    <option value="">All Statuses</option>
+                    <option value="present">Present</option>
+                    <option value="absent">Absent</option>
+                    <option value="late">Late</option>
+                    <option value="half_day">Half Day</option>
+                    <option value="excused">Excused</option>
+                </select>
+                <button class="btn btn-outline-secondary" onclick="clearAll()">
+                    <i class="bi bi-x-circle"></i> Clear All
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Student Grid -->
+    <div class="student-grid" id="student-grid">
+        {% for student in students %}
+        <div class="student-card" data-student-id="{{ student.id }}" data-roll="{{ student.roll_number }}">
+            <div class="status-indicator" id="status-{{ student.id }}"></div>
+            <img src="{{ student.profile_picture.url|default:'/static/images/default-avatar.png' }}" 
+                 alt="{{ student.user.get_full_name }}" 
+                 class="student-avatar"
+                 onclick="openStatusModal('{{ student.id }}')">
+            <div class="student-info">
+                <div class="student-name">{{ student.user.get_full_name|truncatewords:2 }}</div>
+                <div class="student-roll">#{{ student.roll_number }}</div>
+            </div>
+            <input type="hidden" name="attendance_{{ student.id }}" id="attendance_{{ student.id }}" value="">
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Bulk Actions -->
+    <div class="attendance-controls">
+        <div class="bulk-actions">
+            <span class="me-2 fw-bold">Bulk Actions:</span>
+            <button class="btn btn-sm btn-outline-success bulk-btn" onclick="markAll('present')">
+                <i class="bi bi-check-circle me-1"></i> Mark All Present
+            </button>
+            <button class="btn btn-sm btn-outline-danger bulk-btn" onclick="markAll('absent')">
+                <i class="bi bi-x-circle me-1"></i> Mark All Absent
+            </button>
+            <button class="btn btn-sm btn-outline-warning bulk-btn" onclick="markAll('late')">
+                <i class="bi bi-clock me-1"></i> Mark All Late
+            </button>
+        </div>
+        <div class="d-flex justify-content-between align-items-center">
+            <span id="selected-count">0 students selected</span>
+            <button class="btn btn-primary btn-lg" onclick="submitAttendance()">
+                <i class="bi bi-check2-circle me-1"></i> Submit Attendance
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Status Modal -->
+<div class="modal fade attendance-modal" id="statusModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Mark Attendance</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="text-center mb-4">
+                    <img id="modal-avatar" src="" class="student-avatar mb-2" alt="">
+                    <h6 id="modal-name"></h6>
+                    <p class="text-muted" id="modal-roll"></p>
+                </div>
+                <div class="status-options">
+                    <div class="status-option" data-status="present" onclick="selectStatus('present')">
+                        <i class="bi bi-check-circle-fill text-success fs-3"></i>
+                        <div>Present</div>
+                    </div>
+                    <div class="status-option" data-status="absent" onclick="selectStatus('absent')">
+                        <i class="bi bi-x-circle-fill text-danger fs-3"></i>
+                        <div>Absent</div>
+                    </div>
+                    <div class="status-option" data-status="late" onclick="selectStatus('late')">
+                        <i class="bi bi-clock-fill text-warning fs-3"></i>
+                        <div>Late</div>
+                    </div>
+                    <div class="status-option" data-status="half_day" onclick="selectStatus('half_day')">
+                        <i class="bi bi-circle-half text-info fs-3"></i>
+                        <div>Half Day</div>
+                    </div>
+                    <div class="status-option" data-status="excused" onclick="selectStatus('excused')">
+                        <i class="bi bi-file-earmark-text text-purple fs-3"></i>
+                        <div>Excused</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<form id="attendance-form" method="post" style="display: none;">
+    {% csrf_token %}
+    <input type="hidden" name="date" value="{{ selected_date }}">
+    <input type="hidden" name="class_id" value="{{ class_id }}">
+    <input type="hidden" name="attendance_data" id="attendance-data">
+</form>
+{% endblock %}
+
+{% block extra_js %}
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+
+    // 1) Remove any stray backdrops and restore body state on load (force cleanup)
+    (function cleanup() {
+        document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+        document.body.classList.remove('modal-open');
+        document.body.style.overflow = '';
+        document.body.style.paddingRight = '';
+    })();
+
+    // 2) Initialize DataTable
+    try {
+       var table = $('#attendanceTable').DataTable({
+        pageLength: 10,
+        lengthMenu: [[10, 25, 50, -1],[10, 25, 50, "All"]],
+        order: [[2, 'desc']],
+        columnDefs: [{ targets: [0], orderable: false }],
+        language: {
+            search: "Filter:",
+            lengthMenu: "Show _MENU_ entries",
+            paginate: { previous: "<i class='bi bi-chevron-left'></i>", next: "<i class='bi bi-chevron-right'></i>" }
+        }
+    });
+    } catch (err) {
+        console.error('DataTables init error:', err);
+    }
+
+    // 3) Robust modal cleanup handlers
+    // Remove any leftover backdrop BEFORE a modal opens
+    document.querySelectorAll('.modal').forEach(modalEl => {
+        modalEl.addEventListener('show.bs.modal', function () {
+            // if another leftover backdrop exists, remove it
+            document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+        });
+
+        // on hidden, remove backdrops and restore body scrolling
+        modalEl.addEventListener('hidden.bs.modal', function () {
+            document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+            document.body.classList.remove('modal-open');
+            document.body.style.overflow = '';
+            document.body.style.paddingRight = '';
+        });
+    });
+
+    // 4) Safety-net: if a backdrop exists but there is no visible modal, remove it
+    // (handles cases where Bootstrap failed silently)
+    const observer = new MutationObserver(() => {
+        const backdrop = document.querySelector('.modal-backdrop');
+        const anyShown = !!document.querySelector('.modal.show');
+        if (backdrop && !anyShown) {
+            backdrop.remove();
+            document.body.classList.remove('modal-open');
+            document.body.style.overflow = '';
+            document.body.style.paddingRight = '';
+        }
+    });
+    observer.observe(document.body, { childList: true, subtree: true });
+
+    // 5) Allow manual cleanup by pressing Esc (extra safety)
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+            document.body.classList.remove('modal-open');
+            document.body.style.overflow = '';
+            document.body.style.paddingRight = '';
+            document.querySelectorAll('.modal.show').forEach(m => {
+                try { bootstrap.Modal.getInstance(m)?.hide(); } catch(e) {}
+            });
+        }
+    });
+
+    // 6) Final cleanup in case something stuck earlier
+    setTimeout(() => {
+        document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+        document.body.classList.remove('modal-open');
+        document.body.style.overflow = '';
+        document.body.style.paddingRight = '';
+    }, 500);
+});
+
+
+let currentStudentId = null;
+const attendanceData = {};
+
+// Initialize
+document.addEventListener('DOMContentLoaded', function() {
+    updateSummary();
+    setupSearch();
+    setupFilter();
+});
+
+function openStatusModal(studentId) {
+    currentStudentId = studentId;
+    const studentCard = document.querySelector(`[data-student-id="${studentId}"]`);
+    const avatar = studentCard.querySelector('.student-avatar').src;
+    const name = studentCard.querySelector('.student-name').textContent;
+    const roll = studentCard.querySelector('.student-roll').textContent;
+    
+    document.getElementById('modal-avatar').src = avatar;
+    document.getElementById('modal-name').textContent = name;
+    document.getElementById('modal-roll').textContent = roll;
+    
+    // Show current status if exists
+    const currentStatus = attendanceData[studentId];
+    if (currentStatus) {
+        document.querySelectorAll('.status-option').forEach(opt => {
+            opt.classList.remove('selected');
+            if (opt.dataset.status === currentStatus) {
+                opt.classList.add('selected');
+            }
+        });
+    }
+    
+    new bootstrap.Modal(document.getElementById('statusModal')).show();
+}
+
+function selectStatus(status) {
+    if (!currentStudentId) return;
+    
+    // Update UI
+    const indicator = document.getElementById(`status-${currentStudentId}`);
+    indicator.className = 'status-indicator';
+    indicator.classList.add(`status-${status}`);
+    
+    // Update data
+    attendanceData[currentStudentId] = status;
+    document.getElementById(`attendance_${currentStudentId}`).value = status;
+    
+    // Update summary
+    updateSummary();
+    
+    // Close modal
+    bootstrap.Modal.getInstance(document.getElementById('statusModal')).hide();
+}
+
+function markAll(status) {
+    document.querySelectorAll('.student-card').forEach(card => {
+        const studentId = card.dataset.studentId;
+        const indicator = document.getElementById(`status-${studentId}`);
+        
+        indicator.className = 'status-indicator';
+        indicator.classList.add(`status-${status}`);
+        
+        attendanceData[studentId] = status;
+        document.getElementById(`attendance_${studentId}`).value = status;
+    });
+    
+    updateSummary();
+    showToast(`All students marked as ${status}`, 'success');
+}
+
+function clearAll() {
+    document.querySelectorAll('.student-card').forEach(card => {
+        const studentId = card.dataset.studentId;
+        const indicator = document.getElementById(`status-${studentId}`);
+        
+        indicator.className = 'status-indicator';
+        delete attendanceData[studentId];
+        document.getElementById(`attendance_${studentId}`).value = '';
+    });
+    
+    updateSummary();
+    showToast('All attendance cleared', 'info');
+}
+
+function updateSummary() {
+    const counts = {
+        present: 0,
+        absent: 0,
+        late: 0,
+        half_day: 0,
+        excused: 0
+    };
+    
+    Object.values(attendanceData).forEach(status => {
+        if (counts.hasOwnProperty(status)) {
+            counts[status]++;
+        }
+    });
+    
+    const total = Object.values(counts).reduce((sum, count) => sum + count, 0);
+    
+    document.getElementById('total-students').textContent = {{ students|length }};
+    document.getElementById('present-count').textContent = counts.present;
+    document.getElementById('absent-count').textContent = counts.absent;
+    document.getElementById('late-count').textContent = counts.late;
+    document.getElementById('selected-count').textContent = `${total} students marked`;
+}
+
+function setupSearch() {
+    const searchInput = document.getElementById('student-search');
+    searchInput.addEventListener('input', function() {
+        const searchTerm = this.value.toLowerCase();
+        document.querySelectorAll('.student-card').forEach(card => {
+            const name = card.querySelector('.student-name').textContent.toLowerCase();
+            const roll = card.querySelector('.student-roll').textContent.toLowerCase();
+            const matches = name.includes(searchTerm) || roll.includes(searchTerm);
+            card.style.display = matches ? 'block' : 'none';
+        });
+    });
+}
+
+function setupFilter() {
+    const filterSelect = document.getElementById('status-filter');
+    filterSelect.addEventListener('change', function() {
+        const status = this.value;
+        document.querySelectorAll('.student-card').forEach(card => {
+            const studentId = card.dataset.studentId;
+            const currentStatus = attendanceData[studentId];
+            const matches = !status || currentStatus === status;
+            card.style.display = matches ? 'block' : 'none';
+        });
+    });
+}
+
+function submitAttendance() {
+    if (Object.keys(attendanceData).length === 0) {
+        showToast('Please mark attendance for at least one student', 'warning');
+        return;
+    }
+    
+    document.getElementById('attendance-data').value = JSON.stringify(attendanceData);
+    document.getElementById('attendance-form').submit();
+}
+
+function showToast(message, type = 'info') {
+    // Implement toast notification
+    const toast = document.createElement('div');
+    toast.className = `toast align-items-center text-white bg-${type} border-0`;
+    toast.innerHTML = `
+        <div class="d-flex">
+            <div class="toast-body">${message}</div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+        </div>
+    `;
+    
+    document.body.appendChild(toast);
+    new bootstrap.Toast(toast).show();
+    
+    setTimeout(() => toast.remove(), 3000);
+}
+</script>
+{% endblock %}

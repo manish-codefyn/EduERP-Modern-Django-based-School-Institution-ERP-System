@@ -1,0 +1,259 @@
+{% extends 'communications/base.html' %}
+{% load static %}
+
+{% block title %}Notices - {{ organization.name|default:"codefyn" }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header with Breadcrumb on top -->
+<div class="header-section mb-4">
+    <div class="row align-items-center">
+        <div class="col-md-7 d-flex flex-column">
+            <!-- Breadcrumb on top -->
+            <nav aria-label="breadcrumb" class="mb-2">
+                <ol class="breadcrumb mb-0">
+                    <li class="breadcrumb-item">
+                        <a href="{% url 'communications:dashboard' %}">
+                            <i class="bi bi-house-door me-1"></i> Dashboard
+                        </a>
+                    </li>
+                    <li class="breadcrumb-item active" aria-current="page">Notices</li>
+                </ol>
+            </nav>
+
+            <!-- Header title and description -->
+            <div class="d-flex align-items-center">
+                <div class="header-icon me-3">
+                    <i class="bi bi-megaphone display-6 text-primary"></i>
+                </div>
+                <div>
+                    <h1 class="h3 fw-bold mb-1">Notices</h1>
+                    <p class="text-custom mb-0">Manage and publish notices for your institution</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-5">
+            {% if request.user.is_superadmin or request.user.is_institution_admin %}
+            <div class="d-flex justify-content-end align-items-center gap-2">
+                <a href="{% url 'communications:notice_create' %}" class="btn btn-primary">
+                    <i class="bi bi-plus-circle me-1"></i> New Notice
+                </a>
+                <div class="dropdown">
+                    <button class="btn btn-secondary dropdown-toggle" type="button" id="exportDropdown"
+                        data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="bi bi-download me-1"></i> Export
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="exportDropdown">
+                        <li class="dropdown-header">Export Notices</li>
+                        <li>
+                            <a class="dropdown-item" href="{% url 'communications:notice_export' %}?format=csv">
+                                <i class="bi bi-filetype-csv me-2"></i> Export CSV
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item" href="{% url 'communications:notice_export' %}?format=excel">
+                                <i class="bi bi-file-earmark-excel me-2"></i> Export Excel
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item" href="{% url 'communications:notice_export' %}?format=pdf">
+                               <i class="bi bi-file-earmark-pdf me-2"></i> Export PDF
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+
+    <!-- Stats Cards -->
+    <div class="row g-4 mb-4">
+        <div class="col-xl-4 col-md-6">
+            <div class="card stats-card text-white h-100" style="background: var(--primary-gradient);">
+                <div class="card-body">
+                    <h6 class="card-title mb-1 small opacity-75">TOTAL NOTICES</h6>
+                    <h3 class="mb-0 fw-bold">{{ total_notices|default:"0" }}</h3>
+                    <p class="mb-0 small opacity-75"><i class="bi bi-megaphone me-1"></i>All notices</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-4 col-md-6">
+            <div class="card stats-card text-white h-100" style="background: var(--success-gradient);">
+                <div class="card-body">
+                    <h6 class="card-title mb-1 small opacity-75">PUBLISHED</h6>
+                    <h3 class="mb-0 fw-bold">{{ published_notices|default:"0" }}</h3>
+                    <p class="mb-0 small opacity-75"><i class="bi bi-check-circle me-1"></i>Active notices</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-4 col-md-6">
+            <div class="card stats-card text-white h-100" style="background: var(--warning-gradient);">
+                <div class="card-body">
+                    <h6 class="card-title mb-1 small opacity-75">DRAFTS</h6>
+                    <h3 class="mb-0 fw-bold">{{ draft_notices|default:"0" }}</h3>
+                    <p class="mb-0 small opacity-75"><i class="bi bi-pencil me-1"></i>Draft notices</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filter Form -->
+    <div class="card card-custom p-3 mb-4">
+        <form method="get" class="row g-3">
+            <div class="col-md-3">
+                <label class="form-label">Search</label>
+                <input type="text" name="search" class="form-control" placeholder="Search notices..." value="{{ request.GET.search }}">
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Audience</label>
+                <select name="audience" class="form-select">
+                    <option value="">All</option>
+                    {% for key, value in notices.0.get_audience_choices %}
+                        <option value="{{ key }}" {% if request.GET.audience == key %}selected{% endif %}>{{ value }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Priority</label>
+                <select name="priority" class="form-select">
+                    <option value="">All</option>
+                    {% for key, value in notices.0.get_priority_choices %}
+                        <option value="{{ key }}" {% if request.GET.priority == key %}selected{% endif %}>{{ value }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Status</label>
+                <select name="status" class="form-select">
+                    <option value="">All</option>
+                    <option value="published" {% if request.GET.status == 'published' %}selected{% endif %}>Published</option>
+                    <option value="draft" {% if request.GET.status == 'draft' %}selected{% endif %}>Draft</option>
+                </select>
+            </div>
+            <div class="col-md-3 d-flex align-items-end gap-2">
+                <button type="submit" class="btn btn-primary w-50">
+                    <i class="bi bi-search me-1"></i> Filter
+                </button>
+                <a href="{% url 'communications:notice_list' %}" class="btn btn-outline-secondary w-50">
+                    <i class="bi bi-x me-1"></i> Clear
+                </a>
+            </div>
+        </form>
+    </div>
+
+    <!-- Notices Table -->
+    <div class="card card-custom">
+        <div class="card-header bg-transparent border-0 pt-4 px-4">
+            <h5 class="card-title mb-0 fw-bold text-custom">All Notices</h5>
+            <p class="text-custom mb-0">Manage institutional notices</p>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                {% if notices %}
+                <table id="noticesTable" class="w-100 table-custom table-hover align-middle">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Title</th>
+                            <th>Priority</th>
+                            <th>Audience</th>
+                            <th>Status</th>
+                            <th>Publish Date</th>
+                            <th>Created By</th>
+                            <th class="text-center">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for notice in notices %}
+                        <tr>
+                            <td>{{ forloop.counter }}</td>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <i class="bi bi-megaphone me-2 text-primary"></i>
+                                    {{ notice.title }}
+                                </div>
+                            </td>
+                            <td>
+                                {% if notice.priority == 'urgent' %}
+                                    <span class="badge bg-danger">{{ notice.get_priority_display }}</span>
+                                {% elif notice.priority == 'high' %}
+                                    <span class="badge bg-warning text-dark">{{ notice.get_priority_display }}</span>
+                                {% elif notice.priority == 'medium' %}
+                                    <span class="badge bg-info">{{ notice.get_priority_display }}</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">{{ notice.get_priority_display }}</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <span class="badge bg-primary">{{ notice.get_audience_display }}</span>
+                            </td>
+                            <td>
+                                {% if notice.is_published %}
+                                    <span class="badge bg-success">Published</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">Draft</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ notice.publish_date|date:"d M Y H:i"|default:"-" }}</td>
+                            <td>{{ notice.created_by.get_full_name }}</td>
+                            <td class="text-center">
+                                <a href="{% url 'communications:notice_detail' notice.pk %}" 
+                                   class="btn btn-sm btn-outline-primary" title="View">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                                <a href="{% url 'communications:notice_update' notice.pk %}" 
+                                   class="btn btn-sm btn-outline-warning" title="Edit">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                <a href="{% url 'communications:notice_delete' notice.pk %}" 
+                                   class="btn btn-sm btn-outline-danger" title="Delete">
+                                    <i class="bi bi-trash"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% else %}
+                <div class="empty-state text-center py-5">
+                    <i class="bi bi-megaphone fs-1"></i>
+                    <h4 class="mt-3 mb-2">No Notices Found</h4>
+                    <p class="text-custom mb-4">No notices have been created yet.</p>
+                    <a href="{% url 'communications:notice_create' %}" class="btn btn-primary">
+                        <i class="bi bi-plus-circle me-1"></i> Create First Notice
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    $('#noticesTable').DataTable({
+        "pageLength": 10,
+        "order": [[5, 'desc']],
+        "language": {
+            "search": "<i class='bi bi-search me-2'></i>Search:",
+            "lengthMenu": "Show _MENU_ entries",
+            "info": "Showing _START_ to _END_ of _TOTAL_ entries",
+            "paginate": {
+                "previous": "<i class='bi bi-chevron-left'></i>",
+                "next": "<i class='bi bi-chevron-right'></i>"
+            }
+        },
+        "columnDefs": [
+            { "targets": [-1], "orderable": false, "className": "dt-center" }
+        ],
+        "responsive": true
+    });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <style>
+        @page {
+            size: A4 landscape;
+            margin: 15mm;
+        }
+        body {
+            font-family: Arial, sans-serif;
+            font-size: 12px;
+            margin: 0;
+            padding: 0;
+            color: #333;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #333;
+            padding-bottom: 10px;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 18px;
+        }
+        .organization-info {
+            text-align: center;
+            margin-top: 5px;
+            font-size: 12px;
+            color: #555;
+        }
+        .logo {
+            max-height: 60px;
+            margin-bottom: 8px;
+        }
+        .filter-info {
+            margin-bottom: 15px;
+            padding: 8px;
+            background-color: #f8f9fa;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 11px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 6px;
+            text-align: center;
+            vertical-align: middle;
+        }
+        th {
+            background-color: #f2f2f2;
+            font-size: 12px;
+        }
+        td.amount {
+            text-align: right;
+            font-weight: bold;
+        }
+        .no-data {
+            text-align: center;
+            padding: 20px;
+            font-weight: bold;
+            color: #888;
+        }
+        .generated-date {
+            text-align: right;
+            margin-top: 15px;
+            font-style: italic;
+            font-size: 11px;
+        }
+        /* Footer */
+        .footer {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 30px;
+            text-align: center;
+            font-size: 10px;
+            color: #777;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <div class="header">
+        {% if logo %}
+            <img src="{{ logo }}" class="logo" alt="{{ organization.name }} Logo" width="210">
+        {% endif %}
+         <div class="organization-info">
+            {% if organization %}
+                <strong>{{ organization.name }}</strong><br>
+                {% if organization.address %}{{ organization.address }}<br>{% endif %}
+                {% if organization.phone %}Phone: {{ organization.phone }}{% endif %}
+            {% endif %}
+        </div>
+        <h1>Fee Structures Report</h1>
+    </div>
+
+    <!-- Filters -->
+    {% if class_obj or academic_year_obj or is_active_filter %}
+        <div class="filter-info">
+            {% if class_obj %}
+                <span><strong>Class:</strong> {{ class_obj.name }}</span><br>
+            {% endif %}
+            {% if academic_year_obj %}
+                <span><strong>Academic Year:</strong> {{ academic_year_obj.name }}</span><br>
+            {% endif %}
+            {% if is_active_filter %}
+                <span><strong>Status:</strong> {% if is_active_filter == "true" %}Active{% else %}Inactive{% endif %}</span>
+            {% endif %}
+        </div>
+    {% endif %}
+
+    <!-- Table -->
+    {% if fee_structures %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Class</th>
+                    <th>Academic Year</th>
+                    <th class="amount">Amount</th>
+                    <th>Status</th>
+                    <th>Created At</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for fee in fee_structures %}
+                <tr>
+                    <td>{{ fee.name }}</td>
+                    <td>{{ fee.class_name }}</td>
+                    <td>{{ fee.academic_year }}</td>
+                    <td class="amount">{{ fee.amount }}</td>
+                    <td>{% if fee.is_active %}Active{% else %}Inactive{% endif %}</td>
+                    <td>{{ fee.created_at }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <div class="no-data">
+            No fee structure data found for the selected filters.
+        </div>
+    {% endif %}
+
+    <!-- Generated Date -->
+    <div class="generated-date">
+        Generated on: {{ generated_date|date:"F j, Y \\a\\t H:i" }}
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+        Page <pdf:pagenumber> of <pdf:pagecount> | 
+        &copy; {{ organization.name|default:"ERP System" }} - Fee Structures Report
+    </div>
+</body>
+</html>

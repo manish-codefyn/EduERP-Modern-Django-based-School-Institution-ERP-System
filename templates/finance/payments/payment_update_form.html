@@ -1,0 +1,314 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ title }} - {{ organization.name|default:"ERP System" }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .disabled-field {
+        background-color: #f8f9fa;
+        opacity: 1;
+        cursor: not-allowed;
+    }
+    .form-label {
+        font-weight: 500;
+        margin-bottom: 0.5rem;
+    }
+    .card {
+        border: none;
+        border-radius: 12px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    .card-header {
+        border-radius: 12px 12px 0 0;
+    }
+    .readonly-section {
+        background-color: #f8f9fa;
+        border-radius: 8px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+    .editable-section {
+        padding: 1rem 0;
+    }
+    .info-badge {
+        background-color: #e9ecef;
+        color: #495057;
+        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+        font-size: 0.875rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-12 col-md-10">
+            <div class="card card-custom shadow-lg border-0">
+                <!-- Header -->
+                <div class="card-header detail-card-header text-white d-flex align-items-center">
+                    <i class="bi bi-credit-card-fill me-2 fs-5"></i>
+                    <h5 class="card-title mb-0">{{ title }}</h5>
+                </div>
+
+                <!-- Body -->
+                <div class="card-body">
+                    {% if form.non_field_errors %}
+                        <div class="alert alert-danger">
+                            <ul class="mb-0">
+                                {% for error in form.non_field_errors %}
+                                    <li>{{ error }}</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    {% endif %}
+
+                    <form method="post" novalidate id="paymentForm">
+                        {% csrf_token %}
+                        
+                        <!-- Read-only Information Section -->
+                        <div class="card-custom p-3">
+                            <h6 class="text-primary mb-3 d-flex align-items-center">
+                                <i class="bi bi-lock-fill me-2"></i>
+                                Invoice Information (Cannot be changed)
+                            </h6>
+                            
+                            <div class="row">
+                                <!-- Student -->
+                                <div class="col-md-6 mb-3">
+                                    <label for="{{ form.student.id_for_label }}" class="form-label">
+                                        {{ form.student.label }}
+                                        <span class="info-badge ms-2">Read-only</span>
+                                    </label>
+                                    {{ form.student }}
+                                    {% if form.student.errors %}
+                                        <div class="text-danger small">
+                                            {{ form.student.errors }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+
+                                <!-- Invoice -->
+                                <div class="col-md-6 mb-3">
+                                    <label for="{{ form.invoice.id_for_label }}" class="form-label">
+                                        {{ form.invoice.label }}
+                                        <span class="info-badge ms-2">Read-only</span>
+                                    </label>
+                                    {{ form.invoice }}
+                                    {% if form.invoice.errors %}
+                                        <div class="text-danger small">
+                                            {{ form.invoice.errors }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+
+                                <!-- Amount -->
+                                <div class="col-md-6 mb-3">
+                                    <label for="{{ form.amount.id_for_label }}" class="form-label">
+                                        {{ form.amount.label }}
+                                        <span class="info-badge ms-2">From Invoice</span>
+                                    </label>
+                                    {{ form.amount }}
+                                    {% if form.amount.errors %}
+                                        <div class="text-danger small">
+                                            {{ form.amount.errors }}
+                                        </div>
+                                    {% endif %}
+                                    <small class="form-text text-custom">
+                                        This amount is set from the selected invoice and cannot be changed
+                                    </small>
+                                </div>
+
+                                <!-- Invoice Balance Info -->
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Original Invoice Balance</label>
+                                    <div class="form-control disabled-field">
+                                        {% if form.instance.invoice %}
+                                            ₹{{ form.instance.invoice.balance }}
+                                        {% elif form.initial.invoice %}
+                                            ₹{{ form.initial.invoice.balance }}
+                                        {% else %}
+                                            <span class="text-custom">No invoice selected</span>
+                                        {% endif %}
+                                    </div>
+                                    <small class="form-text text-custom">Balance at time of payment creation</small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Editable Fields Section -->
+                        <div class="editable-section">
+                            <h6 class="text-success mb-3 d-flex align-items-center">
+                                <i class="bi bi-pencil-fill me-2"></i>
+                                Payment Details (Editable)
+                            </h6>
+
+                            <div class="row">
+                                <!-- Payment Mode -->
+                                <div class="col-md-6 mb-3">
+                                    <label for="{{ form.payment_mode.id_for_label }}" class="form-label">
+                                        {{ form.payment_mode.label }}
+                                    </label>
+                                    {{ form.payment_mode }}
+                                    {% if form.payment_mode.errors %}
+                                        <div class="text-danger small">
+                                            {{ form.payment_mode.errors }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+
+                                <!-- Payment Date -->
+                                <div class="col-md-6 mb-3">
+                                    <label for="{{ form.payment_date.id_for_label }}" class="form-label">
+                                        {{ form.payment_date.label }}
+                                    </label>
+                                    {{ form.payment_date }}
+                                    {% if form.payment_date.errors %}
+                                        <div class="text-danger small">
+                                            {{ form.payment_date.errors }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+
+                                <!-- Reference Number -->
+                                <div class="col-md-6 mb-3">
+                                    <label for="{{ form.reference_number.id_for_label }}" class="form-label">
+                                        {{ form.reference_number.label }}
+                                    </label>
+                                    {{ form.reference_number }}
+                                    {% if form.reference_number.errors %}
+                                        <div class="text-danger small">
+                                            {{ form.reference_number.errors }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+
+                                <!-- Amount Paid -->
+                                <div class="col-md-6 mb-3">
+                                    <label for="{{ form.amount_paid.id_for_label }}" class="form-label">
+                                        {{ form.amount_paid.label }}
+                                        <span class="info-badge ms-2">Max: ₹{{ form.amount.value }}</span>
+                                    </label>
+                                    {{ form.amount_paid }}
+                                    {% if form.amount_paid.errors %}
+                                        <div class="text-danger small">
+                                            {{ form.amount_paid.errors }}
+                                        </div>
+                                    {% endif %}
+                                    <small class="form-text text-custom">
+                                        Amount actually received (cannot exceed ₹{{ form.amount.value }})
+                                    </small>
+                                </div>
+
+                                <!-- Status -->
+                                <div class="col-md-6 mb-3">
+                                    <label for="{{ form.status.id_for_label }}" class="form-label">
+                                        {{ form.status.label }}
+                                    </label>
+                                    {{ form.status }}
+                                    {% if form.status.errors %}
+                                        <div class="text-danger small">
+                                            {{ form.status.errors }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+
+                                <!-- Remarks -->
+                                <div class="col-12 mb-3">
+                                    <label for="{{ form.remarks.id_for_label }}" class="form-label">
+                                        {{ form.remarks.label }}
+                                    </label>
+                                    {{ form.remarks }}
+                                    {% if form.remarks.errors %}
+                                        <div class="text-danger small">
+                                            {{ form.remarks.errors }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Submit -->
+                        <div class="mt-4 d-flex justify-content-between">
+                            <a href="{% url 'finance:payment_list' %}" class="btn btn-outline-secondary">
+                                <i class="bi bi-arrow-left me-1"></i> Back to List
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-check-circle-fill me-1"></i> 
+                                {% if form.instance.pk %}Update{% else %}Create{% endif %} Payment
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Disable student, invoice, and amount fields
+    const disabledFields = ['id_student', 'id_invoice', 'id_amount'];
+    
+    disabledFields.forEach(fieldId => {
+        const field = document.getElementById(fieldId);
+        if (field) {
+            field.disabled = true;
+            field.classList.add('disabled-field');
+            
+            // Add hidden inputs to ensure values are submitted
+            if (field.value) {
+                const hiddenInput = document.createElement('input');
+                hiddenInput.type = 'hidden';
+                hiddenInput.name = field.name;
+                hiddenInput.value = field.value;
+                field.parentNode.appendChild(hiddenInput);
+            }
+        }
+    });
+    
+    // Add validation for amount_paid
+    const amountInput = document.getElementById('id_amount');
+    const amountPaidInput = document.getElementById('id_amount_paid');
+    
+    if (amountInput && amountPaidInput) {
+        const maxAmount = parseFloat(amountInput.value) || 0;
+        
+        amountPaidInput.addEventListener('blur', function() {
+            const paidAmount = parseFloat(this.value) || 0;
+            
+            if (paidAmount > maxAmount) {
+                alert(`Amount paid cannot exceed ₹${maxAmount.toFixed(2)}`);
+                this.value = maxAmount.toFixed(2);
+            }
+        });
+        
+        amountPaidInput.addEventListener('input', function() {
+            const paidAmount = parseFloat(this.value) || 0;
+            if (paidAmount > maxAmount) {
+                this.classList.add('is-invalid');
+            } else {
+                this.classList.remove('is-invalid');
+            }
+        });
+    }
+    
+    // Show payment creation info for existing payments
+    {% if form.instance.pk %}
+    const creationInfo = `
+        <div class="alert alert-info mt-3">
+            <i class="bi bi-info-circle me-1"></i>
+            <strong>Payment created on:</strong> {{ form.instance.created_at|date:"M d, Y H:i" }}
+            {% if form.instance.created_by %}
+            <strong>by:</strong> {{ form.instance.created_by.get_full_name }}
+            {% endif %}
+        </div>
+    `;
+    document.querySelector('.readonly-section').insertAdjacentHTML('beforeend', creationInfo);
+    {% endif %}
+});
+</script>
+{% endblock %}

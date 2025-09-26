@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <style>
+        @page {
+            size: A4 landscape;
+            margin: 5mm;
+        }
+        body {
+            font-family: Arial, sans-serif;
+            font-size: 12px;
+            margin: 0;
+            padding: 0;
+            color: #333;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 6px;
+            text-align: center;
+            vertical-align: middle;
+        }
+        th {
+            background-color: #f2f2f2;
+            font-size: 12px;
+        }
+        td.amount {
+            text-align: right;
+            font-weight: bold;
+        }
+        .header-table {
+            width: 100%;
+            margin-bottom: 1px;
+            line-height: 1.2;
+        }
+        .header-table td {
+            border: none;
+            text-align: center;
+            vertical-align: middle;
+            line-height: 1.2;
+        }
+       
+        .filter-table {
+            width: 100%;
+            margin-bottom: 2px;
+            background-color: #f8f9fa;
+            border: none !important;
+            font-size: 11px;
+        }
+        .filter-table td {
+            border: none;
+            padding: 4px 6px;
+            text-align: left;
+        }
+        .no-data {
+            text-align: center;
+            padding: 20px;
+            font-weight: bold;
+            color: #888;
+        }
+        .generated-date {
+            text-align: right;
+            margin-top: 5px;
+            font-style: italic;
+            font-size: 11px;
+        }
+        .footer {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 30px;
+            text-align: center;
+            font-size: 10px;
+            color: #777;
+        }
+        .status-paid { color: #28a745; }
+        .status-partially_paid { color: #ffc107; }
+        .status-overdue { color: #dc3545; }
+        .status-refunded { color: #17a2b8; }
+        .status-cancelled { color: #6c757d; }
+    </style>
+</head>
+<body>
+<table class="" style="width:100%; border-collapse:collapse; margin-bottom:20px;">
+    <tr>
+        <!-- Logo + Organization Info -->
+        <td style="vertical-align:top; width:70%;">
+            <table style="border-collapse:collapse;">
+                <tr>
+                    <!-- Logo -->
+                    <td style="vertical-align:top; padding-right:15px;">
+                        {% if logo %}
+                            <img src="{{ logo }}" alt="{{ organization.name }} Logo" style="height:60px;">
+                        {% endif %}
+                    </td>
+                    
+                    <!-- Organization Details -->
+                    <td style="vertical-align:top;">
+                        <table style="border-collapse:collapse;">
+                            <tr>
+                                <td>
+                                    <strong style="font-size:16px;">{{ organization.name }}</strong>
+                                </td>
+                            </tr>
+                            {% if organization.address %}
+                            <tr>
+                                <td style="padding-top:2px;">
+                                    <span style="font-size:12px;">{{ organization.address }}</span>
+                                </td>
+                            </tr>
+                            {% endif %}
+                            {% if organization.phone %}
+                            <tr>
+                                <td style="padding-top:2px;">
+                                    <span style="font-size:12px;">Phone: {{ organization.phone }}</span>
+                                </td>
+                            </tr>
+                            {% endif %}
+                        </table>
+                    </td>
+                </tr>
+            </table>
+        </td>
+        
+        <!-- Report Title -->
+        <td style="vertical-align:top; width:30%; text-align:right;">
+            <table style="border-collapse:collapse; width:100%;">
+                <tr>
+                    <td>
+                        <h1 style="margin:0; font-size:20px; text-align:right;">Payments Report</h1>
+                    </td>
+                </tr>
+            </table>
+        </td>
+    </tr>
+</table>
+
+  <!-- Top-right generated date -->
+        <div style="text-align: right; font-size: 11px; color: #555; margin-bottom: 10px;">
+            Generated on: {{ generated_date|date:"d/m/y H:i" }}
+        </div>
+
+    <!-- Filters -->
+    {% if filters_applied %}
+    <table class="filter-table">
+        <tr>
+            {% if payment_status_filter %}
+            <td><strong>Status:</strong> {{ payment_status_filter }}</td>
+            {% endif %}
+            {% if class_obj %}
+            <td><strong>Class:</strong> {{ class_obj.name }}</td>
+            {% endif %}
+            {% if academic_year_obj %}
+            <td><strong>Academic Year:</strong> {{ academic_year_obj.name }}</td>
+            {% endif %}
+        </tr>
+    </table>
+    {% endif %}
+
+    <!-- Table -->
+    {% if payments %}
+    <table>
+        <thead>
+            <tr>
+                <th>Payment #</th>
+                <th>Student</th>
+                <th>Roll No</th>
+                <th>Class</th>
+                <th>AY</th>
+                <th>Invoice</th>
+                <th>Date</th>
+                <th>Mode</th>
+                <th>Reference</th>
+                <!-- <th class="amount">Amount</th> -->
+                <th class="amount">Paid</th>
+                <th class="amount">Balance</th>
+                <!-- <th>Status</th> -->
+            </tr>
+        </thead>
+        <tbody>
+            {% for payment in payments %}
+            <tr>
+                <td>{{ payment.payment_number }}</td>
+                <td>{{ payment.student_name }}</td>
+                <td>{{ payment.roll_number }}</td>
+                <td>{{ payment.class_name }}</td>
+                <td>{{ payment.academic_year|slice:"-7:-5" }}-{{ payment.academic_year|slice:"-2:" }}</td>
+
+                <td>{{ payment.invoice_number|slice:"-10:" }}</td>
+                <td>{{ payment.payment_date }}</td>
+                <td>{{ payment.payment_mode }}</td>
+                <td>{{ payment.reference_number }}</td>
+                <!-- <td class="amount">Rs.{{ payment.total_amount }}</td> -->
+                <td class="amount">Rs.{{ payment.amount_paid }}</td>
+                <td class="amount">Rs.{{ payment.balance }}</td>
+                <!-- <td class="status-{{ payment.status|lower }}">{{ payment.status }}</td> -->
+            </tr>
+            {% endfor %}
+        </tbody>
+        <tfoot>
+            <tr>
+                <td colspan="9" class="amount"><strong>Totals:</strong></td>
+                <td class="amount"><strong>Rs.{{ total_amount|default:0 }}</strong></td>
+                <td class="amount"><strong>Rs.{{ total_paid|default:0 }}</strong></td>
+                <!-- <td class="amount"><strong>Rs.{{ total_balance|default:0 }}</strong></td> -->
+                <!-- <td></td> -->
+            </tr>
+        </tfoot>
+    </table>
+    {% else %}
+    <div class="no-data">
+        No payments found for the selected filters.
+    </div>
+    {% endif %}
+
+    <!-- Generated Date -->
+   <!-- Generated Date -->
+ <table class="generated-date">
+    <tr>
+        <td>Generated on: {{ generated_date|date:"d/m/y H:i" }}</td>
+    </tr>
+</table>
+
+
+<!-- Notes -->
+<div style="margin-top:20px; font-size:11px; text-align:left; color:#555;">
+    <strong>Note:</strong><br>
+    • <em>AY</em> refers to <strong>Academic Year</strong> 
+    (shown in short format, e.g., <code>24/25</code> for 2024-2025).<br>
+    • <strong>Invoice No.</strong> is displayed using the <em>last 10 digits only</em> 
+    for brevity.
+</div>
+
+
+    <!-- Footer -->
+    <div class="footer">
+        Page <pdf:pagenumber> of <pdf:pagecount> | 
+        &copy; {{ organization.name|default:"ERP System" }} - Payments Report
+    </div>
+</body>
+</html>

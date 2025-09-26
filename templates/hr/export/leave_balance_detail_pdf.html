@@ -1,0 +1,165 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ title }}</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            font-size: 12px;
+            color: #333;
+            margin: 20px;
+        }
+        h1, h2, h3, h4 {
+            margin: 0;
+            padding: 0;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #555;
+            padding-bottom: 10px;
+        }
+        .header h1 {
+            font-size: 20px;
+            font-weight: bold;
+        }
+        .header p {
+            font-size: 13px;
+            margin-top: 4px;
+            color: #555;
+        }
+        .logo {
+            text-align: center;
+            margin-bottom: 10px;
+        }
+        .logo img {
+            max-height: 60px;
+        }
+        .section {
+            margin-bottom: 20px;
+        }
+        .section h3 {
+            font-size: 14px;
+            margin-bottom: 8px;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 4px;
+        }
+        .info-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 6px;
+        }
+        .info-table td {
+            padding: 6px 8px;
+            border: 1px solid #ccc;
+        }
+        .info-table td.label {
+            font-weight: bold;
+            background: #f5f5f5;
+            width: 35%;
+        }
+        .footer {
+            font-size: 11px;
+            color: #666;
+            text-align: center;
+            margin-top: 20px;
+            border-top: 1px solid #ddd;
+            padding-top: 6px;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Logo -->
+    {% if logo %}
+    <div class="logo">
+        <img src="{{ logo }}" alt="Organization Logo" width="230">
+    </div>
+    {% endif %}
+
+    <!-- Header -->
+    <div class="header">
+        <h1>Leave Balance Report</h1>
+        <p>{{ organization.name|default:"ERP System" }}</p>
+    </div>
+
+    <!-- Staff Info -->
+    <div class="section">
+        <h3>Staff Information</h3>
+        <table class="info-table">
+            <tr>
+                <td class="label">Employee ID</td>
+                <td>{{ balance.employee_id }}</td>
+            </tr>
+            <tr>
+                <td class="label">Name</td>
+                <td>{{ balance.staff_name }}</td>
+            </tr>
+            <tr>
+                <td class="label">Department</td>
+                <td>{{ balance.staff_department }}</td>
+            </tr>
+            <tr>
+                <td class="label">Designation</td>
+                <td>{{ balance.staff_designation }}</td>
+            </tr>
+            <tr>
+                <td class="label">Leave Year</td>
+                <td>{{ balance.year }}</td>
+            </tr>
+        </table>
+    </div>
+
+    <!-- Balance Info -->
+    <div class="section">
+        <h3>Balance Details</h3>
+        <table class="info-table">
+            <tr>
+                <td class="label">Leave Type</td>
+                <td>{{ balance.leave_type }} ({{ balance.leave_code }})</td>
+            </tr>
+            <tr>
+                <td class="label">Allocated Days</td>
+                <td>{{ balance.total_allocated }}</td>
+            </tr>
+            <tr>
+                <td class="label">Used Days</td>
+                <td>{{ balance.total_used }}</td>
+            </tr>
+            <tr>
+                <td class="label">Carry Forward</td>
+                <td>{{ balance.carry_forward }}</td>
+            </tr>
+            <tr>
+                <td class="label">Remaining Balance</td>
+                <td>{{ balance.balance }}</td>
+            </tr>
+        </table>
+    </div>
+
+    <!-- Audit Info -->
+    <div class="section">
+        <h3>Audit Information</h3>
+        <table class="info-table">
+            <tr>
+                <td class="label">Created At</td>
+                <td>{{ balance.created_at }}</td>
+            </tr>
+            <tr>
+                <td class="label">Updated At</td>
+                <td>{{ balance.updated_at }}</td>
+            </tr>
+        </table>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+        Generated on {{ export_date|date:"M d, Y H:i" }}  
+        | Page <pdf:pagenumber> of <pdf:pagecount>
+    </div>
+
+</body>
+</html>

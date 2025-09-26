@@ -1,0 +1,94 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ title }} - {{ organization.name|default:"ERP System" }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-7 col-md-9">
+            <div class="card shadow-lg border-0">
+                <!-- Header -->
+                <div class="card-header bg-danger text-white d-flex align-items-center">
+                    <i class="bi bi-exclamation-triangle-fill me-2 fs-5"></i>
+                    <h5 class="card-title mb-0">{{ title }}</h5>
+                </div>
+
+                <!-- Body -->
+                <div class="card-body">
+                    <!-- Warning Alert -->
+                    <div class="alert alert-danger d-flex align-items-center" role="alert">
+                        <i class="bi bi-exclamation-octagon-fill me-2 fs-4"></i>
+                        <div>
+                            <strong>Warning:</strong> You are about to delete a payment record. This action cannot be undone.
+                        </div>
+                    </div>
+
+                    <!-- Payment Info -->
+                    <div class="payment-info mb-4">
+                        <h6 class="fw-bold mb-3">Payment Details</h6>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <small class="text-muted d-block">Payment Number</small>
+                                <span class="fw-semibold">{{ payment.payment_number }}</span>
+                            </div>
+                            <div class="col-md-6">
+                                <small class="text-muted d-block">Amount</small>
+                                <span class="fw-semibold">₹{{ payment.amount }}</span>
+                            </div>
+                            <div class="col-md-6">
+                                <small class="text-muted d-block">Student</small>
+                                <span class="fw-semibold">{{ payment.student.user.get_full_name }}</span>
+                            </div>
+                            <div class="col-md-6">
+                                <small class="text-muted d-block">Status</small>
+                                {% if payment.status == "completed" or payment.status == "paid" %}
+                                    <span class="badge bg-success text-white px-3 py-2">{{ payment.get_status_display }}</span>
+                                {% elif payment.status == "partially_paid" or payment.status == "pending" %}
+                                    <span class="badge bg-warning text-dark px-3 py-2">{{ payment.get_status_display }}</span>
+                                {% elif payment.status == "failed" or payment.status == "overdue" %}
+                                    <span class="badge bg-danger text-white px-3 py-2">{{ payment.get_status_display }}</span>
+                                {% elif payment.status == "refunded" %}
+                                    <span class="badge bg-info text-dark px-3 py-2">{{ payment.get_status_display }}</span>
+                                {% elif payment.status == "cancelled" %}
+                                    <span class="badge bg-secondary text-white px-3 py-2">{{ payment.get_status_display }}</span>
+                                {% else %}
+                                    <span class="badge bg-light text-dark px-3 py-2">{{ payment.get_status_display }}</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Status Restriction -->
+                    {% if payment.status == "completed" or payment.status == "paid" or payment.status == "refunded" %}
+                    <div class="alert alert-warning d-flex align-items-center" role="alert">
+                        <i class="bi bi-info-circle-fill me-2 fs-4"></i>
+                        <div>
+                            This payment has status 
+                            <strong>{{ payment.get_status_display }}</strong> 
+                            and <u>cannot be deleted</u>.  
+                            Only <em>pending</em> or <em>cancelled</em> payments are deletable.
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Form -->
+                    <form method="post" class="mt-4">
+                        {% csrf_token %}
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'finance:payment_detail' payment.id %}" class="btn btn-outline-secondary">
+                                <i class="bi bi-arrow-left me-1"></i> Cancel
+                            </a>
+                            
+                            {% if payment.status != "completed" and payment.status != "paid" and payment.status != "refunded" %}
+                            <button type="submit" class="btn btn-danger">
+                                <i class="bi bi-trash-fill me-1"></i> Confirm Delete
+                            </button>
+                            {% endif %}
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

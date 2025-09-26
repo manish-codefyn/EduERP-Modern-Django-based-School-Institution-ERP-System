@@ -1,0 +1,537 @@
+{% extends 'communications/base.html' %}
+{% load static %}
+
+{% block title %}Communications Dashboard - {{ organization.name|default:"codefyn" }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header Section -->
+    <div class="header-section mb-4">
+        <div class="row align-items-center">
+            <div class="col-md-7 d-flex align-items-center">
+                <div class="header-icon me-3">
+                    <i class="bi bi-megaphone display-6 text-primary"></i>
+                </div>
+                <div>
+                    <h1 class="h3 fw-bold mb-1">Communications Dashboard</h1>
+                    <p class="text-custom mb-0">Monitor all communication activities and analytics</p>
+                </div>
+            </div>
+            <div class="col-md-5">
+                <div class="d-flex justify-content-end align-items-center gap-2">
+                    <div class="dropdown">
+                        <button class="btn btn-outline-primary dropdown-toggle" type="button" 
+                                data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="bi bi-calendar-range me-1"></i> 
+                            Last 30 Days
+                        </button>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="#">Last 7 Days</a></li>
+                            <li><a class="dropdown-item" href="#">Last 30 Days</a></li>
+                            <li><a class="dropdown-item" href="#">Last 90 Days</a></li>
+                            <li><a class="dropdown-item" href="#">This Year</a></li>
+                        </ul>
+                    </div>
+                    <a href="{% url 'communications:notice_list' %}" class="btn btn-primary">
+                        <i class="bi bi-grid me-1"></i> Manage Communications
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Stats Cards -->
+    <div class="row g-4 mb-4">
+        <!-- Notices Card -->
+        <div class="col-xl-3 col-md-6">
+            <div class="card stats-card text-white h-100" style="background: var(--primary-gradient);">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <h6 class="card-title mb-1 small opacity-75">TOTAL NOTICES</h6>
+                            <h3 class="mb-0 fw-bold">{{ total_notices }}</h3>
+                            <p class="mb-0 small opacity-75">
+                                <i class="bi bi-check-circle me-1"></i>{{ published_notices }} Published
+                            </p>
+                        </div>
+                        <div class="stats-icon">
+                            <i class="bi bi-megaphone fs-1 opacity-50"></i>
+                        </div>
+                    </div>
+                    <div class="progress mt-3" style="height: 4px;">
+                        <div class="progress-bar bg-white" style="width: {{ published_percentage }}%"></div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <!-- Broadcasts Card -->
+        <div class="col-xl-3 col-md-6">
+            <div class="card stats-card text-white h-100" style="background: var(--success-gradient);">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <h6 class="card-title mb-1 small opacity-75">BROADCASTS</h6>
+                            <h3 class="mb-0 fw-bold">{{ total_broadcasts }}</h3>
+                            <p class="mb-0 small opacity-75">
+                                <i class="bi bi-check-circle me-1"></i>{{ broadcast_success_rate }}% Success
+                            </p>
+                        </div>
+                        <div class="stats-icon">
+                            <i class="bi bi-broadcast fs-1 opacity-50"></i>
+                        </div>
+                    </div>
+                    <div class="progress mt-3" style="height: 4px;">
+                        <div class="progress-bar bg-white" style="width: {{ broadcast_success_rate }}%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SMS Card -->
+        <div class="col-xl-3 col-md-6">
+            <div class="card stats-card text-white h-100" style="background: var(--info-gradient);">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <h6 class="card-title mb-1 small opacity-75">SMS MESSAGES</h6>
+                            <h3 class="mb-0 fw-bold">{{ total_sms }}</h3>
+                            <p class="mb-0 small opacity-75">
+                                <i class="bi bi-phone me-1"></i>{{ sms_success_rate }}% Delivered
+                            </p>
+                        </div>
+                        <div class="stats-icon">
+                            <i class="bi bi-chat-dots fs-1 opacity-50"></i>
+                        </div>
+                    </div>
+                    <div class="progress mt-3" style="height: 4px;">
+                        <div class="progress-bar bg-white" style="width: {{ sms_success_rate }}%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Emails Card -->
+        <div class="col-xl-3 col-md-6">
+            <div class="card stats-card text-white h-100" style="background: var(--warning-gradient);">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <h6 class="card-title mb-1 small opacity-75">EMAILS SENT</h6>
+                            <h3 class="mb-0 fw-bold">{{ total_emails }}</h3>
+                            <p class="mb-0 small opacity-75">
+                                <i class="bi bi-envelope me-1"></i>{{ email_success_rate }}% Delivered
+                            </p>
+                        </div>
+                        <div class="stats-icon">
+                            <i class="bi bi-envelope fs-1 opacity-50"></i>
+                        </div>
+                    </div>
+                    <div class="progress mt-3" style="height: 4px;">
+                        <div class="progress-bar bg-white" style="width: {{ email_success_rate }}%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts and Analytics Section -->
+    <div class="row g-4 mb-4">
+        <!-- Activity Chart -->
+        <div class="col-xl-8">
+            <div class="card card-custom h-100">
+                <div class="card-header bg-transparent border-0 pt-4 px-4">
+                    <h5 class="card-title mb-0 fw-bold text-custom">
+                        <i class="bi bi-bar-chart me-2"></i>Monthly Communication Activity
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="activityChart" height="250"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Audience Engagement -->
+        <div class="col-xl-4">
+            <div class="card card-custom h-100">
+                <div class="card-header bg-transparent border-0 pt-4 px-4">
+                    <h5 class="card-title mb-0 fw-bold text-custom">
+                        <i class="bi bi-people me-2"></i>Audience Engagement
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="text-center mb-4">
+                        <div class="position-relative d-inline-block">
+                            <canvas id="engagementChart" width="200" height="200"></canvas>
+                            <div class="position-absolute top-50 start-50 translate-middle">
+                                <span class="h4 fw-bold">{{ read_percentage }}%</span>
+                                <br>
+                                <small class="text-custom">Read</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row text-center">
+                        <div class="col-6">
+                            <div class="border-end">
+                                <h4 class="text-success fw-bold">{{ read_audience }}</h4>
+                                <small class="text-custom">Read</small>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <h4 class="text-warning fw-bold">{{ unread_audience }}</h4>
+                            <small class="text-custom">Unread</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Distribution Charts -->
+    <div class="row g-4 mb-4">
+        <!-- Notices by Audience -->
+        <div class="col-xl-4">
+            <div class="card card-custom h-100">
+                <div class="card-header bg-transparent border-0 pt-4 px-4">
+                    <h5 class="card-title mb-0 fw-bold text-custom">
+                        <i class="bi bi-pie-chart me-2"></i>Notices by Audience
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="audienceChart" height="250"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Notices by Priority -->
+        <div class="col-xl-4">
+            <div class="card card-custom h-100">
+                <div class="card-header bg-transparent border-0 pt-4 px-4">
+                    <h5 class="card-title mb-0 fw-bold text-custom">
+                        <i class="bi bi-graph-up me-2"></i>Notices by Priority
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="priorityChart" height="250"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Templates by Type -->
+        <div class="col-xl-4">
+            <div class="card card-custom h-100">
+                <div class="card-header bg-transparent border-0 pt-4 px-4">
+                    <h5 class="card-title mb-0 fw-bold text-custom">
+                        <i class="bi bi-layers me-2"></i>Templates by Type
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="templatesChart" height="250"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Activity and Quick Actions -->
+    <div class="row g-4">
+        <!-- Recent Notices -->
+        <div class="col-xl-6">
+            <div class="card card-custom h-100">
+                <div class="card-header bg-transparent border-0 pt-4 px-4 d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0 fw-bold text-custom">
+                        <i class="bi bi-clock-history me-2"></i>Recent Notices
+                    </h5>
+                    <a href="{% url 'communications:notice_list' %}" class="btn btn-sm btn-outline-primary">
+                        View All
+                    </a>
+                </div>
+                <div class="card-body">
+                    <div class="list-group list-group-flush">
+                        {% for notice in recent_notices %}
+                        <div class="list-group-item px-0 py-3">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div class="flex-grow-1">
+                                    <h6 class="mb-1">{{ notice.title }}</h6>
+                                    <p class="text-custom mb-1 small">{{ notice.content|truncatewords:15 }}</p>
+                                    <div class="d-flex align-items-center small text-custom">
+                                        <span class="badge bg-{% if notice.priority == 'urgent' %}danger{% elif notice.priority == 'high' %}warning{% elif notice.priority == 'medium' %}info{% else %}secondary{% endif %} me-2">
+                                            {{ notice.get_priority_display }}
+                                        </span>
+                                        <span class="me-3">
+                                            <i class="bi bi-people me-1"></i>{{ notice.get_audience_display }}
+                                        </span>
+                                        <span>
+                                            <i class="bi bi-calendar me-1"></i>{{ notice.created_at|date:"M d, Y" }}
+                                        </span>
+                                    </div>
+                                </div>
+                                <span class="badge bg-{% if notice.is_published %}success{% else %}secondary{% endif %}">
+                                    {% if notice.is_published %}Published{% else %}Draft{% endif %}
+                                </span>
+                            </div>
+                        </div>
+                        {% empty %}
+                        <div class="text-center py-4">
+                            <i class="bi bi-megaphone fs-1 text-custom"></i>
+                            <p class="text-custom mt-2 mb-0">No recent notices</p>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="col-xl-6">
+            <div class="card card-custom h-100">
+                <div class="card-header bg-transparent border-0 pt-4 px-4">
+                    <h5 class="card-title mb-0 fw-bold text-custom">
+                        <i class="bi bi-lightning me-2"></i>Quick Actions
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <a href="{% url 'communications:notice_create' %}" class="card quick-action-card text-decoration-none">
+                                <div class="card-body text-center p-4">
+                                    <i class="bi bi-megaphone fs-1 text-primary mb-3"></i>
+                                    <h6 class="fw-bold">Create Notice</h6>
+                                    <p class="text-custom small mb-0">Publish new announcement</p>
+                                </div>
+                            </a>
+                        </div>
+                        <div class="col-md-6">
+                            <a href="{% url 'communications:broadcast_create' %}" class="card quick-action-card text-decoration-none">
+                                <div class="card-body text-center p-4">
+                                    <i class="bi bi-broadcast fs-1 text-success mb-3"></i>
+                                    <h6 class="fw-bold">Send Broadcast</h6>
+                                    <p class="text-custom small mb-0">Mass communication</p>
+                                </div>
+                            </a>
+                        </div>
+                        <div class="col-md-6">
+                            <a href="{% url 'communications:template_create' %}" class="card quick-action-card text-decoration-none">
+                                <div class="card-body text-center p-4">
+                                    <i class="bi bi-layers fs-1 text-info mb-3"></i>
+                                    <h6 class="fw-bold">New Template</h6>
+                                    <p class="text-custom small mb-0">Create message template</p>
+                                </div>
+                            </a>
+                        </div>
+                        <div class="col-md-6">
+                            <a href="{% url 'communications:notice_export' %}" class="card quick-action-card text-decoration-none">
+                                <div class="card-body text-center p-4">
+                                    <i class="bi bi-download fs-1 text-warning mb-3"></i>
+                                    <h6 class="fw-bold">Export Data</h6>
+                                    <p class="text-custom small mb-0">Download reports</p>
+                                </div>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.stats-card {
+    border: none;
+    border-radius: 15px;
+    transition: transform 0.3s ease;
+}
+.stats-card:hover {
+    transform: translateY(-5px);
+}
+.quick-action-card {
+    border: 1px solid #e9ecef;
+    border-radius: 10px;
+    transition: all 0.3s ease;
+}
+.quick-action-card:hover {
+    border-color: var(--primary);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    transform: translateY(-2px);
+}
+.progress {
+    background-color: rgba(255,255,255,0.3);
+}
+.stats-icon {
+    opacity: 0.8;
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Activity Chart (Line Chart)
+    const activityCtx = document.getElementById('activityChart').getContext('2d');
+    const activityChart = new Chart(activityCtx, {
+        type: 'line',
+        data: {
+            labels: {{ chart_labels|safe }},
+            datasets: [
+                {
+                    label: 'Notices',
+                    data: {{ chart_notices|safe }},
+                    borderColor: '#3b5998',
+                    backgroundColor: 'rgba(59, 89, 152, 0.1)',
+                    tension: 0.4,
+                    fill: true
+                },
+                {
+                    label: 'Broadcasts',
+                    data: {{ chart_broadcasts|safe }},
+                    borderColor: '#28a745',
+                    backgroundColor: 'rgba(40, 167, 69, 0.1)',
+                    tension: 0.4,
+                    fill: true
+                },
+                {
+                    label: 'SMS',
+                    data: {{ chart_sms|safe }},
+                    borderColor: '#17a2b8',
+                    backgroundColor: 'rgba(23, 162, 184, 0.1)',
+                    tension: 0.4,
+                    fill: true
+                },
+                {
+                    label: 'Emails',
+                    data: {{ chart_emails|safe }},
+                    borderColor: '#ffc107',
+                    backgroundColor: 'rgba(255, 193, 7, 0.1)',
+                    tension: 0.4,
+                    fill: true
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'top',
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        stepSize: 1
+                    }
+                }
+            }
+        }
+    });
+
+    // Engagement Chart (Doughnut)
+    const engagementCtx = document.getElementById('engagementChart').getContext('2d');
+    const engagementChart = new Chart(engagementCtx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Read', 'Unread'],
+            datasets: [{
+                data: [{{ read_audience }}, {{ unread_audience }}],
+                backgroundColor: ['#28a745', '#ffc107'],
+                borderWidth: 2,
+                borderColor: '#fff'
+            }]
+        },
+        options: {
+            responsive: true,
+            cutout: '70%',
+            plugins: {
+                legend: {
+                    display: false
+                }
+            }
+        }
+    });
+
+    // Audience Distribution (Pie Chart)
+    const audienceCtx = document.getElementById('audienceChart').getContext('2d');
+    const audienceChart = new Chart(audienceCtx, {
+        type: 'pie',
+        data: {
+            labels: {{ notices_by_audience|safe }}.map(item => {
+                const audiences = {
+                    'all': 'All', 'students': 'Students', 'parents': 'Parents',
+                    'teachers': 'Teachers', 'staff': 'Staff'
+                };
+                return audiences[item.audience] || item.audience;
+            }),
+            datasets: [{
+                data: {{ notices_by_audience|safe }}.map(item => item.count),
+                backgroundColor: ['#3b5998', '#28a745', '#17a2b8', '#ffc107', '#dc3545']
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                }
+            }
+        }
+    });
+
+    // Priority Distribution (Bar Chart)
+    const priorityCtx = document.getElementById('priorityChart').getContext('2d');
+    const priorityChart = new Chart(priorityCtx, {
+        type: 'bar',
+        data: {
+            labels: {{ notices_by_priority|safe }}.map(item => {
+                const priorities = {
+                    'low': 'Low', 'medium': 'Medium', 'high': 'High', 'urgent': 'Urgent'
+                };
+                return priorities[item.priority] || item.priority;
+            }),
+            datasets: [{
+                label: 'Notices',
+                data: {{ notices_by_priority|safe }}.map(item => item.count),
+                backgroundColor: ['#6c757d', '#17a2b8', '#ffc107', '#dc3545']
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        stepSize: 1
+                    }
+                }
+            }
+        }
+    });
+
+    // Templates by Type (Doughnut)
+    const templatesCtx = document.getElementById('templatesChart').getContext('2d');
+    const templatesChart = new Chart(templatesCtx, {
+        type: 'doughnut',
+        data: {
+            labels: {{ templates_by_type|safe }}.map(item => {
+                const types = {'sms': 'SMS', 'email': 'Email', 'push': 'Push'};
+                return types[item.template_type] || item.template_type;
+            }),
+            datasets: [{
+                data: {{ templates_by_type|safe }}.map(item => item.count),
+                backgroundColor: ['#3b5998', '#28a745', '#17a2b8']
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                }
+            }
+        }
+    });
+});
+</script>
+{% endblock %}

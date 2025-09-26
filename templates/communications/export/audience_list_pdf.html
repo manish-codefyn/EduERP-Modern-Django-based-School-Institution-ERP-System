@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ title }}</title>
+    <style>
+          @page {
+            size: A4 landscape;
+            margin: 5mm; /* Reduced margin */
+        }
+        body {
+            font-family: DejaVu Sans, sans-serif;
+            font-size: 12px;
+            margin: 20px;
+        }
+        h2 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+            page-break-inside: auto;
+        }
+        table, th, td {
+            border: 1px solid #333;
+        }
+        th, td {
+            padding: 6px 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        tfoot td {
+            font-weight: bold;
+        }
+        .summary {
+            margin-top: 10px;
+            font-size: 12px;
+        }
+        .summary p {
+            margin: 2px 0;
+        }
+    </style>
+</head>
+<body>
+     
+    <h2>{{ title }}</h2>
+
+    <table>
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>Notice Title</th>
+                <th>User Name</th>
+                <th>User Email</th>
+                <th>Read Status</th>
+                <th>Read At</th>
+                <th>Delivery Status</th>
+                <th>Delivered At</th>
+                <th>Notification Sent</th>
+                <th>Publish Date</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for member in audience_members %}
+            <tr>
+                <td>{{ forloop.counter }}</td>
+                <td>{{ member.notice_title }}</td>
+                <td>{{ member.user_name }}</td>
+                <td>{{ member.user_email }}</td>
+                <td>{{ member.read_status }}</td>
+                <td>{{ member.read_at }}</td>
+                <td>{{ member.delivery_status }}</td>
+                <td>{{ member.delivered_at }}</td>
+                <td>{{ member.notification_sent }}</td>
+                <td>{{ member.publish_date }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <div class="summary">
+        <p>Total Records: {{ total_count }}</p>
+        <p>Read Count: {{ read_count }}</p>
+        <p>Unread Count: {{ total_count }}</p>
+        <p>Delivered Count: {{ delivered_count }}</p>
+        <p>Organization: {{ organization.name }}</p>
+        <p>Export Date: {{ export_date|date:"Y-m-d H:i" }}</p>
+    </div>
+</body>
+</html>

@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+{% load crispy_forms_tags %}
+
+{% block title %}
+    {% if form.instance.pk %}Edit{% else %}Add{% endif %} Teacher - {{ organization.name|default:"School ERP System" }}
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="card card-custom shadow-sm">
+        <div class="card-header detail-card-header">
+            <h5 class="mb-0">
+                {% if form.instance.pk %}
+                    <i class="bi bi-pencil-square"></i> Edit Teacher
+                {% else %}
+                    <i class="bi bi-plus-circle"></i> Add New Teacher
+                {% endif %}
+            </h5>
+        </div>
+        <div class="card-body">
+            <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+                <div class="row">
+                    {% for field in form %}
+                        <div class="col-md-6 mb-3">
+                            {{ field|as_crispy_field }}
+                            <!-- {% if field.errors %}
+                                <div class="text-danger small mt-1">
+                                    {{ field.errors|striptags }}
+                                </div>
+                            {% endif %} -->
+                            {% if field.help_text %}
+                                <small class="form-text text-custom">{{ field.help_text }}</small>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                </div>
+
+                <div class="mt-3 d-flex justify-content-between">
+                    <div>
+                        <button type="submit" class="btn btn-success">
+                            <i class="bi bi-check-circle me-1"></i> 
+                            {% if form.instance.pk %}Update{% else %}Create{% endif %} Teacher
+                        </button>
+                        <a href="{% url 'teacher_list' %}" class="btn btn-secondary">
+                            <i class="bi bi-x-circle me-1"></i> Cancel
+                        </a>
+                    </div>
+
+                    {% if form.instance.pk %}
+                        <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteModal">
+                            <i class="bi bi-trash me-1"></i> Delete Teacher
+                        </button>
+                    {% endif %}
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const classTeacherCheckbox = document.getElementById('id_is_class_teacher');
+    const classFieldDiv = document.getElementById('id_class_teacher_of')?.closest('.col-md-6');
+
+    function toggleClassField() {
+        if (classTeacherCheckbox && classFieldDiv) {
+            classFieldDiv.style.display = classTeacherCheckbox.checked ? 'block' : 'none';
+        }
+    }
+
+    toggleClassField();
+    if (classTeacherCheckbox) {
+        classTeacherCheckbox.addEventListener('change', toggleClassField);
+    }
+});
+</script>
+{% endblock %}

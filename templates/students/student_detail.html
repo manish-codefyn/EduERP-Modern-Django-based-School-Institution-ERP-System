@@ -1,0 +1,936 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}
+   {{ student.full_name }} - Student Details - {{ organization.name|default:"School ERP System" }}
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .student-profile-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-radius: 15px;
+    padding: 2rem;
+    margin-bottom: 2rem;
+}
+    .student-profile-img {
+        width: 90px;
+        height: 90px;
+        object-fit: cover;
+        border: 3px solid #dee2e6;
+    }
+    .info-card {
+        border-left: 4px solid #0d6efd;
+    }
+    .medical-alert {
+        border-left: 4px solid #dc3545;
+    }
+    .document-badge {
+        font-size: 0.8rem;
+    }
+    .nav-tabs .nav-link.active {
+        border-bottom: 3px solid #0d6efd;
+        font-weight: 600;
+    }
+    .stat-card {
+        transition: transform 0.2s;
+    }
+    .stat-card:hover {
+        transform: translateY(-2px);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+
+ <div class="container-fluid py-4">
+
+    <!-- Header Section - Similar to Teacher Design -->
+    <div class="student-profile-header card p-3 bg-primary">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb breadcrumb-dark">
+                        <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Dashboard</a></li>
+                        <li class="breadcrumb-item"><a href="{% url 'students:student_list' %}">Students</a></li>
+                        <li class="breadcrumb-item active" aria-current="page">{{ student.full_name }}</li>
+                    </ol>
+                </nav>
+                <div class="d-flex align-items-center">
+                    {% with photo=student.get_photo %}           
+                    {% if photo %}
+                    <img src="{{ photo.file.url }}" alt="{{ student.full_name }}" 
+                         class="student-profile-img rounded-circle me-4">
+                    {% else %}
+                    <div class="rounded-circle bg-white text-primary d-flex align-items-center justify-content-center me-4 student-photo">
+                        <i class="bi bi-person display-4"></i>
+                    </div>
+                    {% endif %}
+                    {% endwith %}
+                    <div>
+                        <h1 class="display-6 fw-bold mb-1">{{ student.full_name }}</h1>
+                        <p class="lead mb-2 opacity-75">{{ student.current_class|default:"Student" }}</p>
+                        <div class="d-flex flex-wrap gap-2">
+                            <span class="badge bg-light text-dark">
+                                <i class="bi bi-id-card me-1"></i>{{ student.admission_number }}
+                            </span>
+                            <span class="badge bg-{% if student.status == 'ACTIVE' %}success{% else %}secondary{% endif %}">
+                                <i class="bi bi-{% if student.status == 'ACTIVE' %}check{% else %}x{% endif %}-circle me-1"></i>
+                                {{ student.get_status_display }}
+                            </span>
+                            {% if student.is_class_teacher %}
+                            <span class="badge bg-warning">
+                                <i class="bi bi-crown me-1"></i>Class Representative
+                            </span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 text-md-end">
+                <div class="d-flex gap-2 justify-content-md-end flex-wrap">
+                    <div class="btn-group">
+                        <a href="{% url 'students:student_detail_export' student.id %}" class="btn btn-light">
+                            <i class="bi bi-download me-1"></i> Export PDF
+                        </a>
+                        <button type="button" class="btn btn-light dropdown-toggle dropdown-toggle-split"
+                                data-bs-toggle="dropdown" aria-expanded="false">
+                            <span class="visually-hidden">Toggle Dropdown</span>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li>
+                                <a class="dropdown-item" href="{% url 'students:student_detail_export' student.id %}?format=csv">
+                                    <i class="bi bi-filetype-csv me-2"></i> Export CSV
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="{% url 'students:student_detail_export' student.id %}?format=excel">
+                                    <i class="bi bi-filetype-xlsx me-2"></i> Export Excel
+                                </a>
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <a class="dropdown-item" href="{% url 'students:student-id-card' student.id %}">
+                                    <i class="bi bi-person-badge me-2"></i> Generate ID Card
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                    {% if request.user.is_superadmin or request.user.is_teacher or request.user.role == 'support_staff' %}
+                    <a href="{% url 'students:student_update' student.id %}" class="btn btn-primary">
+                        <i class="bi bi-pencil me-1"></i> Edit
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<!-- Quick Stats -->
+<div class="row g-3 mb-4">
+    <!-- Age -->
+    <div class="col-xl-3 col-md-6">
+        <div class="card shadow-sm text-white h-100" style="background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);">
+            <div class="card-body d-flex justify-content-between align-items-center">
+                <div>
+                    <h6 class="text-uppercase fw-bold mb-1">Age</h6>
+                    <h4 class="mb-0">{{ student.age|default:"0" }} years</h4>
+                </div>
+                <i class="bi bi-calendar-event fs-1 opacity-75"></i>
+            </div>
+        </div>
+    </div>
+
+    <!-- Status -->
+    <div class="col-xl-3 col-md-6">
+        <div class="card shadow-sm text-white h-100" style="background: linear-gradient(135deg, #00b09b 0%, #96c93d 100%);">
+            <div class="card-body d-flex justify-content-between align-items-center">
+                <div>
+                    <h6 class="text-uppercase fw-bold mb-1">Status</h6>
+                    <h4 class="mb-0">
+                        <span class="badge bg-{% if student.is_active %}success{% else %}danger{% endif %}">
+                            {{ student.get_status_display }}
+                        </span>
+                    </h4>
+                </div>
+                <i class="bi bi-person-check fs-1 opacity-75"></i>
+            </div>
+        </div>
+    </div>
+
+    <!-- Class -->
+    <div class="col-xl-3 col-md-6">
+        <div class="card shadow-sm text-white h-100" style="background: linear-gradient(135deg, #ff6a00 0%, #ee0979 100%);">
+            <div class="card-body d-flex justify-content-between align-items-center">
+                <div>
+                    <h6 class="text-uppercase fw-bold mb-1">Class</h6>
+                    <h4 class="mb-0">{{ student.current_class|default:"N/A" }}</h4>
+                </div>
+                <i class="bi bi-building fs-1 opacity-75"></i>
+            </div>
+        </div>
+    </div>
+    <!-- Enrollment -->
+    <div class="col-xl-3 col-md-6">
+        <div class="card shadow-sm text-white h-100" style="background: linear-gradient(135deg, #f7971e 0%, #ffd200 100%);">
+            <div class="card-body d-flex justify-content-between align-items-center">
+                <div>
+                    <h6 class="text-uppercase fw-bold mb-1">Enrollment</h6>
+                    <h4 class="mb-0">{{ student.enrollment_date|date:"M Y"|default:"-" }}</h4>
+                </div>
+                <i class="bi bi-clock-history fs-1 opacity-75"></i>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div class="row">
+    <!-- Left Column - Profile -->
+    <div class="col-md-4">
+        <!-- Profile Card -->
+        <div class="card card-custom  mb-4">
+            <div class="card-body text-center">
+                {% with photo=student.get_photo %}           
+                {% if photo %}
+                <img src="{{ photo.file.url }}" class="student-profile-img rounded-circle mb-3" alt="{{ student.get_full_name }}">
+                {% else %}
+                <div class="student-profile-img rounded-circle bg-secondary d-flex align-items-center justify-content-center mx-auto mb-3">
+                    <i class="bi bi-person text-white" style="font-size: 4rem;"></i>
+                </div>
+                {% endif %}
+                {% endwith %}
+                
+                <h4>{{ student.get_full_name }}</h4>
+                <p class="text-custom">{{ student.admission_number }}</p>
+                
+                <div class="d-grid gap-2 mb-3">
+                    <span class="badge bg-{% if student.is_active %}success{% else %}danger{% endif %} mb-1">
+                        {{ student.get_status_display }}
+                    </span>
+                    {% if student.house %}
+                    <span class="badge bg-info mb-1">{{ student.house.name }} House</span>
+                    {% endif %}
+                    {% if student.has_special_needs %}
+                    <span class="badge bg-warning mb-1">Special Needs</span>
+                    {% endif %}
+                </div>
+
+                <div class="row text-start">
+                    <div class="col-6">
+                        <strong>Roll No:</strong><br>
+                        <strong>Class:</strong><br>
+                        <strong>Section:</strong><br>
+                        <strong>Academic Year:</strong>
+                    </div>
+                    <div class="col-6">
+                        {{ student.roll_number|default:"-" }}<br>
+                        {{ student.current_class.name|default:"-" }}<br>
+                        {{ student.section.name|default:"-" }}<br>
+                        {{ student.academic_year.name }}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Contact Information -->
+        <div class="card card-custom mb-4">
+            <div class="card-header">
+                <h6 class="card-title mb-0">Contact Information</h6>
+            </div>
+            <div class="card-body">
+                <p><i class="bi bi-envelope me-2"></i> {{ student.email }}</p>
+                <p><i class="bi bi-phone me-2"></i> {{ student.mobile }}</p>
+                
+                <h6 class="mt-3">Address</h6>
+                <p class="small">
+                    {{ student.permanent_address }}<br>
+                    {{ student.city }}, {{ student.state }} - {{ student.pincode }}<br>
+                    {{ student.country }}
+                </p>
+
+                {% if student.correspondence_address and student.correspondence_address != student.permanent_address %}
+                <h6 class="mt-3">Correspondence Address</h6>
+                <p class="small">{{ student.correspondence_address }}</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="card card-custom">
+            <div class="card-header">
+                <h6 class="card-title mb-0">Quick Actions</h6>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    {% comment %}Student action buttons for Teacher, Superadmin, Support Staff{% endcomment %}
+
+                    {% if request.user.is_superadmin or request.user.is_teacher or request.user.role == 'support_staff' %}
+                        <div class="d-flex flex-wrap gap-1">
+
+                            <a href="{% url 'students:student_update' student.id %}" class="btn btn-outline-primary btn-sm">
+                                <i class="bi bi-pencil me-1"></i> Edit Profile
+                            </a>
+
+                            <a href="{% url 'students:document_list' student.id %}" class="btn btn-outline-info btn-sm">
+                                <i class="bi bi-files me-1"></i> Manage Documents
+                            </a>
+
+                            <a href="mailto:{{ student.email }}" class="btn btn-outline-success btn-sm">
+                                <i class="bi bi-envelope me-1"></i> Send Email
+                            </a>
+
+                            <a href="tel:{{ student.mobile }}" class="btn btn-outline-warning btn-sm">
+                                <i class="bi bi-telephone me-1"></i> Call Student
+                            </a>
+
+                            <!-- <a href="{% url 'students:student_detail' student.id %}" class="btn btn-outline-secondary btn-sm">
+                                <i class="bi bi-eye me-1"></i> View
+                            </a> -->
+
+                        </div>
+                    {% endif %}
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Right Column - Details -->
+    <div class="col-md-8">
+        <!-- Tab Navigation -->
+        <ul class="nav nav-tabs" id="studentTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="personal-tab" data-bs-toggle="tab" data-bs-target="#personal" type="button" role="tab">
+                    <i class="bi bi-person me-1"></i> Personal
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="academic-tab" data-bs-toggle="tab" data-bs-target="#academic" type="button" role="tab">
+                    <i class="bi bi-book me-1"></i> Academic
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="parent-tab" data-bs-toggle="tab" data-bs-target="#parent" type="button" role="tab">
+                    <i class="bi bi-people me-1"></i> Parent
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="medical-tab" data-bs-toggle="tab" data-bs-target="#medical" type="button" role="tab">
+                    <i class="bi bi-heart-pulse me-1"></i> Medical
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="documents-tab" data-bs-toggle="tab" data-bs-target="#documents" type="button" role="tab">
+                    <i class="bi bi-file-earmark me-1"></i> Documents
+                </button>
+            </li>
+        </ul>
+
+        <!-- Tab Content -->
+        <div class="tab-content" id="studentTabsContent">
+            <!-- Personal Information Tab -->
+            <div class="tab-pane fade show active" id="personal" role="tabpanel">
+                <div class="card card-custom mt-3">
+                 <div class="card-body">
+                    <div class="row">
+                    <!-- Basic & Additional Info -->
+                    <div class="row">
+                        <div class="col-md-6 mb-4">
+                            <div class="card shadow-sm h-100">
+                                <div class="card-header bg-primary text-white">
+                                    <i class="bi bi-info-circle me-2"></i> Basic Information
+                                </div>
+                                <div class="card-body">
+                                    <p><i class="bi bi-hash me-2 text-primary"></i><strong>Roll No:</strong> {{ student.roll_number|default:"Not assigned" }}</p>
+                                    <p><i class="bi bi-calendar-event me-2 text-danger"></i><strong>DOB:</strong> {{ student.date_of_birth }} (Age: {{ student.age }})</p>
+                                    <p><i class="bi bi-gender-ambiguous me-2 text-info"></i><strong>Gender:</strong> {{ student.get_gender_display }}</p>
+                                    <p><i class="bi bi-droplet-fill me-2 text-danger"></i><strong>Blood Group:</strong> {{ student.blood_group|default:"Not specified" }}</p>
+                                    <p><i class="bi bi-person-check-fill me-2 text-success"></i><strong>Status:</strong> {{ student.get_status_display }}</p>
+                                    <p><i class="bi bi-journal-check me-2 text-warning"></i><strong>Admission Type:</strong> {{ student.get_admission_type_display }}</p>
+                                    <p><i class="bi bi-calendar-check me-2 text-success"></i><strong>Enrollment Date:</strong> {{ student.enrollment_date }}</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6 mb-4">
+                            <div class="card shadow-sm h-100">
+                                <div class="card-header bg-success text-white">
+                                    <i class="bi bi-person-lines-fill me-2"></i> Additional Details
+                                </div>
+                                <div class="card-body">
+                                    <p><i class="bi bi-envelope-at me-2 text-primary"></i><strong>Email:</strong> {{ student.email }}</p>
+                                    <p><i class="bi bi-phone me-2 text-success"></i><strong>Mobile:</strong> {{ student.mobile }}</p>
+                                    <p><i class="bi bi-flag me-2 text-danger"></i><strong>Nationality:</strong> {{ student.nationality|default:"Not specified" }}</p>
+                                    <p><i class="bi bi-heart-fill me-2 text-warning"></i><strong>Religion:</strong> {{ student.get_religion_display|default:"Not specified" }}</p>
+                                    <p><i class="bi bi-people-fill me-2 text-info"></i><strong>Category:</strong> {{ student.get_category_display|default:"Not specified" }}</p>
+
+                                    {% if student.identification %}
+                                        <hr>
+                                        <p><i class="bi bi-person-vcard me-2 text-primary"></i><strong>Aadhaar:</strong> {{ student.identification.aadhaar_number|default:"Not provided" }}</p>
+                                        <p><i class="bi bi-credit-card me-2 text-success"></i><strong>ABC ID:</strong> {{ student.identification.abc_id|default:"Not provided" }}</p>
+                                        <p><i class="bi bi-card-checklist me-2 text-warning"></i><strong>Shiksha ID:</strong> {{ student.identification.shiksha_id|default:"Not provided" }}</p>
+                                        <p><i class="bi bi-credit-card-2-front me-2 text-danger"></i><strong>PAN:</strong> {{ student.identification.pan_number|default:"Not provided" }}</p>
+                                        <p><i class="bi bi-passport me-2 text-info"></i><strong>Passport:</strong> {{ student.identification.passport_number|default:"Not provided" }}</p>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Academic & Guardians -->
+                    <div class="row">
+                        <div class="col-md-6 mb-4">
+                            <div class="card shadow-sm h-100">
+                                <div class="card-header bg-info text-white">
+                                    <i class="bi bi-book me-2"></i> Academic Details
+                                </div>
+                                <div class="card-body">
+                                    <p><i class="bi bi-calendar3 me-2"></i><strong>Academic Year:</strong> {{ student.academic_year.name }}</p>
+                                    <p><i class="bi bi-building me-2"></i><strong>Class:</strong> {{ student.current_class|default:"Not assigned" }}</p>
+                                    <p><i class="bi bi-diagram-3 me-2"></i><strong>Section:</strong> {{ student.section|default:"Not assigned" }}</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6 mb-4">
+                            <div class="card shadow-sm h-100">
+                                <div class="card-header bg-warning text-white">
+                                    <i class="bi bi-people-fill me-2"></i> Guardians
+                                </div>
+                                <div class="card-body">
+                                    {% if student.father %}
+                                        <p><i class="bi bi-person-badge me-2 text-primary"></i><strong>Father:</strong> {{ student.father.name }} ({{ student.father.get_occupation_display }})</p>
+                                    {% else %}
+                                        <p class="text-muted"><i class="bi bi-dash-circle me-2"></i> Father info not available</p>
+                                    {% endif %}
+
+                                    {% if student.mother %}
+                                        <p><i class="bi bi-person-badge-fill me-2 text-danger"></i><strong>Mother:</strong> {{ student.mother.name }} ({{ student.mother.get_occupation_display }})</p>
+                                    {% else %}
+                                        <p class="text-muted"><i class="bi bi-dash-circle me-2"></i> Mother info not available</p>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Medical Info -->
+                    {% if student.medical_info %}
+                    <div class="card shadow-sm mb-4">
+                        <div class="card-header bg-danger text-white">
+                            <i class="bi bi-hospital me-2"></i> Medical Information
+                        </div>
+                        <div class="card-body">
+                            <p><strong>Conditions:</strong> {{ student.medical_info.conditions|default:"None" }}</p>
+                            <p><strong>Allergies:</strong> {{ student.medical_info.allergies|default:"None" }}</p>
+                            <p><strong>Disability:</strong> {{ student.medical_info.disability|yesno:"Yes,No" }}</p>
+                            {% if student.medical_info.disability %}
+                                <p><strong>Type:</strong> {{ student.medical_info.disability_type }}</p>
+                                <p><strong>Percentage:</strong> {{ student.medical_info.disability_percentage }}%</p>
+                            {% endif %}
+                            <p><strong>Emergency Contact:</strong> {{ student.medical_info.emergency_contact_name }} 
+                                ({{ student.medical_info.emergency_contact_relation }}) - {{ student.medical_info.emergency_contact_phone }}
+                            </p>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Address -->
+                    <div class="card shadow-sm">
+                        <div class="card-header bg-secondary text-white">
+                            <i class="bi bi-geo-alt-fill me-2"></i> Address
+                        </div>
+                        <div class="card-body">
+                            {% for address in student.addresses.all %}
+                                <p>
+                                    <i class="bi bi-house-door me-2 text-primary"></i>
+                                    <strong>{{ address.get_address_type_display }}:</strong>
+                                    {{ address.address_line1 }} {{ address.address_line2 }},
+                                    {{ address.city }}, {{ address.state }} - {{ address.pincode }},
+                                    {{ address.country }}
+                                    {% if address.is_current %}<span class="badge bg-success">Current</span>{% endif %}
+                                </p>
+                            {% empty %}
+                                <p class="text-muted">No addresses available</p>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+                        <h6 class="mt-4">Admission Details</h6>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <p><strong>Admission Number:</strong> {{ student.admission_number }}</p>
+                                <p><strong>Enrollment Date:</strong> {{ student.enrollment_date }}</p>
+                            </div>
+                            <div class="col-md-6">
+                                <p><strong>Admission Type:</strong> {{ student.get_admission_type_display }}</p>
+                                <p><strong>Status:</strong> 
+                                    <span class="badge bg-{% if student.is_active %}success{% else %}danger{% endif %}">
+                                        {{ student.get_status_display }}
+                                    </span>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Academic Information Tab -->
+            <div class="tab-pane fade" id="academic" role="tabpanel">
+                <div class="card card-custom mt-3">
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6 class="mb-3">Current Academic Information</h6>
+                                <p><strong>Class:</strong> {{ student.current_class.name|default:"Not assigned" }}</p>
+                                <p><strong>Section:</strong> {{ student.section.name|default:"Not assigned" }}</p>
+                                <p><strong>Roll Number:</strong> {{ student.roll_number|default:"Not assigned" }}</p>
+                                <p><strong>Academic Year:</strong> {{ student.academic_year.name }}</p>
+                                {% if student.house %}
+                                <p><strong>House:</strong> {{ student.house.name }}</p>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6">
+                                <h6 class="mb-3">Previous Academic History</h6>
+                                {% if student.previous_school %}
+                                <p><strong>Previous School:</strong> {{ student.previous_school }}</p>
+                                <p><strong>Previous Class:</strong> {{ student.previous_class }}</p>
+                                {% if student.previous_marks %}
+                                <p><strong>Previous Marks:</strong> {{ student.previous_marks }}%</p>
+                                {% endif %}
+                                {% if student.transfer_reason %}
+                                <p><strong>Transfer Reason:</strong> {{ student.transfer_reason }}</p>
+                                {% endif %}
+                                {% else %}
+                                <p class="text-custom">No previous academic history available.</p>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Additional Services -->
+                        <h6 class="mt-4">Additional Services</h6>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <p><strong>Transportation:</strong> 
+                                    <span class="badge bg-{% if student.uses_transport %}success{% else %}secondary{% endif %}">
+                                        {{ student.uses_transport|yesno:"Yes,No" }}
+                                    </span>
+                                </p>
+                                {% if student.uses_transport %}
+                                <p><strong>Transport Route:</strong> {{ student.transport_route.name|default:"Not assigned" }}</p>
+                                <p><strong>Pickup Point:</strong> {{ student.pickup_point|default:"Not specified" }}</p>
+                                <p><strong>Drop Point:</strong> {{ student.drop_point|default:"Not specified" }}</p>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6">
+                                <p><strong>Hostel:</strong> 
+                                    <span class="badge bg-{% if student.is_hosteller %}success{% else %}secondary{% endif %}">
+                                        {{ student.is_hosteller|yesno:"Yes,No" }}
+                                    </span>
+                                </p>
+                                {% if student.is_hosteller %}
+                                <p><strong>Hostel:</strong> {{ student.hostel.name|default:"Not assigned" }}</p>
+                                <p><strong>Room Number:</strong> {{ student.room_number|default:"Not assigned" }}</p>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Financial Information -->
+                        <h6 class="mt-4">Financial Information</h6>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <p><strong>Fee Concession:</strong> 
+                                    <span class="badge bg-{% if student.fee_concession %}success{% else %}secondary{% endif %}">
+                                        {{ student.fee_concession|yesno:"Yes,No" }}
+                                    </span>
+                                </p>
+                                {% if student.fee_concession %}
+                                <p><strong>Concession Type:</strong> {{ student.concession_type|default:"Not specified" }}</p>
+                                <p><strong>Concession Percentage:</strong> {{ student.concession_percentage|default:"0" }}%</p>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- parent Information Tab -->
+                <div class="tab-pane fade" id="parent" role="tabpanel">
+                    <div class="card card-custom mt-3 shadow-sm">
+                        <div class="card-body">
+
+                        <!-- Primary Guardian -->
+                        <h5 class="mb-3 border-bottom pb-2">Primary Guardian</h5>
+                        {% if primary_parent %}
+                            <p><strong>Name:</strong> {{ primary_parent.name }}</p>
+                            <p><strong>Relation:</strong> {{ primary_parent.get_relation_display }}</p>
+                            <p><strong>Phone:</strong> {{ primary_parent.phone|default:"Not provided" }}</p>
+                            <p><strong>Email:</strong> {{ primary_parent.email|default:"Not provided" }}</p>
+                        {% else %}
+                            <p class="text-custom">No primary guardian assigned.</p>
+                        {% endif %}
+
+                        <!-- Father -->
+                        <h5>Father</h5>
+                        {% if father %}
+                            <p><strong>Name:</strong> {{ father.name }}</p>
+                            <p><strong>Occupation:</strong> {{ father.get_occupation_display }}</p>
+                            <p><strong>Phone:</strong> {{ father.phone|default:"Not provided" }}</p>
+                        {% else %}
+                            <p class="text-custom">Father information not available</p>
+                        {% endif %}
+
+                        <!-- Mother -->
+                        <h5>Mother</h5>
+                        {% if mother %}
+                            <p><strong>Name:</strong> {{ mother.name }}</p>
+                            <p><strong>Occupation:</strong> {{ mother.get_occupation_display }}</p>
+                            <p><strong>Phone:</strong> {{ mother.phone|default:"Not provided" }}</p>
+                        {% else %}
+                            <p class="text-custom">Mother information not available</p>
+                        {% endif %}
+
+
+
+                            <!-- Additional Guardians -->
+                            {% if guardians.exists %}
+                            <h5 class="mb-3 border-bottom pb-2">Additional Guardians</h5>
+                            <div class="table-responsive">
+                                <table class="table table-hover table-bordered align-middle text-center">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Name</th>
+                                            <th>Relation</th>
+                                            <th>Phone</th>
+                                            <th>Email</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for parent in guardians %}
+                                        <tr>
+                                            <td>{{ parent.name }}</td>
+                                            <td>{{ parent.get_relation_display }}</td>
+                                            <td>{{ parent.phone }}</td>
+                                            <td>{{ parent.email|default:"-" }}</td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                            {% endif %}
+
+                            <!-- Action Button -->
+                            <div class="d-flex justify-content-end mt-4">
+                                <a href="{% url 'students:guardian_create' student.id %}" class="btn btn-primary">
+                                    {% if primary_parent %}Update Parent{% else %}Add Parent{% endif %}
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+
+            <!-- Medical Information Tab -->
+            <div class="tab-pane fade" id="medical" role="tabpanel">
+                <div class="card  card-custom mt-3">
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6 class="mb-3">Medical Overview</h6>
+                                <p><strong>Disability:</strong> 
+                                    <span class="badge bg-{% if student.disability %}warning{% else %}success{% endif %}">
+                                        {{ student.disability|yesno:"Yes,No" }}
+                                    </span>
+                                </p>
+                                {% if student.disability %}
+                                <p><strong>Disability Type:</strong> {{ student.disability_type|default:"Not specified" }}</p>
+                                {% if student.disability_percentage %}
+                                <p><strong>Disability Percentage:</strong> {{ student.disability_percentage }}%</p>
+                                {% endif %}
+                                {% endif %}
+                                <p><strong>Blood Group Allergies:</strong> {{ student.blood_group_allergies|default:"None" }}</p>
+                            </div>
+                        </div>
+
+                        <!-- Medical Conditions -->
+                        <h6 class="mt-4">Medical Conditions</h6>
+                        {% if student.medical_conditions %}
+                        <div class="alert alert-warning">
+                            <strong>Conditions:</strong><br>
+                            {{ student.medical_conditions|linebreaks }}
+                        </div>
+                        {% else %}
+                        <p class="text-custom">No medical conditions reported.</p>
+                        {% endif %}
+
+                        <!-- Allergies -->
+                        <h6 class="mt-4">Allergies</h6>
+                        {% if student.allergies %}
+                        <div class="alert alert-danger">
+                            <strong>Allergies:</strong><br>
+                            {{ student.allergies|linebreaks }}
+                        </div>
+                        {% else %}
+                        <p class="text-custom">No allergies reported.</p>
+                        {% endif %}
+
+                        <!-- Medications -->
+                        <h6 class="mt-4">Regular Medications</h6>
+                        {% if student.regular_medications %}
+                        <div class="alert alert-info">
+                            <strong>Medications:</strong><br>
+                            {{ student.regular_medications|linebreaks }}
+                        </div>
+                        {% else %}
+                        <p class="text-custom">No regular medications reported.</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Documents Tab -->
+            <div class="tab-pane fade" id="documents" role="tabpanel">
+                <div class="card card-custom mt-3">
+                    <div class="card-body">
+                        <h6 class="mb-3">Uploaded Documents</h6>
+                        
+                        <div class="row">
+                            <!-- Photo -->
+                            <div class="col-md-6 mb-3">
+                                <strong>Photo:</strong><br>
+                                {% if student.photo %}
+                                <img src="{{ student.photo.url }}" class="img-thumbnail mt-2" width="100" alt="Student Photo">
+                                {% else %}
+                                <span class="badge bg-secondary">Not uploaded</span>
+                                {% endif %}
+                            </div>
+
+                            <!-- Documents List -->
+                            <div class="col-12">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <p><strong>ID Proof:</strong> 
+                                            {% if student.id_proof %}
+                                            <a href="{{ student.id_proof.url }}" target="_blank" class="badge bg-success document-badge">View</a>
+                                            {% else %}
+                                            <span class="badge bg-secondary document-badge">Not uploaded</span>
+                                            {% endif %}
+                                        </p>
+                                        
+                                        <p><strong>Address Proof:</strong> 
+                                            {% if student.address_proof %}
+                                            <a href="{{ student.address_proof.url }}" target="_blank" class="badge bg-success document-badge">View</a>
+                                            {% else %}
+                                            <span class="badge bg-secondary document-badge">Not uploaded</span>
+                                            {% endif %}
+                                        </p>
+                                        
+                                        <p><strong>Birth Certificate:</strong> 
+                                            {% if student.birth_certificate %}
+                                            <a href="{{ student.birth_certificate.url }}" target="_blank" class="badge bg-success document-badge">View</a>
+                                            {% else %}
+                                            <span class="badge bg-secondary document-badge">Not uploaded</span>
+                                            {% endif %}
+                                        </p>
+                                    </div>
+                                    
+                                    <div class="col-md-6">
+                                        <p><strong>Transfer Certificate:</strong> 
+                                            {% if student.transfer_certificate %}
+                                            <a href="{{ student.transfer_certificate.url }}" target="_blank" class="badge bg-success document-badge">View</a>
+                                            {% else %}
+                                            <span class="badge bg-secondary document-badge">Not uploaded</span>
+                                            {% endif %}
+                                        </p>
+                                        
+                                        <p><strong>Caste Certificate:</strong> 
+                                            {% if student.caste_certificate %}
+                                            <a href="{{ student.caste_certificate.url }}" target="_blank" class="badge bg-success document-badge">View</a>
+                                            {% else %}
+                                            <span class="badge bg-secondary document-badge">Not uploaded</span>
+                                            {% endif %}
+                                        </p>
+                                        
+                                        <p><strong>Disability Certificate:</strong> 
+                                            {% if student.disability_certificate %}
+                                            <a href="{{ student.disability_certificate.url }}" target="_blank" class="badge bg-success document-badge">View</a>
+                                            {% else %}
+                                            <span class="badge bg-secondary document-badge">Not uploaded</span>
+                                            {% endif %}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Additional Documents -->
+                        {% if student.documents.exists %}
+                        <h6 class="mt-4">Additional Documents</h6>
+                        <div class="table-responsive">
+                            <table class="table-custom w-100 table-sm">
+                                <thead>
+                                    <tr>
+                                        <th>Document Type</th>
+                                        <th>Title</th>
+                                        <th>Uploaded</th>
+                                        <th>Status</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for doc in student.documents.all %}
+                                    <tr>
+                                        <td>{{ doc.get_doc_type_display }}</td>
+                                        <td><p>
+                                           
+                                        {% if doc.description %}
+                                            {{ doc.description }}
+                                        {% else %}
+                                            <span class="text-custom">Not available</span>
+                                        {% endif %}
+                                        </p>
+                                        </td>
+                                        <td>{{ doc.uploaded_at|date:"d M Y" }}</td>
+                                        <td>
+                                            <span class="badge bg-{% if doc.verified %}success{% else %}warning{% endif %}">
+                                                {{ doc.verified|yesno:"Verified,Pending" }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <a href="{{ doc.file.url }}" target="_blank" class="btn btn-sm btn-outline-primary">
+                                                <i class="bi bi-download"></i>
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        {% endif %}
+
+                        <div class="mt-3">
+                            <a href="{% url 'students:document_list' student.id %}" class="btn btn-primary btn-sm">
+                                <i class="bi bi-plus-circle me-1"></i> Manage Documents
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Additional Information -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card card-custom">
+            <div class="card-header">
+                <h6 class="card-title mb-0">Additional Information</h6>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>Achievements</h6>
+                        {% if student.achievements %}
+                        <p>{{ student.achievements|linebreaks }}</p>
+                        {% else %}
+                        <p class="text-custom">No achievements recorded.</p>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Extracurricular Activities</h6>
+                        {% if student.extracurricular %}
+                        <p>{{ student.extracurricular|linebreaks }}</p>
+                        {% else %}
+                        <p class="text-custom">No extracurricular activities recorded.</p>
+                        {% endif %}
+                    </div>
+                </div>
+
+                {% if student.remarks %}
+                <h6 class="mt-3">Remarks</h6>
+                <div class="alert alert-info">
+                    {{ student.remarks|linebreaks }}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Audit Information -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card card-custom">
+            <div class="card-header">
+                <h6 class="card-title mb-0">Audit Information</h6>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <p><strong>Created By:</strong> {{ student.created_by.get_full_name|default:"System" }}</p>
+                        <p><strong>Created At:</strong> {{ student.created_at }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <p><strong>Last Updated By:</strong> {{ student.updated_by.get_full_name|default:"System" }}</p>
+                        <p><strong>Last Updated:</strong> {{ student.updated_at }}</p>
+                    </div>
+                </div>
+
+                {% if student.transferred_date or student.graduated_date %}
+                <div class="row mt-3">
+                    <div class="col-md-6">
+                        {% if student.transferred_date %}
+                        <p><strong>Transferred Date:</strong> {{ student.transferred_date }}</p>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-6">
+                        {% if student.graduated_date %}
+                        <p><strong>Graduated Date:</strong> {{ student.graduated_date }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Activate the first tab
+    const firstTab = new bootstrap.Tab(document.getElementById('personal-tab'));
+    firstTab.show();
+
+    // Add smooth scrolling for anchor links
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener('click', function (e) {
+            e.preventDefault();
+            document.querySelector(this.getAttribute('href')).scrollIntoView({
+                behavior: 'smooth'
+            });
+        });
+    });
+
+    // Print functionality
+    window.printStudent = function() {
+        const printContent = document.getElementById('student-details-content').innerHTML;
+        const originalContent = document.body.innerHTML;
+        
+        document.body.innerHTML = printContent;
+        window.print();
+        document.body.innerHTML = originalContent;
+        location.reload();
+    };
+});
+</script>
+{% endblock %}

@@ -1,0 +1,55 @@
+{% extends "library/base.html" %}
+
+{% block title %}Return Book - {{ organization.name|default:"Library" }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-6">
+            <div class="card card-custom shadow-sm">
+                <div class="card-header detail-card-header text-white">
+                    <h5 class="mb-0">Return Book</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <!-- Returned Date -->
+                        <div class="mb-3">
+                            {{ form.returned_date.label_tag }}
+                            {{ form.returned_date }}
+                            {% if form.returned_date.errors %}
+                                <div class="text-danger small">{{ form.returned_date.errors }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Fine Amount -->
+                        <div class="mb-3">
+                            {{ form.fine_amount.label_tag }}
+                            {{ form.fine_amount }}
+                            {% if form.fine_amount.errors %}
+                                <div class="text-danger small">{{ form.fine_amount.errors }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Notes -->
+                        <div class="mb-3">
+                            {{ form.notes.label_tag }}
+                            {{ form.notes }}
+                            {% if form.notes.errors %}
+                                <div class="text-danger small">{{ form.notes.errors }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Submit Button -->
+                        <div class="d-flex justify-content-end">
+                            <a href="{% url 'library:borrowrecord_list' %}" class="btn btn-secondary me-2">Cancel</a>
+                            <button type="submit" class="btn btn-success">Process Return</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en" {% if request.LANGUAGE_CODE %}lang="{{ request.LANGUAGE_CODE }}"{% endif %}>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    
+    <!-- Primary Meta Tags -->
+    <title>
+        {% block title %}
+          codefyn-{{ organization.name|default:"Codefyn" }}
+        {% endblock %}
+    </title>
+    
+    <meta name="description" content="{% block meta_description %}{{ organization.description|default:'Comprehensive School Management System for efficient administration' }}{% endblock %}">
+    <meta name="keywords" content="{% block meta_keywords %}school, education, management, erp, student, teacher, administration{% endblock %}">
+    <meta name="author" content="{{ organization.name|default:'School ERP' }}">
+    <meta name="robots" content="index, follow">
+    <meta name="theme-color" content="#3b82f6">
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="{{ request.build_absolute_uri }}">
+    <meta property="og:title" content="{% block og_title %}{{ organization.name|default:'School ERP System' }}{% endblock %}">
+    <meta property="og:description" content="{% block og_description %}{{ organization.description|default:'Comprehensive School Management System' }}{% endblock %}">
+    {% if organization.logo %}
+    <meta property="og:image" content="{{ request.scheme }}://{{ request.get_host }}{{ organization.logo.url }}">
+    {% endif %}
+    
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="{{ request.build_absolute_uri }}">
+    <meta property="twitter:title" content="{% block twitter_title %}{{ organization.name|default:'School ERP System' }}{% endblock %}">
+    <meta property="twitter:description" content="{% block twitter_description %}{{ organization.description|default:'Comprehensive School Management System' }}{% endblock %}">
+    {% if organization.logo %}
+    <meta property="twitter:image" content="{{ request.scheme }}://{{ request.get_host }}{{ organization.logo.url }}">
+    {% endif %}
+    
+    <!-- Favicon -->
+     {% load static %}
+    <link rel="apple-touch-icon" sizes="180x180" href="{% static 'favicon/apple-touch-icon.png' %}">
+    <link rel="icon" type="image/png" sizes="32x32" href="{% static 'favicon/favicon-32x32.png' %}">
+    <link rel="icon" type="image/png" sizes="16x16" href="{% static 'favicon/favicon-16x16.png' %}">
+    <link rel="manifest" href="{% static 'favicon/site.webmanifest' %}">
+    <link rel="mask-icon" href="{% static 'favicon/safari-pinned-tab.svg' %}" color="#3b82f6">
+    <link rel="shortcut icon" href="{% static 'favicon/favicon.ico' %}">
+    <meta name="msapplication-TileColor" content="#3b82f6">
+    <meta name="msapplication-config" content="{% static 'favicon/browserconfig.xml' %}">
+    
+    <!-- Canonical URL -->
+    <link rel="canonical" href="{{ request.build_absolute_uri }}">
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    
+    <!-- Google Fonts (Poppins) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'css/index.css' %}">
+   
+</head>
+<body>
+
+    <!-- 1. Navigation Bar -->
+    <nav class="navbar navbar-expand-lg fixed-top" id="mainNavbar">
+        <div class="container">
+            <a class="navbar-brand" href="#">
+                <i class="bi bi-code-slash"></i> Codefyn
+            </a>
+            
+            <!-- Mobile Menu Toggler (triggers off-canvas) -->
+            <button class="navbar-toggler" type="button" data-bs-toggle="offcanvas" data-bs-target="#mobileSidebar" aria-controls="mobileSidebar">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            
+            <!-- Desktop Menu -->
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item"><a class="nav-link active" href="#">Home</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#about">About Us</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#courses">Courses</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#contact">Contact</a></li>
+                </ul>
+                <div class="dropdown ms-lg-3">
+                    <button class="btn btn-gradient dropdown-toggle px-4 py-2" type="button" id="loginDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="bi bi-box-arrow-in-right me-1"></i> Login / Sign Up
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="loginDropdown">
+                        <li><a class="dropdown-item" href="{% url 'account_login' %}"><i class="bi bi-person-fill me-2"></i> Student Portal</a></li>
+                        <li><a class="dropdown-item" href="{% url 'account_login' %}"><i class="bi bi-briefcase-fill me-2"></i> Organization Portal</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </nav>
+    
+    <!-- Mobile Off-canvas Sidebar -->
+    <div class="offcanvas offcanvas-end" tabindex="-1" id="mobileSidebar" aria-labelledby="mobileSidebarLabel">
+        <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="mobileSidebarLabel"><i class="bi bi-code-slash"></i> Codefyn Menu</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+        </div>
+        <div class="offcanvas-body">
+            <ul class="navbar-nav">
+                <li class="nav-item"><a class="nav-link active" href="#">Home</a></li>
+                <li class="nav-item"><a class="nav-link" href="#about">About Us</a></li>
+                <li class="nav-item"><a class="nav-link" href="#courses">Courses</a></li>
+                <li class="nav-item"><a class="nav-link" href="#contact">Contact</a></li>
+            </ul>
+             <div class="dropdown mt-3">
+                <button class="btn btn-gradient dropdown-toggle w-100" type="button" data-bs-toggle="dropdown">
+                    Login / Sign Up
+                </button>
+                <ul class="dropdown-menu w-100">
+                    <li><a class="dropdown-item" href="{% url 'account_login' %}"><i class="bi bi-person-fill me-2"></i> Student Portal</a></li>
+                    <li><a class="dropdown-item" href="{% url 'account_login' %}"><i class="bi bi-briefcase-fill me-2"></i> Organization Portal</a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- 2. Hero Section -->
+    <header class="hero-section">
+        <div class="container">
+            <h1 class="display-3 fw-bold">Build Your Future in Tech with Codefyn</h1>
+            <p class="lead my-4">Join a community dedicated to excellence, innovation, and hands-on learning.</p>
+            <a href="#courses" class="btn btn-light btn-lg me-2">Explore Courses</a>
+            <a href="#contact" class="btn btn-outline-light btn-lg">Apply Now</a>
+        </div>
+    </header>
+
+    <main>
+        <!-- 3. Features Section -->
+        <section id="about" class="py-5 animated-section">
+            <div class="container text-center">
+                <h2 class="section-title">Why Codefyn?</h2>
+                <div class="row mt-5">
+                    <div class="col-md-4 mb-4 animated-section">
+                        <div class="feature-card h-100">
+                            <div class="feature-icon mb-3">
+                                <i class="bi bi-person-video3"></i>
+                            </div>
+                            <h3 class="h5">Industry-Expert Mentors</h3>
+                            <p class="text-muted">Learn from professionals who have worked at top tech companies and are passionate about sharing their knowledge.</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4 mb-4 animated-section" style="transition-delay: 0.2s;">
+                        <div class="feature-card h-100">
+                            <div class="feature-icon mb-3">
+                                <i class="bi bi-code-braces"></i>
+                            </div>
+                            <h3 class="h5">Project-Based Learning</h3>
+                            <p class="text-muted">Build a portfolio of real-world projects, from full-stack web apps to machine learning models.</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4 mb-4 animated-section" style="transition-delay: 0.4s;">
+                        <div class="feature-card h-100">
+                            <div class="feature-icon mb-3">
+                                <i class="bi bi-graph-up-arrow"></i>
+                            </div>
+                            <h3 class="h5">Dedicated Career Support</h3>
+                            <p class="text-muted">We provide robust career coaching, interview prep, and connections to our network of hiring partners.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 4. Courses Section -->
+        <section id="courses" class="py-5">
+            <div class="container">
+                <h2 class="section-title text-center animated-section">Our Core Programs</h2>
+                <div class="row mt-5">
+                    <!-- Course Card 1 -->
+                    <div class="col-lg-4 col-md-6 mb-4 animated-section">
+                        <div class="card h-100 course-card">
+                            <img src="https://images.unsplash.com/photo-1571171637578-41bc2174d4c5?q=80&w=2940" class="card-img-top" alt="Web Development">
+                            <div class="card-body d-flex flex-column">
+                                <h5 class="card-title">Full-Stack Web Development</h5>
+                                <p class="card-text">Master front-end and back-end technologies including React, Node.js, and SQL to build complete web applications.</p>
+                                <a href="#" class="btn btn-outline-primary mt-auto">Learn More</a>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Course Card 2 -->
+                    <div class="col-lg-4 col-md-6 mb-4 animated-section" style="transition-delay: 0.2s;">
+                        <div class="card h-100 course-card">
+                            <img src="https://images.unsplash.com/photo-1593508512255-86ab42a8e620?q=80&w=2938" class="card-img-top" alt="Data Science">
+                            <div class="card-body d-flex flex-column">
+                                <h5 class="card-title">Data Science & AI</h5>
+                                <p class="card-text">Learn Python, Machine Learning, and data visualization to extract insights and build intelligent systems.</p>
+                                <a href="#" class="btn btn-outline-primary mt-auto">Learn More</a>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Course Card 3 -->
+                    <div class="col-lg-4 col-md-6 mb-4 animated-section" style="transition-delay: 0.4s;">
+                        <div class="card h-100 course-card">
+                             <img src="https://images.unsplash.com/photo-1618761714954-0b8cd0026356?q=80&w=2940" class="card-img-top" alt="UX Design">
+                            <div class="card-body d-flex flex-column">
+                                <h5 class="card-title">UI/UX Design</h5>
+                                <p class="card-text">Master the principles of user-centric design, from wireframing and prototyping to creating beautiful interfaces.</p>
+                                <a href="#" class="btn btn-outline-primary mt-auto">Learn More</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 5. Testimonials Section -->
+        <section id="testimonials" class="py-5 animated-section">
+            <div class="container">
+                <h2 class="section-title text-center">Success Stories from Our Alumni</h2>
+                <div id="testimonialCarousel" class="carousel slide mt-5" data-bs-ride="carousel">
+                    <div class="carousel-inner">
+                        <div class="carousel-item active">
+                            <div class="testimonial-card">
+                                <img src="https://i.pravatar.cc/100?img=1" class="testimonial-img" alt="Student 1">
+                                <p class="fst-italic lead">"Codefyn's hands-on approach was a game-changer. I went from a complete beginner to a confident software engineer at a top startup in just six months."</p>
+                                <h5 class="mt-3">- Priya Sharma</h5>
+                                <p class="text-muted">Software Engineer, Bangalore</p>
+                            </div>
+                        </div>
+                        <div class="carousel-item">
+                             <div class="testimonial-card">
+                                <img src="https://i.pravatar.cc/100?img=32" class="testimonial-img" alt="Student 2">
+                                <p class="fst-italic lead">"The career support team is phenomenal. They helped me craft my resume, practice for interviews, and land my dream job in data science."</p>
+                                <h5 class="mt-3">- Rohan Gupta</h5>
+                                <p class="text-muted">Data Scientist, Noida</p>
+                            </div>
+                        </div>
+                    </div>
+                    <button class="carousel-control-prev" type="button" data-bs-target="#testimonialCarousel" data-bs-slide="prev">
+                        <span class="carousel-control-prev-icon" aria-hidden="true"></span><span class="visually-hidden">Previous</span>
+                    </button>
+                    <button class="carousel-control-next" type="button" data-bs-target="#testimonialCarousel" data-bs-slide="next">
+                        <span class="carousel-control-next-icon" aria-hidden="true"></span><span class="visually-hidden">Next</span>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- 6. Call to Action Section -->
+        <section id="contact" class="text-white text-center">
+            <div class="container animated-section">
+                <h2 class="display-6 fw-bold">Ready to Launch Your Tech Career?</h2>
+                <p class="lead my-4">Our admissions team is here to guide you. Schedule a free counseling session today.</p>
+                <a href="#" class="btn btn-light btn-lg">Contact Admissions <i class="bi bi-arrow-right-short"></i></a>
+            </div>
+        </section>
+    </main>
+
+    <!-- 7. Footer -->
+    <footer class="py-5">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-4 mb-4">
+                    <h5 class="text-uppercase mb-4"><i class="bi bi-code-slash"></i> Codefyn</h5>
+                    <p>Committed to providing world-class tech education and fostering a community of builders and innovators.</p>
+                </div>
+                <div class="col-lg-2 col-md-4 col-6 mb-4">
+                    <h5 class="text-uppercase mb-4">Links</h5>
+                    <ul class="list-unstyled">
+                        <li><a href="#about" class="footer-link">About</a></li>
+                        <li><a href="#courses" class="footer-link">Courses</a></li>
+                        <li><a href="#" class="footer-link">Admissions</a></li>
+                        <li><a href="#" class="footer-link">Careers</a></li>
+                    </ul>
+                </div>
+                <div class="col-lg-3 col-md-4 col-6 mb-4">
+                    <h5 class="text-uppercase mb-4">Contact</h5>
+                    <ul class="list-unstyled">
+                        <li class="mb-2"><i class="bi bi-telephone-fill me-2"></i> +91 9239397147</li>
+                        <li class="mb-2"><i class="bi bi-envelope-fill me-2"></i> sales@codefyn.com</li>
+                        <li class="mb-2"><i class="bi bi-geo-alt-fill me-2"></i> West Bengal, Siliguri-734001</li>
+                    </ul>
+                </div>
+                <div class="col-lg-3 col-md-4 col-12 mb-4">
+                     <h5 class="text-uppercase mb-4">Operating In</h5>
+                     <p>Noida, Kolkata, Sikkim, Darjeeling & more.</p>
+                </div>
+            </div>
+            <hr class="text-secondary">
+            <div class="row align-items-center">
+                <div class="col-md-6">
+                    <p class="mb-md-0 small">&copy; 2025 Codefyn. All Rights Reserved.</p>
+                </div>
+                <div class="col-md-6 text-md-end">
+                    <a href="#" class="social-icon"><i class="bi bi-facebook"></i></a>
+                    <a href="#" class="social-icon"><i class="bi bi-twitter-x"></i></a>
+                    <a href="#" class="social-icon"><i class="bi bi-linkedin"></i></a>
+                    <a href="#" class="social-icon"><i class="bi bi-instagram"></i></a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Bootstrap JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Custom JS for animations and navbar scroll effect -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Navbar scroll effect
+            const navbar = document.getElementById('mainNavbar');
+            if (navbar) {
+                window.addEventListener('scroll', function() {
+                    if (window.scrollY > 50) {
+                        navbar.classList.add('scrolled');
+                    } else {
+                        navbar.classList.remove('scrolled');
+                    }
+                });
+            }
+
+            // On-scroll animations
+            const animatedSections = document.querySelectorAll('.animated-section');
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('is-visible');
+                    }
+                });
+            }, {
+                threshold: 0.1
+            });
+
+            animatedSections.forEach(section => {
+                observer.observe(section);
+            });
+        });
+    </script>
+</body>
+</html>

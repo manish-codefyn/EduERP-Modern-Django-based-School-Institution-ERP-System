@@ -1,0 +1,387 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load crispy_forms_tags %}
+
+{% block title %}Generate Fee Invoices - {{ organization.name|default:"ERP System" }}{% endblock %}
+
+{% block extra_css %}
+<style>
+.student-selector-container {
+    max-height: 300px;
+    overflow-y: auto;
+    border: 1px solid var(--table-border-color);
+    border-radius: 8px;
+    padding: 15px;
+    background-color: var(--card-bg);
+}
+
+.student-item {
+    display: flex;
+    align-items: center;
+    padding: 10px;
+    margin-bottom: 8px;
+    border-radius: 6px;
+    transition: all 0.3s ease;
+    border: 1px solid transparent;
+}
+
+.student-item:hover {
+    background-color: var(--sidebar-hover-bg);
+    border-color: var(--accent-color);
+}
+
+.student-item.selected {
+    background-color: rgba(var(--accent-color-rgb), 0.1);
+    border-color: var(--accent-color);
+}
+
+.student-info {
+    flex-grow: 1;
+    margin-left: 12px;
+}
+
+.student-name {
+    font-weight: 500;
+    color: var(--text-color);
+}
+
+.student-details {
+    font-size: 0.875rem;
+    color: var(--text-muted-color);
+}
+
+.search-box {
+    position: sticky;
+    top: 0;
+    background: var(--card-bg);
+    padding: 10px 0;
+    z-index: 10;
+}
+
+.select-all-container {
+    padding: 10px 0;
+    border-bottom: 1px solid var(--table-border-color);
+    margin-bottom: 10px;
+}
+
+.student-count {
+    font-size: 0.875rem;
+    color: var(--text-muted-color);
+    margin-top: 10px;
+    padding: 5px;
+    background-color: var(--sidebar-hover-bg);
+    border-radius: 4px;
+}
+
+/* Custom checkbox styling */
+.form-check-input {
+    width: 18px;
+    height: 18px;
+    border: 2px solid var(--table-border-color);
+}
+
+.form-check-input:checked {
+    background-color: var(--accent-color);
+    border-color: var(--accent-color);
+}
+
+.form-check-input:focus {
+    box-shadow: 0 0 0 0.25rem rgba(var(--accent-color-rgb), 0.25);
+}
+
+.empty-state {
+    text-align: center;
+    padding: 20px;
+    color: var(--text-muted-color);
+}
+
+.empty-state i {
+    font-size: 2rem;
+    margin-bottom: 10px;
+    opacity: 0.5;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 mb-0"><i class="bi bi-journal-plus me-2"></i>Generate Fee Invoices</h1>
+        <a href="{% url 'finance:fee_invoice_list' %}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-1"></i> Back
+        </a>
+    </div>
+
+    <div class="card card-custom shadow-sm">
+        <div class="card-header">Fee Invoice Details</div>
+        <div class="card-body">
+            <form method="post" id="invoiceForm">
+                {% csrf_token %}
+
+                {% if messages %}
+                    {% for message in messages %}
+                        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+
+                <div class="row g-3">
+                    <!-- Academic Year -->
+                    <div class="col-md-6">
+                        <label for="academic_year" class="form-label">Academic Year</label>
+                        <select name="academic_year" id="academic_year" class="form-select" required>
+                            <option value="">Select Academic Year</option>
+                            {% for year in academic_years %}
+                                <option value="{{ year.id }}">{{ year.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <!-- Class -->
+                    <div class="col-md-6">
+                        <label for="class" class="form-label">Class</label>
+                        <select name="class" id="class" class="form-select" required>
+                            <option value="">Select Class</option>
+                            {% for c in classes %}
+                            <option value="{{ c.id }}">{{ c.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <!-- Fee Structure -->
+                    <div class="col-md-6">
+                        <label for="fee_structure" class="form-label">Fee Structure</label>
+                        <select name="fee_structure" id="fee_structure" class="form-select" required>
+                            <option value="">Select Fee Structure</option>
+                            {% for fs in fee_structures %}
+                                <option value="{{ fs.id }}" data-amount="{{ fs.amount }}">
+                                    {{ fs.name }} - ₹{{ fs.amount }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <!-- Amount Preview -->
+                    <div class="col-md-6">
+                        <label class="form-label">Amount per Student</label>
+                        <div class="form-control" style="background-color: var(--sidebar-hover-bg);">
+                            <span id="amountPreview">₹0.00</span>
+                            <small class="text-muted" id="totalAmountPreview"></small>
+                        </div>
+                    </div>
+
+                    <!-- Students Selection -->
+                    <div class="col-md-12">
+                        <label class="form-label">Select Students</label>
+                        
+                        <div class="student-selector-container">
+                            <!-- Search Box -->
+                            <div class="search-box">
+                                <input type="text" id="studentSearch" class="form-control" 
+                                       placeholder="Search students..." style="margin-bottom: 10px;">
+                                
+                                <div class="select-all-container">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="selectAllStudents">
+                                        <label class="form-check-label" for="selectAllStudents">
+                                            Select All Students
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Students List -->
+                            <div id="studentsList">
+                                <div class="empty-state">
+                                    <i class="bi bi-people"></i>
+                                    <p>Please select a class to view students</p>
+                                </div>
+                            </div>
+
+                            <!-- Selected Count -->
+                            <div class="student-count" id="selectedCount">
+                                0 students selected
+                            </div>
+                        </div>
+                        
+                        <small class="text-muted">
+                            <i class="bi bi-info-circle"></i> Select students by checking the boxes. Use search to filter students.
+                        </small>
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-end mt-4">
+                    <button type="submit" class="btn btn-primary" id="submitButton" disabled>
+                        <i class="bi bi-check-circle me-1"></i> Generate Invoices
+                    </button>
+                    <a href="{% url 'finance:fee_invoice_list' %}" class="btn btn-outline-secondary ms-2">
+                        <i class="bi bi-x-circle me-1"></i> Cancel
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const classSelect = document.getElementById('class');
+    const feeStructureSelect = document.getElementById('fee_structure');
+    const studentsList = document.getElementById('studentsList');
+    const studentSearch = document.getElementById('studentSearch');
+    const selectAllCheckbox = document.getElementById('selectAllStudents');
+    const amountPreview = document.getElementById('amountPreview');
+    const totalAmountPreview = document.getElementById('totalAmountPreview');
+    const selectedCount = document.getElementById('selectedCount');
+    const submitButton = document.getElementById('submitButton');
+    const form = document.getElementById('invoiceForm');
+
+    let currentStudents = [];
+    let selectedStudents = new Set();
+
+    // Load students when class changes
+    classSelect.addEventListener('change', function () {
+        const classId = this.value;
+        studentsList.innerHTML = '<div class="empty-state"><i class="bi bi-hourglass-split"></i><p>Loading students...</p></div>';
+        
+        if (!classId) {
+            studentsList.innerHTML = '<div class="empty-state"><i class="bi bi-people"></i><p>Please select a class to view students</p></div>';
+            return;
+        }
+
+        fetch(`/finance/invoices/ajax/get-students/?class=${classId}`)
+            .then(res => res.json())
+            .then(data => {
+                currentStudents = data.students;
+                renderStudents(currentStudents);
+                updateSelectionCount();
+            })
+            .catch(error => {
+                studentsList.innerHTML = '<div class="empty-state"><i class="bi bi-exclamation-triangle"></i><p>Error loading students</p></div>';
+            });
+    });
+
+    // Update amount preview when fee structure changes
+    feeStructureSelect.addEventListener('change', function () {
+        const selectedOption = this.options[this.selectedIndex];
+        const amount = selectedOption.getAttribute('data-amount') || '0';
+        amountPreview.textContent = `₹${parseFloat(amount).toFixed(2)}`;
+        updateTotalAmountPreview();
+    });
+
+    // Search functionality
+    studentSearch.addEventListener('input', function () {
+        const searchTerm = this.value.toLowerCase();
+        const filteredStudents = currentStudents.filter(student => 
+            student.full_name.toLowerCase().includes(searchTerm) ||
+            student.roll_number.toLowerCase().includes(searchTerm)
+        );
+        renderStudents(filteredStudents);
+    });
+
+    // Select all functionality
+    selectAllCheckbox.addEventListener('change', function () {
+        const checkboxes = studentsList.querySelectorAll('input[type="checkbox"]');
+        checkboxes.forEach(checkbox => {
+            checkbox.checked = this.checked;
+            const studentId = checkbox.value;
+            if (this.checked) {
+                selectedStudents.add(studentId);
+            } else {
+                selectedStudents.delete(studentId);
+            }
+        });
+        updateSelectionCount();
+        updateTotalAmountPreview();
+        updateSubmitButton();
+    });
+
+    // Form submission
+    form.addEventListener('submit', function (e) {
+        // Add selected students to form data
+        selectedStudents.forEach(studentId => {
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = 'students';
+            input.value = studentId;
+            form.appendChild(input);
+        });
+    });
+
+    function renderStudents(students) {
+        if (students.length === 0) {
+            studentsList.innerHTML = '<div class="empty-state"><i class="bi bi-search"></i><p>No students found</p></div>';
+            return;
+        }
+
+        studentsList.innerHTML = students.map(student => `
+            <div class="student-item ${selectedStudents.has(student.id.toString()) ? 'selected' : ''}">
+                <input class="form-check-input" type="checkbox" 
+                       value="${student.id}" 
+                       id="student_${student.id}"
+                       ${selectedStudents.has(student.id.toString()) ? 'checked' : ''}>
+                <div class="student-info">
+                    <div class="student-name">${student.full_name}</div>
+                    <div class="student-details">
+                        Roll: ${student.roll_number} | 
+                        Class: ${student.current_class_name}
+                    </div>
+                </div>
+            </div>
+        `).join('');
+
+        // Add event listeners to checkboxes
+        studentsList.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+            checkbox.addEventListener('change', function () {
+                const studentId = this.value;
+                if (this.checked) {
+                    selectedStudents.add(studentId);
+                    this.closest('.student-item').classList.add('selected');
+                } else {
+                    selectedStudents.delete(studentId);
+                    this.closest('.student-item').classList.remove('selected');
+                    selectAllCheckbox.checked = false;
+                }
+                updateSelectionCount();
+                updateTotalAmountPreview();
+                updateSubmitButton();
+            });
+        });
+    }
+
+    function updateSelectionCount() {
+        const count = selectedStudents.size;
+        selectedCount.textContent = `${count} student${count !== 1 ? 's' : ''} selected`;
+        
+        // Update select all checkbox state
+        const allCheckboxes = studentsList.querySelectorAll('input[type="checkbox"]');
+        selectAllCheckbox.checked = allCheckboxes.length > 0 && 
+                                   selectedStudents.size === allCheckboxes.length &&
+                                   allCheckboxes.length > 0;
+    }
+
+    function updateTotalAmountPreview() {
+        const feeAmount = parseFloat(feeStructureSelect.options[feeStructureSelect.selectedIndex]?.getAttribute('data-amount') || 0);
+        const totalAmount = feeAmount * selectedStudents.size;
+        totalAmountPreview.textContent = selectedStudents.size > 0 ? 
+            `Total: ₹${totalAmount.toFixed(2)} for ${selectedStudents.size} students` : '';
+    }
+
+    function updateSubmitButton() {
+        submitButton.disabled = selectedStudents.size === 0 || 
+                               !feeStructureSelect.value || 
+                               !classSelect.value ||
+                               !document.getElementById('academic_year').value;
+    }
+
+    // Enable/disable submit button based on form state
+    document.getElementById('academic_year').addEventListener('change', updateSubmitButton);
+    classSelect.addEventListener('change', updateSubmitButton);
+    feeStructureSelect.addEventListener('change', updateSubmitButton);
+});
+</script>
+{% endblock %}

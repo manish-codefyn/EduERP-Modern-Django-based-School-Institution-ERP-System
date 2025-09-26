@@ -1,0 +1,241 @@
+{% extends 'organization/base.html' %}
+{% load static %}
+
+{% block title %}Partnerships - {{ organization.name|default:"Codefyn" }}{% endblock %}
+
+{% block content %}
+<!-- Header -->
+<div class="header-section mb-4">
+    <div class="row align-items-center">
+        <div class="col-md-7 d-flex align-items-center">
+            <div class="header-icon me-3">
+                <i class="bi bi-handshake display-6 text-primary"></i>
+            </div>
+            <div>
+                <h1 class="h3 fw-bold mb-1">Partnerships</h1>
+                <p class="text-custom mb-0">Manage institutional partnerships, MoUs, and collaborations</p>
+            </div>
+        </div>
+        <div class="col-md-5">
+            <div class="d-flex justify-content-end align-items-center gap-2">
+                <a href="{% url 'organization:partnership_create' %}" class="btn btn-primary">
+                    <i class="bi bi-plus-circle me-1"></i> New Partnership
+                </a>
+                <div class="dropdown">
+                    <button class="btn btn-secondary dropdown-toggle" type="button" id="exportDropdown"
+                        data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="bi bi-download me-1"></i> Export
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="exportDropdown">
+                        <li class="dropdown-header">Export Partnerships</li>
+                        <li><a class="dropdown-item" href="{% url 'organization:partnership_export' %}?format=csv">
+                            <i class="bi bi-filetype-csv me-2"></i> Export CSV</a></li>
+                        <li><a class="dropdown-item" href="{% url 'organization:partnership_export' %}?format=excel">
+                            <i class="bi bi-file-earmark-excel me-2"></i> Export Excel</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Stats Cards -->
+<div class="row g-4 mb-4">
+    <div class="col-xl-3 col-md-6">
+        <div class="card stats-card text-white h-100 organization-gradient">
+            <div class="card-body">
+                <h6 class="card-title mb-1 small opacity-75">TOTAL PARTNERSHIPS</h6>
+                <h3 class="mb-0 fw-bold">{{ total_partnerships }}</h3>
+                <p class="mb-0 small opacity-75"><i class="bi bi-handshake me-1"></i>All partnerships</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6">
+        <div class="card stats-card text-white h-100" style="background: var(--success-gradient);">
+            <div class="card-body">
+                <h6 class="card-title mb-1 small opacity-75">ACTIVE PARTNERSHIPS</h6>
+                <h3 class="mb-0 fw-bold">{{ active_partnerships }}</h3>
+                <p class="mb-0 small opacity-75"><i class="bi bi-check-circle me-1"></i>Currently active</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6">
+        <div class="card stats-card text-white h-100" style="background: var(--warning-gradient);">
+            <div class="card-body">
+                <h6 class="card-title mb-1 small opacity-75">EXPIRING SOON</h6>
+                <h3 class="mb-0 fw-bold">{{ expiring_soon }}</h3>
+                <p class="mb-0 small opacity-75"><i class="bi bi-clock me-1"></i>Need renewal</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6">
+        <div class="card stats-card text-white h-100" style="background: var(--info-gradient);">
+            <div class="card-body">
+                <h6 class="card-title mb-1 small opacity-75">INDUSTRY PARTNERS</h6>
+                <h3 class="mb-0 fw-bold">{{ industry_count }}</h3>
+                <p class="mb-0 small opacity-75"><i class="bi bi-building me-1"></i>Industry collaborations</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Partnerships Table -->
+<div class="card card-custom">
+    <div class="card-header bg-transparent border-0 pt-4 px-4">
+        <h5 class="card-title mb-0 fw-bold text-custom">All Partnerships</h5>
+        <p class="text-custom mb-0">Manage and review institutional partnerships</p>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            {% if partnerships %}
+            <table id="partnershipTable" class="w-100 table-custom table-hover align-middle">
+                <thead>
+                    <tr>
+                        <th>Institution</th>
+                        <th>Partner Name</th>
+                        <th>Partner Type</th>
+                        <th>Description</th>
+                        <th>Duration</th>
+                        <th>Contact Info</th>
+                        <th>Renewal</th>
+                        <th>Status</th>
+                        <th>Document</th>
+                        <th class="text-center">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for partnership in partnerships %}
+                    <tr>
+                        <td>
+                            <strong class="text-custom">{{ partnership.institution.name }}</strong>
+                        </td>
+                        <td>
+                            <div class="d-flex flex-column">
+                                <strong class="text-custom">{{ partnership.partner_name }}</strong>
+                                {% if partnership.contact_person %}
+                                <small class="text-custom">Contact: {{ partnership.contact_person }}</small>
+                                {% endif %}
+                            </div>
+                        </td>
+                        <td>
+                            <span class="badge bg-primary bg-opacity-10 text-primary">
+                                {{ partnership.get_partner_type_display }}
+                            </span>
+                        </td>
+                        <td>
+                            <small class="text-custom">
+                                {{ partnership.description|truncatewords:10|default:"No description" }}
+                            </small>
+                        </td>
+                        <td>
+                            <div class="d-flex flex-column">
+                                <small class="text-custom">
+                                    <strong>Start:</strong> 
+                                    {{ partnership.start_date|date:"M d, Y"|default:"Not set" }}
+                                </small>
+                                <small class="text-custom">
+                                    <strong>End:</strong> 
+                                    {{ partnership.end_date|date:"M d, Y"|default:"Not set" }}
+                                </small>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="d-flex flex-column">
+                                {% if partnership.contact_email %}
+                                <small class="text-custom">{{ partnership.contact_email }}</small>
+                                {% endif %}
+                                {% if partnership.contact_phone %}
+                                <small class="text-custom">{{ partnership.contact_phone }}</small>
+                                {% endif %}
+                            </div>
+                        </td>
+                        <td>
+                            {% if partnership.renewal_required %}
+                            <span class="badge bg-warning bg-opacity-10 text-warning">
+                                <i class="bi bi-arrow-repeat me-1"></i>Required
+                            </span>
+                            {% else %}
+                            <span class="badge bg-secondary bg-opacity-10 text-secondary">
+                                Not Required
+                            </span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if partnership.is_active %}
+                            <span class="badge bg-success bg-opacity-10 text-success">
+                                <i class="bi bi-check-circle me-1"></i>Active
+                            </span>
+                            {% else %}
+                            <span class="badge bg-danger bg-opacity-10 text-danger">
+                                <i class="bi bi-x-circle me-1"></i>Inactive
+                            </span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if partnership.document %}
+                            <a href="{{ partnership.document.url }}" target="_blank" 
+                               class="btn btn-sm btn-outline-primary" title="View Document">
+                                <i class="bi bi-file-earmark-text"></i>
+                            </a>
+                            {% else %}
+                            <span class="text-custom">-</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-center">
+                            <div class="btn-group" role="group">
+                                <a href="{% url 'organization:partnership_detail' partnership.pk %}" 
+                                   class="btn btn-sm btn-outline-primary" title="View">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                                <a href="{% url 'organization:partnership_update' partnership.pk %}" 
+                                   class="btn btn-sm btn-outline-secondary" title="Edit">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                <a href="{% url 'organization:partnership_delete' partnership.pk %}" 
+                                   class="btn btn-sm btn-outline-danger" title="Delete">
+                                    <i class="bi bi-trash"></i>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <div class="empty-state text-center py-5">
+                <i class="bi bi-handshake fs-1 text-custom"></i>
+                <h4 class="mt-3 mb-2">No Partnerships Found</h4>
+                <p class="text-custom mb-4">Start by adding your first partnership record</p>
+                <a href="{% url 'organization:partnership_create' %}" class="btn btn-primary">
+                    <i class="bi bi-plus-circle me-2"></i> Add First Partnership
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    $('#partnershipTable').DataTable({
+        "pageLength": 10,
+        "order": [[1, 'asc']],
+        "language": {
+            "search": "<i class='bi bi-search me-2'></i>Search:",
+            "lengthMenu": "Show _MENU_ entries",
+            "info": "Showing _START_ to _END_ of _TOTAL_ entries",
+            "paginate": {
+                "previous": "<i class='bi bi-chevron-left'></i>",
+                "next": "<i class='bi bi-chevron-right'></i>"
+            }
+        },
+        "columnDefs": [
+            { "targets": [0, -1], "orderable": false, "className": "dt-center" }
+        ],
+        "responsive": true
+    });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,279 @@
+{% extends 'transport/base.html' %}
+{% load static %}
+
+{% block title %}{% if form.instance.pk %}Edit{% else %}Add{% endif %} Vehicle{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+
+    <!-- Header -->
+    <div class="header-section mb-4">
+        <div class="row align-items-center">
+            <div class="col-md-8 d-flex align-items-center">
+                <div class="header-icon me-3">
+                    <i class="bi bi-truck display-6 text-primary"></i>
+                </div>
+                <div>
+                    <h1 class="h3 fw-bold mb-1">
+                        {% if form.instance.pk %}Edit Vehicle{% else %}Add New Vehicle{% endif %}
+                    </h1>
+                    <p class="text-custom mb-0">
+                        {% if form.instance.pk %}Update vehicle details{% else %}Register a new vehicle{% endif %}
+                    </p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="d-flex justify-content-end align-items-center gap-2">
+                    <a href="{% url 'transport:vehicle_list' %}" class="btn btn-outline-primary">
+                        <i class="bi bi-arrow-left me-1"></i> Back to List
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Form -->
+    <div class="row justify-content-center">
+        <div class="col-xl-8">
+            <div class="card card-custom">
+                <div class="card-header bg-transparent border-0">
+                    <h5 class="card-title fw-bold text-custom mb-0">
+                        <i class="bi bi-clipboard-data me-2"></i>Vehicle Information
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="post" novalidate>
+                        {% csrf_token %}
+                        
+                        {% if form.non_field_errors %}
+                        <div class="alert alert-danger">
+                            {% for error in form.non_field_errors %}
+                            <p class="mb-0">{{ error }}</p>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+
+                        <div class="row g-3">
+                            <!-- Basic Information -->
+                            <div class="col-md-6">
+                                <label for="{{ form.vehicle_number.id_for_label }}" class="form-label">
+                                    Vehicle Number *
+                                </label>
+                                {{ form.vehicle_number }}
+                                {% if form.vehicle_number.errors %}
+                                <div class="text-danger small mt-1">
+                                    {% for error in form.vehicle_number.errors %}
+                                    {{ error }}
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                            </div>
+
+                            <div class="col-md-6">
+                                <label for="{{ form.vehicle_type.id_for_label }}" class="form-label">
+                                    Vehicle Type *
+                                </label>
+                                {{ form.vehicle_type }}
+                                {% if form.vehicle_type.errors %}
+                                <div class="text-danger small mt-1">
+                                    {% for error in form.vehicle_type.errors %}
+                                    {{ error }}
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                            </div>
+
+                            <div class="col-md-6">
+                                <label for="{{ form.make.id_for_label }}" class="form-label">
+                                    Make *
+                                </label>
+                                {{ form.make }}
+                                {% if form.make.errors %}
+                                <div class="text-danger small mt-1">
+                                    {% for error in form.make.errors %}
+                                    {{ error }}
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                            </div>
+
+                            <div class="col-md-6">
+                                <label for="{{ form.model.id_for_label }}" class="form-label">
+                                    Model *
+                                </label>
+                                {{ form.model }}
+                                {% if form.model.errors %}
+                                <div class="text-danger small mt-1">
+                                    {% for error in form.model.errors %}
+                                    {{ error }}
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                            </div>
+
+                            <div class="col-md-4">
+                                <label for="{{ form.year.id_for_label }}" class="form-label">
+                                    Year *
+                                </label>
+                                {{ form.year }}
+                                {% if form.year.errors %}
+                                <div class="text-danger small mt-1">
+                                    {% for error in form.year.errors %}
+                                    {{ error }}
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                            </div>
+
+                            <div class="col-md-4">
+                                <label for="{{ form.color.id_for_label }}" class="form-label">
+                                    Color *
+                                </label>
+                                {{ form.color }}
+                                {% if form.color.errors %}
+                                <div class="text-danger small mt-1">
+                                    {% for error in form.color.errors %}
+                                    {{ error }}
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                            </div>
+
+                            <div class="col-md-4">
+                                <label for="{{ form.capacity.id_for_label }}" class="form-label">
+                                    Capacity *
+                                </label>
+                                {{ form.capacity }}
+                                {% if form.capacity.errors %}
+                                <div class="text-danger small mt-1">
+                                    {% for error in form.capacity.errors %}
+                                    {{ error }}
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                            </div>
+
+                            <div class="col-md-6">
+                                <label for="{{ form.fuel_type.id_for_label }}" class="form-label">
+                                    Fuel Type *
+                                </label>
+                                {{ form.fuel_type }}
+                                {% if form.fuel_type.errors %}
+                                <div class="text-danger small mt-1">
+                                    {% for error in form.fuel_type.errors %}
+                                    {{ error }}
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                            </div>
+
+                            <div class="col-md-6">
+                                <label for="{{ form.insurance_number.id_for_label }}" class="form-label">
+                                    Insurance Number
+                                </label>
+                                {{ form.insurance_number }}
+                                {% if form.insurance_number.errors %}
+                                <div class="text-danger small mt-1">
+                                    {% for error in form.insurance_number.errors %}
+                                    {{ error }}
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Dates Section -->
+                            <div class="col-md-4">
+                                <label for="{{ form.insurance_expiry.id_for_label }}" class="form-label">
+                                    Insurance Expiry
+                                </label>
+                                {{ form.insurance_expiry }}
+                                {% if form.insurance_expiry.errors %}
+                                <div class="text-danger small mt-1">
+                                    {% for error in form.insurance_expiry.errors %}
+                                    {{ error }}
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                            </div>
+
+                            <div class="col-md-4">
+                                <label for="{{ form.registration_date.id_for_label }}" class="form-label">
+                                    Registration Date *
+                                </label>
+                                {{ form.registration_date }}
+                                {% if form.registration_date.errors %}
+                                <div class="text-danger small mt-1">
+                                    {% for error in form.registration_date.errors %}
+                                    {{ error }}
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                            </div>
+
+                            <div class="col-md-4">
+                                <label for="{{ form.registration_expiry.id_for_label }}" class="form-label">
+                                    Registration Expiry *
+                                </label>
+                                {{ form.registration_expiry }}
+                                {% if form.registration_expiry.errors %}
+                                <div class="text-danger small mt-1">
+                                    {% for error in form.registration_expiry.errors %}
+                                    {{ error }}
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Status -->
+                            <div class="col-12">
+                                <div class="form-check form-switch">
+                                    {{ form.is_active }}
+                                    <label class="form-check-label" for="{{ form.is_active.id_for_label }}">
+                                        Active Vehicle
+                                    </label>
+                                </div>
+                                {% if form.is_active.errors %}
+                                <div class="text-danger small mt-1">
+                                    {% for error in form.is_active.errors %}
+                                    {{ error }}
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-between align-items-center mt-4 pt-3 border-top">
+                            <a href="{% url 'transport:vehicle_list' %}" class="btn btn-outline-secondary">
+                                <i class="bi bi-x-circle me-1"></i> Cancel
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-check-circle me-1"></i>
+                                {% if form.instance.pk %}Update Vehicle{% else %}Create Vehicle{% endif %}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Add Bootstrap classes to form fields
+    const formFields = document.querySelectorAll('input, select, textarea');
+    formFields.forEach(field => {
+        field.classList.add('form-control');
+    });
+
+    // Special handling for checkbox
+    const isActiveField = document.getElementById('{{ form.is_active.id_for_label }}');
+    if (isActiveField) {
+        isActiveField.classList.add('form-check-input');
+    }
+});
+</script>
+{% endblock %}

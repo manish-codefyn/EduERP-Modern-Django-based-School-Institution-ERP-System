@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Exam Result Detail{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="card shadow-sm mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">Exam Result Details</h5>
+            <a href="{% url 'examination:exam_result_list' %}" class="btn btn-secondary btn-sm">
+                <i class="bi bi-arrow-left me-1"></i> Back to List
+            </a>
+            <div class="btn-group">
+                <a href="{% url 'examination:exam_result_report_card' pk=result.id %}?format=pdf" 
+                class="btn btn-danger">
+                    <i class="bi bi-file-pdf"></i> PDF
+                </a>
+                <a href="{% url 'examination:exam_result_report_card' pk=result.id %}?format=excel" 
+                class="btn btn-success">
+                    <i class="bi bi-file-excel"></i> Excel
+                </a>
+                <a href="{% url 'examination:exam_result_report_card' pk=result.id %}?format=csv" 
+                class="btn btn-info">
+                    <i class="bi bi-file-text"></i> CSV
+                </a>
+            </div>
+        </div>
+        <div class="card-body">
+            <table class="table table-bordered table-striped">
+                <tbody>
+                    <tr>
+                        <th>Student</th>
+                        <td>{{ result.student.full_name }}</td>
+                        <th>Admission Number</th>
+                        <td>{{ result.student.admission_number }}</td>
+                    </tr>
+                    <tr>
+                        <th>Exam</th>
+                        <td>{{ result.exam_subject.exam.name }}</td>
+                        <th>Subject</th>
+                        <td>{{ result.exam_subject.subject.name }}</td>
+                    </tr>
+                    <tr>
+                        <th>Max Marks</th>
+                        <td>{{ result.exam_subject.max_marks }}</td>
+                        <th>Marks Obtained</th>
+                        <td>{{ result.marks_obtained }}</td>
+                    </tr>
+                    <tr>
+                        <th>Percentage</th>
+                        <td>{{ result.marks_obtained }}%</td>
+                        <th>Grade</th>
+                        <td>{{ result.grade }}</td>
+                    </tr>
+                    <tr>
+                        <th>Remarks</th>
+                        <td colspan="3">{{ result.remarks|default:"-" }}</td>
+                    </tr>
+                    <tr>
+                        <th>Exam Date</th>
+                        <td>{{ result.exam_subject.exam_date }}</td>
+                        <th>Created At</th>
+                        <td>{{ result.created_at }}</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

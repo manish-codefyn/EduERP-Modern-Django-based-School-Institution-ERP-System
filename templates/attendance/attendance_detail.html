@@ -1,0 +1,265 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Attendance Detail" %} - {{ organization.name|default:"ERP System" }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .detail-card-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 1rem 1.5rem;
+        font-weight: 600;
+        border-radius: 8px 8px 0 0;
+    }
+    
+    .detail-card-body {
+        padding: 1.5rem;
+        background: white;
+        border-radius: 0 0 8px 8px;
+    }
+    
+    .info-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .info-item {
+        display: flex;
+        flex-direction: column;
+        padding: 1rem;
+        background: #f8f9fa;
+        border-radius: 8px;
+        border-left: 4px solid #667eea;
+    }
+    
+    .info-label {
+        font-size: 0.75rem;
+        color: #6c757d;
+        font-weight: 600;
+        text-transform: uppercase;
+        margin-bottom: 0.25rem;
+    }
+    
+    .info-value {
+        font-size: 1rem;
+        color: #2c3e50;
+        font-weight: 500;
+    }
+    
+    .attendance-badge {
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        font-size: 0.875rem;
+        font-weight: 500;
+    }
+    
+    .card-footer {
+        background: #f8f9fa;
+        border-top: 1px solid #e9ecef;
+        padding: 1rem 1.5rem;
+        border-radius: 0 0 8px 8px;
+    }
+    
+    .student-avatar {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 1.5rem;
+        font-weight: bold;
+        margin-right: 1rem;
+    }
+    
+    .student-header {
+        display: flex;
+        align-items: center;
+        margin-bottom: 2rem;
+        padding: 1rem;
+        background: #f8f9fa;
+        border-radius: 8px;
+        border-left: 4px solid #667eea;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+
+    <!-- Header -->
+    <div class="header-section">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb breadcrumb-dark">
+                        <li class="breadcrumb-item"><a href="{% url 'attendance:attendance_list' %}">{% trans "Attendance" %}</a></li>
+                        <li class="breadcrumb-item active" aria-current="page">{% trans "Attendance Detail" %}</li>
+                    </ol>
+                </nav>
+                <h1 class="display-6 fw-bold mb-2">{% trans "Attendance Record" %}</h1>
+                <p class="lead mb-0 opacity-75">{% trans "Detailed view of student attendance record" %}</p>
+            </div>
+            <div class="col-md-4 text-md-end">
+                <span class="status-badge bg-{% if object.status == 'present' %}success{% elif object.status == 'absent' %}danger{% elif object.status == 'late' %}warning{% elif object.status == 'half_day' %}info{% elif object.status == 'excused' %}primary{% else %}secondary{% endif %} bg-opacity-10 text-{% if object.status == 'present' %}success{% elif object.status == 'absent' %}danger{% elif object.status == 'late' %}warning{% elif object.status == 'half_day' %}info{% elif object.status == 'excused' %}primary{% else %}secondary{% endif %}">
+                    <i class="bi bi-{% if object.status == 'present' %}check-circle{% elif object.status == 'absent' %}x-circle{% elif object.status == 'late' %}clock{% elif object.status == 'half_day' %}hourglass-split{% elif object.status == 'excused' %}patch-check{% else %}question-circle{% endif %} me-2"></i>
+                    {{ object.get_status_display }}
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <!-- Student Header -->
+            <div class="student-header mb-4">
+                <div class="student-avatar">
+                    {{ object.student.first_name|first }}{{ object.student.last_name|first }}
+                </div>
+                <div>
+                    <h4 class="mb-1">{{ object.student.get_full_name }}</h4>
+                    <p class="text-muted mb-0">
+                        {{ object.student.admission_number }} • {{ object.student.current_class.name }}
+                        {% if object.student.section %}| {{ object.student.section.name }}{% endif %}
+                    </p>
+                </div>
+            </div>
+
+            <!-- Attendance Details Card -->
+            <div class="card card-custom mb-4">
+                <div class="detail-card-header">
+                    <i class="bi bi-info-circle me-2"></i>{% trans "Attendance Information" %}
+                </div>
+                <div class="detail-card-body">
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <span class="info-label">{% trans "Student Name" %}</span>
+                            <span class="info-value">
+                                <i class="bi bi-person me-2 text-primary"></i>
+                                {{ object.student.get_full_name }}
+                            </span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">{% trans "Admission Number" %}</span>
+                            <span class="info-value">
+                                <i class="bi bi-tag me-2 text-info"></i>
+                                {{ object.student.admission_number }}
+                            </span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">{% trans "Date" %}</span>
+                            <span class="info-value">
+                                <i class="bi bi-calendar me-2 text-success"></i>
+                                {{ object.date }}
+                            </span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">{% trans "Status" %}</span>
+                            <span class="info-value">
+                                <span class="attendance-badge bg-{% if object.status == 'present' %}success{% elif object.status == 'absent' %}danger{% elif object.status == 'late' %}warning{% elif object.status == 'half_day' %}info{% elif object.status == 'excused' %}primary{% else %}secondary{% endif %} bg-opacity-10 text-{% if object.status == 'present' %}success{% elif object.status == 'absent' %}danger{% elif object.status == 'late' %}warning{% elif object.status == 'half_day' %}info{% elif object.status == 'excused' %}primary{% else %}secondary{% endif %}">
+                                    <i class="bi bi-{% if object.status == 'present' %}check-circle{% elif object.status == 'absent' %}x-circle{% elif object.status == 'late' %}clock{% elif object.status == 'half_day' %}hourglass-split{% elif object.status == 'excused' %}patch-check{% else %}question-circle{% endif %} me-1"></i>
+                                    {{ object.get_status_display }}
+                                </span>
+                            </span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">{% trans "Class" %}</span>
+                            <span class="info-value">
+                                <i class="bi bi-building me-2 text-warning"></i>
+                                {{ object.student.current_class.name }}
+                            </span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">{% trans "Section" %}</span>
+                            <span class="info-value">
+                                <i class="bi bi-diagram-3 me-2 text-info"></i>
+                                {{ object.student.section.name|default:_("Not assigned") }}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Additional Information Card -->
+            <div class="card card-custom mb-4">
+                <div class="detail-card-header">
+                    <i class="bi bi-card-checklist me-2"></i>{% trans "Additional Information" %}
+                </div>
+                <div class="detail-card-body">
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <span class="info-label">{% trans "Remarks" %}</span>
+                            <span class="info-value">
+                                <i class="bi bi-chat-text me-2 text-secondary"></i>
+                                {{ object.remarks|default:_("No remarks provided") }}
+                            </span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">{% trans "Marked By" %}</span>
+                            <span class="info-value">
+                                <i class="bi bi-person-check me-2 text-primary"></i>
+                                {{ object.marked_by.get_full_name }}
+                            </span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">{% trans "Institution" %}</span>
+                            <span class="info-value">
+                                <i class="bi bi-building me-2 text-warning"></i>
+                                {{ object.institution.name }}
+                            </span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">{% trans "Record Created" %}</span>
+                            <span class="info-value">
+                                <i class="bi bi-clock me-2 text-info"></i>
+                                {{ object.created_at|date:"M d, Y H:i" }}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="card card-custom">
+                <div class="card-footer">
+                    <div class="d-flex justify-content-between">
+                        <a href="{% url 'attendance:attendance_list' %}" class="btn btn-outline-secondary">
+                            <i class="bi bi-arrow-left me-2"></i>{% trans "Back to List" %}
+                        </a>
+                        <div class="btn-group">
+                            {% if request.user.is_superuser %}
+                            <a href="{% url 'attendance:attendance_update' object.id %}" class="btn btn-outline-primary">
+                                <i class="bi bi-pencil me-2"></i>{% trans "Edit" %}
+                            </a>
+                            <a href="{% url 'attendance:attendance_delete' object.id %}" class="btn btn-outline-danger">
+                                <i class="bi bi-trash me-2"></i>{% trans "Delete" %}
+                            </a>
+                            {% endif %}
+                          <!-- Add export buttons in your attendance detail template -->
+<div class="btn-group">
+    <a href="{% url 'attendance:attendance_export_detail' object.id %}?format=pdf" 
+       class="btn btn-outline-primary btn-sm" target="_blank">
+        <i class="bi bi-file-earmark-pdf me-1"></i>PDF
+    </a>
+    <a href="{% url 'attendance:attendance_export_detail' object.id %}?format=csv" 
+       class="btn btn-outline-success btn-sm">
+        <i class="bi bi-file-earmark-spreadsheet me-1"></i>CSV
+    </a>
+    <a href="{% url 'attendance:attendance_export_detail' object.id %}?format=excel" 
+       class="btn btn-outline-info btn-sm">
+        <i class="bi bi-file-earmark-excel me-1"></i>Excel
+    </a>
+</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

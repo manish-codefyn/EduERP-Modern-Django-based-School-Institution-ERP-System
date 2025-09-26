@@ -1,0 +1,94 @@
+{% extends "student_portal/base.html" %}
+
+{% block title %}Student Portal - {{ organization.name|default:"Codefyn" }}{% endblock %}
+
+{% block header_name %}{{ student.full_name }}{% endblock %}
+{% block header_avatar %}{{ student.avatar_url|default:"https://i.pravatar.cc/60?img=32" }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+
+    <!-- Quick Stats Cards -->
+    <div class="row mb-4">
+        <div class="col-md-6 mb-3">
+            <div class="dashboard-card text-center p-3 shadow-sm rounded-4">
+                <i class="bi bi-calendar-check card-icon fs-2 mb-2"></i>
+                <h6 class="mb-1">Attendance</h6>
+                <p class="fw-bold text-success mb-0">{{ attendance_percentage }}%</p>
+            </div>
+        </div>
+        <div class="col-md-6 mb-3">
+            <div class="dashboard-card text-center p-3 shadow-sm rounded-4">
+                <i class="bi bi-award card-icon fs-2 mb-2"></i>
+                <h6 class="mb-1">Overall Grade</h6>
+                <p class="fw-bold text-primary mb-0">{{ overall_grade|default:"N/A" }}</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="dashboard-card p-3 mb-4 shadow-sm rounded-4">
+        <h5 class="mb-3">Quick Actions</h5>
+        <div class="d-flex flex-wrap gap-3">
+            <a href="{% url 'student_portal:timetable' %}" class="action-item text-center p-3 shadow-sm rounded-3">
+                <i class="bi bi-calendar3 fs-3 mb-1"></i>
+                <div>Timetable</div>
+            </a>
+            <a href="{% url 'student_portal:academic_overview' %}" class="action-item text-center p-3 shadow-sm rounded-3">
+                <i class="bi bi-book fs-3 mb-1"></i>
+                <div>Assignments</div>
+            </a>
+            <a href="{% url 'student_portal:notifications' %}" class="action-item text-center p-3 shadow-sm rounded-3">
+                <i class="bi bi-bell fs-3 mb-1"></i>
+                <div>Notices</div>
+            </a>
+            <a href="{% url 'student_portal:resources' %}" class="action-item text-center p-3 shadow-sm rounded-3">
+                <i class="bi bi-people fs-3 mb-1"></i>
+                <div>Community</div>
+            </a>
+        </div>
+    </div>
+
+    <!-- Today's Classes -->
+    <div class="dashboard-card p-3 mb-4 shadow-sm rounded-4">
+        <h5 class="mb-3">Today's Classes - {{ today|date:"l, d M Y" }}</h5>
+        {% if todays_classes %}
+            {% for cls in todays_classes %}
+            <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
+                <div>
+                    <div class="fw-bold">{{ cls.subject.name }}</div>
+                    <small class="text-muted">{{ cls.teacher.full_name }}</small>
+                </div>
+                <div class="text-end">
+                    <small>{{ cls.start_time|time:"H:i" }} - {{ cls.end_time|time:"H:i" }}</small>
+                    {% if cls.room %}
+                        <br><small>Room: {{ cls.room }}</small>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <p class="text-muted">No classes scheduled today.</p>
+        {% endif %}
+    </div>
+
+    <!-- Recent Grades -->
+    <div class="dashboard-card p-3 mb-4 shadow-sm rounded-4">
+        <h5 class="mb-3">Recent Grades</h5>
+        {% if recent_grades %}
+            {% for grade in recent_grades %}
+            <div class="d-flex justify-content-between align-items-center py-2 {% if not forloop.last %}border-bottom{% endif %}">
+                <div>
+                    <div class="fw-semibold">{{ grade.subject }}</div>
+                    <small class="text-muted">{{ grade.date|date:"M d, Y" }}</small>
+                </div>
+                <div class="badge bg-primary rounded-pill px-3 py-1">{{ grade.grade }}</div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <p class="text-muted">No grades available.</p>
+        {% endif %}
+    </div>
+
+</div>
+{% endblock %}

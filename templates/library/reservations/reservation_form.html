@@ -1,0 +1,116 @@
+{% extends 'library/base.html' %}
+{% load widget_tweaks %}
+
+{% block title %}
+{% if reservation.pk %}
+Edit Reservation - Library Management - {{ organization.name|default:"codefyn" }}
+{% else %}
+Create Reservation - Library Management - {{ organization.name|default:"codefyn" }}
+{% endif %}
+{% endblock %}
+
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-lg-8 mx-auto">
+            <div class="card card-custom">
+                <div class="card-header detail-card-header ">
+                    <h4 class="card-title mb-0">{{ title }}</h4>
+                </div>
+                <div class="card-body">
+                    <form method="post" novalidate>
+                        {% csrf_token %}
+                        
+                        {% if form.non_field_errors %}
+                        <div class="alert alert-danger">
+                            {% for error in form.non_field_errors %}
+                            <p class="mb-0">{{ error }}</p>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    {{ form.book.label_tag }}
+                                    {{ form.book|add_class:"form-control" }}
+                                    {% if form.book.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.book.errors.0 }}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    {{ form.user.label_tag }}
+                                    {{ form.user|add_class:"form-control" }}
+                                    {% if form.user.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.user.errors.0 }}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    {{ form.expiry_date.label_tag }}
+                                    {{ form.expiry_date|add_class:"form-control" }}
+                                    {% if form.expiry_date.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.expiry_date.errors.0 }}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    {{ form.status.label_tag }}
+                                    {{ form.status|add_class:"form-control" }}
+                                    {% if form.status.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.status.errors.0 }}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            {{ form.notes.label_tag }}
+                            {{ form.notes|add_class:"form-control" }}
+                            {% if form.notes.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.notes.errors.0 }}
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'library:reservation_list' %}" class="btn btn-secondary">Cancel</a>
+                            <button type="submit" class="btn btn-primary">Save Reservation</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block javascript %}
+<script>
+$(document).ready(function() {
+    // Initialize datepicker if needed
+    $('input[type="datetime-local"]').flatpickr({
+        enableTime: true,
+        dateFormat: "Y-m-d H:i",
+        time_24hr: true
+    });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,16 @@
+[
+  {
+    "name": "Academic Year 2023-2024",
+    "institution_code": "main-campus",
+    "start_date": "2023-09-01",
+    "end_date": "2024-06-30",
+    "is_current": true
+  },
+  {
+    "name": "Academic Year 2024-2025",
+    "institution_code": "main-campus",
+    "start_date": "2024-09-01",
+    "end_date": "2025-06-30",
+    "is_current": false
+  }
+]

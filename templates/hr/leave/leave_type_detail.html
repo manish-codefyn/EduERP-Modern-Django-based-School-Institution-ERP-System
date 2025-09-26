@@ -1,0 +1,136 @@
+{% extends 'hr/base.html' %}
+{% load static %}
+
+{% block title %}{{ leave_type.name }} - {{ organization.name|default:"ERP System" }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+
+    <!-- Header -->
+    <div class="header-section mb-4">
+        <div class="row align-items-center">
+            <div class="col-md-7 d-flex align-items-center">
+                <div class="header-icon me-3">
+                    <i class="bi bi-calendar-event display-6 text-primary"></i>
+                </div>
+                <div>
+                    <h1 class="h3 fw-bold mb-1">{{ leave_type.name }}</h1>
+                    <p class="text-custom mb-0">Leave type details and configuration</p>
+                </div>
+            </div>
+            <div class="col-md-5">
+                <div class="d-flex justify-content-end align-items-center gap-2">
+                    <a href="{% url 'hr:leave_type_list' %}" class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-left me-1"></i> Back to List
+                    </a>
+                    {% if request.user.is_superadmin or request.user.is_institution_admin or request.user.is_principal %}
+                    <a href="{% url 'hr:leave_type_update' leave_type.pk %}" class="btn btn-outline-primary">
+                        <i class="bi bi-pencil me-1"></i> Edit
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Details Card -->
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card card-custom">
+                <div class="card-header bg-transparent border-0 pt-4 px-4">
+                    <h5 class="card-title mb-0 fw-bold text-custom">Leave Type Information</h5>
+                    <p class="text-custom mb-0">Complete details of this leave type</p>
+                </div>
+                <div class="card-body">
+                    <div class="row g-4">
+                        <div class="col-md-6">
+                            <h6 class="text-custom small fw-bold">Name</h6>
+                            <p class="mb-0">{{ leave_type.name }}</p>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <h6 class="text-custom small fw-bold">Code</h6>
+                            <p class="mb-0"><span class="badge bg-secondary">{{ leave_type.code }}</span></p>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <h6 class="text-custom small fw-bold">Maximum Days</h6>
+                            <p class="mb-0">{{ leave_type.max_days }} days per year</p>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <h6 class="text-custom small fw-bold">Carry Forward</h6>
+                            <p class="mb-0">
+                                {% if leave_type.carry_forward %}
+                                <span class="badge bg-success bg-opacity-10 text-success">
+                                    <i class="bi bi-check-circle me-1"></i>Yes
+                                </span>
+                                {% else %}
+                                <span class="badge bg-secondary bg-opacity-10 text-secondary">
+                                    <i class="bi bi-x-circle me-1"></i>No
+                                </span>
+                                {% endif %}
+                            </p>
+                        </div>
+                        
+                        {% if leave_type.carry_forward %}
+                        <div class="col-md-6">
+                            <h6 class="text-custom small fw-bold">Maximum Carry Forward</h6>
+                            <p class="mb-0">{{ leave_type.max_carry_forward }} days</p>
+                        </div>
+                        {% endif %}
+                        
+                        <div class="col-md-6">
+                            <h6 class="text-custom small fw-bold">Approval Required</h6>
+                            <p class="mb-0">
+                                {% if leave_type.requires_approval %}
+                                <span class="badge bg-warning bg-opacity-10 text-warning">
+                                    <i class="bi bi-check-circle me-1"></i>Yes
+                                </span>
+                                {% else %}
+                                <span class="badge bg-secondary bg-opacity-10 text-secondary">
+                                    <i class="bi bi-x-circle me-1"></i>No
+                                </span>
+                                {% endif %}
+                            </p>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <h6 class="text-custom small fw-bold">Status</h6>
+                            <p class="mb-0">
+                                {% if leave_type.is_active %}
+                                <span class="badge bg-success bg-opacity-10 text-success">
+                                    <i class="bi bi-check-circle me-1"></i>Active
+                                </span>
+                                {% else %}
+                                <span class="badge bg-danger bg-opacity-10 text-danger">
+                                    <i class="bi bi-x-circle me-1"></i>Inactive
+                                </span>
+                                {% endif %}
+                            </p>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <h6 class="text-custom small fw-bold">Created</h6>
+                            <p class="mb-0">{{ leave_type.created_at|date:"M d, Y H:i" }}</p>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <h6 class="text-custom small fw-bold">Last Updated</h6>
+                            <p class="mb-0">{{ leave_type.updated_at|date:"M d, Y H:i" }}</p>
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex justify-content-end gap-2 mt-4">
+                        <a href="{% url 'hr:leave_type_list' %}" class="btn btn-outline-secondary">Back to List</a>
+                        {% if request.user.is_superadmin or request.user.is_institution_admin or request.user.is_principal %}
+                        <a href="{% url 'hr:leave_type_update' leave_type.pk %}" class="btn btn-primary">Edit</a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

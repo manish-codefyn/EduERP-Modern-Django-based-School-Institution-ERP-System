@@ -1,0 +1,113 @@
+{% extends 'communications/base.html' %}
+{% load static %}
+
+{% block title %}Broadcast Details - {{ organization.name|default:"codefyn" }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+
+    <!-- Header -->
+    <div class="header-section mb-4">
+        <div class="row align-items-center">
+            <div class="col-md-6 d-flex align-items-center">
+                <div class="header-icon me-3">
+                    <i class="bi bi-megaphone display-6 text-primary"></i>
+                </div>
+                <div>
+                    <h1 class="h3 fw-bold mb-1">{{ broadcast.name }}</h1>
+                    <p class="text-custom mb-0">Broadcast details for your institution</p>
+                </div>
+            </div>
+            <div class="col-md-6 d-flex justify-content-end gap-2">
+                <a href="{% url 'communications:broadcast_update' broadcast.pk %}" class="btn btn-outline-warning">
+                    <i class="bi bi-pencil me-1"></i> Edit
+                </a>
+                <a href="{% url 'communications:broadcast_delete' broadcast.pk %}" class="btn btn-outline-danger">
+                    <i class="bi bi-trash me-1"></i> Delete
+                </a>
+                <a href="{% url 'communications:broadcast_list' %}" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left me-1"></i> Back to Broadcasts
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Broadcast Details Card -->
+    <div class="card card-custom mb-4">
+        <div class="card-header bg-transparent border-0 pt-4 px-4">
+            <h5 class="card-title mb-0 fw-bold text-custom">Broadcast Information</h5>
+            <p class="text-custom mb-0">View all details of this broadcast</p>
+        </div>
+        <div class="card-body px-4 py-4">
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <h6 class="fw-bold"><i class="bi bi-megaphone me-2"></i>Name</h6>
+                    <p>{{ broadcast.name }}</p>
+                </div>
+                <div class="col-md-6">
+                    <h6 class="fw-bold"><i class="bi bi-people me-2"></i>Audience</h6>
+                    <p>{{ broadcast.get_audience_display }}</p>
+                </div>
+                <div class="col-md-6">
+                    <h6 class="fw-bold"><i class="bi bi-bell me-2"></i>Channel</h6>
+                    <p>
+                        {% if broadcast.channel == 'email' %}
+                            <i class="bi bi-envelope me-1"></i> Email
+                        {% elif broadcast.channel == 'sms' %}
+                            <i class="bi bi-chat-dots me-1"></i> SMS
+                        {% else %}
+                            <i class="bi bi-bell me-1"></i> Push Notification
+                        {% endif %}
+                    </p>
+                </div>
+                <div class="col-md-6">
+                    <h6 class="fw-bold"><i class="bi bi-flag me-2"></i>Status</h6>
+                    <p>
+                        {% if broadcast.status == 'sent' %}
+                            <span class="badge bg-success">Sent</span>
+                        {% elif broadcast.status == 'pending' %}
+                            <span class="badge bg-warning">Pending</span>
+                        {% else %}
+                            <span class="badge bg-secondary">Failed</span>
+                        {% endif %}
+                    </p>
+                </div>
+                <div class="col-md-6">
+                    <h6 class="fw-bold"><i class="bi bi-person me-2"></i>Created By</h6>
+                    <p>{{ broadcast.created_by.get_full_name }}</p>
+                </div>
+                <div class="col-md-6">
+                    <h6 class="fw-bold"><i class="bi bi-calendar me-2"></i>Created At</h6>
+                    <p>{{ broadcast.created_at|date:"d M Y H:i" }}</p>
+                </div>
+                <div class="col-md-6">
+                    <h6 class="fw-bold"><i class="bi bi-clock me-2"></i>Scheduled For</h6>
+                    <p>
+                        {% if broadcast.scheduled_for %}
+                            {{ broadcast.scheduled_for|date:"d M Y H:i" }}
+                        {% else %}
+                            Immediate
+                        {% endif %}
+                    </p>
+                </div>
+                <div class="col-12">
+                    <h6 class="fw-bold"><i class="bi bi-card-text me-2"></i>Message</h6>
+                    <div class="p-3 border rounded bg-light">
+                        <pre class="mb-0">{{ broadcast.message }}</pre>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <h6 class="fw-bold"><i class="bi bi-people-fill me-2"></i>Recipients</h6>
+                    <p>Total: {{ broadcast.total_recipients }} | Successful: {{ broadcast.successful }} | Failed: {{ broadcast.failed }}</p>
+                    <p>Success Rate: {{ broadcast.success_rate }}</p>
+                </div>
+                <div class="col-md-6">
+                    <h6 class="fw-bold"><i class="bi bi-card-list me-2"></i>Template Used</h6>
+                    <p>{{ broadcast.template.name|default:"No Template" }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

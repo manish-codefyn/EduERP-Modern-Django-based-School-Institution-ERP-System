@@ -1,0 +1,219 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Delete Room - {{ organization.name|default:"ERP System" }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row justify-content-center">
+        <div class="col-md-6 col-lg-5">
+            <!-- Header -->
+            <div class="header-section text-center mb-4">
+                <div class="d-flex align-items-center justify-content-center">
+                    <div class="header-icon me-3">
+                        <i class="bi bi-exclamation-triangle display-6 text-danger"></i> 
+                    </div>
+                    <div>
+                        <h1 class="h3 fw-bold mb-1">Delete Room</h1>
+                        <p class="text-custom mb-0">Confirm deletion of room record</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Delete Confirmation Card -->
+            <div class="card card-custom">
+                <div class="card-header bg-transparent border-0 pt-4 px-4">
+                    <h5 class="card-title mb-0 fw-bold text-danger">Confirm Deletion</h5>
+                    <p class="text-custom mb-0">Please review the room details before proceeding</p>
+                </div>
+                <div class="card-body">
+                    <!-- Room Details -->
+                    <div class="alert alert-danger">
+                        <div class="d-flex">
+                            <div class="flex-shrink-0">
+                                <i class="bi bi-exclamation-octagon-fill me-2"></i>
+                            </div>
+                            <div class="flex-grow-1">
+                                <h6 class="alert-heading">Warning!</h6>
+                                You are about to delete a room record. This action cannot be undone.
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="room-details-card border rounded p-3 mb-4">
+                        <h6 class="fw-semibold mb-3">Room Details</h6>
+                        <div class="row">
+                            <div class="col-6 mb-2">
+                                <small class="text-custom">Room Number:</small>
+                                <p class="fw-semibold mb-0">{{ object.room_number }}</p>
+                            </div>
+                            <div class="col-6 mb-2">
+                                <small class="text-custom">Hostel:</small>
+                                <p class="fw-semibold mb-0">{{ object.hostel.name }}</p>
+                            </div>
+                            <div class="col-6 mb-2">
+                                <small class="text-custom">Floor:</small>
+                                <p class="fw-semibold mb-0">{{ object.floor }}</p>
+                            </div>
+                            <div class="col-6 mb-2">
+                                <small class="text-custom">Room Type:</small>
+                                <p class="fw-semibold mb-0">{{ object.get_room_type_display }}</p>
+                            </div>
+                            <div class="col-6 mb-2">
+                                <small class="text-custom">Capacity:</small>
+                                <p class="fw-semibold mb-0">{{ object.capacity }} beds</p>
+                            </div>
+                            <div class="col-6 mb-2">
+                                <small class="text-custom">Current Occupancy:</small>
+                                <p class="fw-semibold mb-0">{{ object.current_occupancy }} students</p>
+                            </div>
+                            <div class="col-12 mb-2">
+                                <small class="text-custom">Status:</small>
+                                <p class="fw-semibold mb-0">
+                                    {% if object.is_available %}
+                                        <span class="badge bg-success bg-opacity-10 text-success">
+                                            <i class="bi bi-check-circle me-1"></i>Available
+                                        </span>
+                                    {% else %}
+                                        <span class="badge bg-danger bg-opacity-10 text-danger">
+                                            <i class="bi bi-x-circle me-1"></i>Unavailable
+                                        </span>
+                                    {% endif %}
+                                </p>
+                            </div>
+                            {% if object.maintenance_required %}
+                            <div class="col-12 mb-2">
+                                <small class="text-custom">Maintenance:</small>
+                                <p class="fw-semibold mb-0">
+                                    <span class="badge bg-warning bg-opacity-10 text-warning">
+                                        <i class="bi bi-tools me-1"></i>Maintenance Required
+                                    </span>
+                                </p>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Warning Messages -->
+                    {% if object.current_occupancy > 0 %}
+                    <div class="alert alert-warning">
+                        <div class="d-flex">
+                            <div class="flex-shrink-0">
+                                <i class="bi bi-people-fill me-2"></i>
+                            </div>
+                            <div class="flex-grow-1">
+                                <h6 class="alert-heading">Occupied Room!</h6>
+                                This room currently has {{ object.current_occupancy }} student(s) allocated. 
+                                Deleting this room will also remove all student allocations.
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    {% if object.maintenance_required %}
+                    <div class="alert alert-info">
+                        <div class="d-flex">
+                            <div class="flex-shrink-0">
+                                <i class="bi bi-tools me-2"></i>
+                            </div>
+                            <div class="flex-grow-1">
+                                <h6 class="alert-heading">Maintenance Flagged</h6>
+                                This room is marked as requiring maintenance. Please ensure any ongoing 
+                                maintenance issues are properly documented before deletion.
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Delete Form -->
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <div class="mb-3">
+                            <label for="confirmationText" class="form-label fw-semibold">
+                                Type "DELETE" to confirm
+                            </label>
+                            <input type="text" class="form-control" id="confirmationText" 
+                                   placeholder="Enter DELETE to confirm" required
+                                   oninput="toggleDeleteButton()">
+                            <div class="form-text">This action is permanent and cannot be undone.</div>
+                        </div>
+
+                        <div class="d-flex gap-2 justify-content-end">
+                            <a href="{% url 'hostel:room_list' %}" class="btn btn-secondary">
+                                <i class="bi bi-arrow-left me-1"></i> Cancel
+                            </a>
+                            <button type="submit" id="deleteButton" class="btn btn-danger" disabled>
+                                <i class="bi bi-trash me-1"></i> Delete Room
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Related Information -->
+            <div class="card card-custom mt-4">
+                <div class="card-header bg-transparent border-0 pt-4 px-4">
+                    <h5 class="card-title mb-0 fw-bold text-custom">Related Information</h5>
+                    <p class="text-custom mb-0">This deletion will affect the following</p>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="d-flex align-items-center mb-3">
+                                <div class="flex-shrink-0">
+                                    <i class="bi bi-people text-primary fs-5"></i>
+                                </div>
+                                <div class="flex-grow-1 ms-3">
+                                    <h6 class="mb-0">{{ object.current_occupancy }} Student Allocations</h6>
+                                    <small class="text-custom">Will be permanently removed</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="d-flex align-items-center mb-3">
+                                <div class="flex-shrink-0">
+                                    <i class="bi bi-building text-primary fs-5"></i>
+                                </div>
+                                <div class="flex-grow-1 ms-3">
+                                    <h6 class="mb-0">Hostel Capacity</h6>
+                                    <small class="text-custom">Hostel occupancy will be updated</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function toggleDeleteButton() {
+    const confirmationText = document.getElementById('confirmationText').value;
+    const deleteButton = document.getElementById('deleteButton');
+    
+    if (confirmationText.toUpperCase() === 'DELETE') {
+        deleteButton.disabled = false;
+    } else {
+        deleteButton.disabled = true;
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Focus on confirmation input
+    document.getElementById('confirmationText').focus();
+    
+    // Add confirmation dialog for navigation away
+    window.addEventListener('beforeunload', function(e) {
+        const confirmationText = document.getElementById('confirmationText').value;
+        if (confirmationText !== '') {
+            e.preventDefault();
+            e.returnValue = 'You have unsaved changes. Are you sure you want to leave?';
+        }
+    });
+});
+</script>
+{% endblock %}

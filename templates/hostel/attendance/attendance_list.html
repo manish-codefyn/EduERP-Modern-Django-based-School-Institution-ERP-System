@@ -1,0 +1,373 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load custom_filters %}
+
+{% block title %}Hostel Attendance - {{ organization.name|default:"ERP System" }}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+<!-- Hostel Attendance Header -->
+<div class="header-section">
+    <div class="row align-items-center">
+        <div class="col-12 mb-2">
+            <!-- Breadcrumb -->
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb breadcrumb-dark">
+                    <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Dashboard</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Hostel Attendance</li>
+                </ol>
+            </nav>
+        </div>
+
+        <div class="col-md-8">
+            <div class="d-flex align-items-center">
+                <div class="header-icon me-3">
+                   <i class="bi bi-person-check-fill display-6 text-primary"></i>
+                </div>
+                <div>
+                    <h1 class="h3 fw-bold mb-1">Hostel Attendance</h1>
+                    <p class="text-custom mb-0">Track and manage student attendance in hostels.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            {% if request.user.is_superadmin or request.user.is_institution_admin or request.user.is_principal %}
+            <div class="d-flex gap-2 justify-content-md-end flex-wrap">
+                <div class="btn-group w-100" role="group">
+                    <a href="{% url 'hostel:attendance_add' %}" class="btn btn-primary">
+                        <i class="bi bi-plus-circle me-1"></i> Mark Attendance
+                    </a>
+                    <button type="button" class="btn btn-primary dropdown-toggle dropdown-toggle-split" 
+                            data-bs-toggle="dropdown" aria-expanded="false">
+                        <span class="visually-hidden">Toggle Dropdown</span>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <li>
+                             <button type="button" class="dropdown-item" data-bs-toggle="modal" data-bs-target="#exportModal">
+                                <i class="bi bi-download me-2"></i> Export Data
+                            </button>
+                          
+                        </li>
+                        <!-- <li><hr class="dropdown-divider"></li>
+                        <li>
+                            <a class="dropdown-item" href="{% url 'hostel:attendance_list' %}">
+                                <i class="bi bi-person-check-fill me-2"></i> View Attendance
+                            </a>
+                        </li> -->
+                    </ul>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Stats Cards -->
+<div class="row g-4 mb-4">
+    <div class="col-xl-3 col-md-6">
+        <div class="card stats-card text-white h-100" style="background: var(--primary-gradient);">
+            <div class="card-body d-flex flex-column justify-content-between">
+                <div class="row align-items-center">
+                    <div class="col-8">
+                        <h6 class="card-title mb-1 small opacity-75">TOTAL RECORDS</h6>
+                        <h3 class="mb-0 fw-bold">{{ total_attendances|default:"0" }}</h3>
+                        <p class="mb-0 small opacity-75">All attendance entries</p>
+                    </div>
+                    <div class="col-4 text-end">
+                        <i class="bi bi-journal-check fs-2"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6">
+        <div class="card stats-card text-white h-100" style="background: var(--info-gradient);">
+            <div class="card-body d-flex flex-column justify-content-between">
+                <div class="row align-items-center">
+                    <div class="col-8">
+                        <h6 class="card-title mb-1 small opacity-75">TODAY'S ENTRIES</h6>
+                        <h3 class="mb-0 fw-bold">{{ today_attendances|default:"0" }}</h3>
+                        <p class="mb-0 small opacity-75">Entries for today</p>
+                    </div>
+                    <div class="col-4 text-end">
+                        <i class="bi bi-calendar-day fs-2"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6">
+        <div class="card stats-card text-white h-100" style="background: var(--success-gradient);">
+            <div class="card-body d-flex flex-column justify-content-between">
+                <div class="row align-items-center">
+                    <div class="col-8">
+                        <h6 class="card-title mb-1 small opacity-75">TODAY - PRESENT</h6>
+                        <h3 class="mb-0 fw-bold">{{ today_present|default:"0" }}</h3>
+                        <p class="mb-0 small opacity-75">Students present today</p>
+                    </div>
+                    <div class="col-4 text-end">
+                        <i class="bi bi-person-check fs-2"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6">
+        <div class="card stats-card text-white h-100" style="background: var(--danger-gradient);">
+            <div class="card-body d-flex flex-column justify-content-between">
+                <div class="row align-items-center">
+                    <div class="col-8">
+                        <h6 class="card-title mb-1 small opacity-75">TODAY - ABSENT</h6>
+                        <h3 class="mb-0 fw-bold">{{ today_absent|default:"0" }}</h3>
+                        <p class="mb-0 small opacity-75">Students absent today</p>
+                    </div>
+                    <div class="col-4 text-end">
+                        <i class="bi bi-person-x fs-2"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card card-custom">
+    <div class="card-header d-flex justify-content-between align-items-center flex-wrap">
+        <h5 class="card-title mb-0 fw-bold text-custom">Attendance Records</h5>
+        <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#filterCollapse" aria-expanded="false" aria-controls="filterCollapse">
+            <i class="bi bi-funnel me-1"></i> Filters
+        </button>
+    </div>
+
+    <div class="collapse" id="filterCollapse">
+        <div class="card-body bg-light">
+            <form method="get" class="row g-3 align-items-center">
+                <div class="col-md-4">
+                    <label for="dateFilter" class="form-label">Date</label>
+                    <input type="date" class="form-control" id="dateFilter" name="date" value="{{ request.GET.date }}">
+                </div>
+                <div class="col-md-4">
+                    <label for="studentFilter" class="form-label">Student</label>
+                    <select class="form-select" id="studentFilter" name="student">
+                        <option value="">All Students</option>
+                        {% for student in students %}
+                            <option value="{{ student.id }}" {% if request.GET.student|add:"0" == student.id %}selected{% endif %}>
+                                {{ student.name }} ({{ student.admission_id }})
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label for="statusFilter" class="form-label">Status</label>
+                    <select class="form-select" id="statusFilter" name="status">
+                        <option value="">All</option>
+                        <option value="present" {% if request.GET.status == 'present' %}selected{% endif %}>Present</option>
+                        <option value="absent" {% if request.GET.status == 'absent' %}selected{% endif %}>Absent</option>
+                    </select>
+                </div>
+                <div class="col-md-2 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary w-100">Apply</button>
+                    <a href="{% url 'hostel:attendance_list' %}" class="btn btn-link text-muted" title="Clear Filters">
+                        <i class="bi bi-x-circle"></i>
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="card-body">
+        <div class="table-responsive">
+            <table id="attendanceTable" class="table-custom w-100  table-hover align-middle">
+                <thead>
+                    <tr>
+                        <th>Student Name</th>
+                       
+                        <th>Date</th>
+                        <th>Status</th>
+                        <th>Recorded By</th>
+                        <th>Notes</th>
+                        <!-- <th class="text-center">Actions</th> -->
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for record in attendances %}
+                    <tr>
+                       <td>
+                           <a href="{% url 'students:student_detail' record.student.id %}" class="fw-bold">{{ record.student }}</a>
+                       </td>
+                      
+                       <td>{{ record.date|date:"d M Y" }}</td>
+                       <td>
+                            {% if record.present %}
+                                <span class="badge bg-success-soft text-success">
+                                    <i class="bi bi-check-circle me-1"></i>Present
+                                </span>
+                            {% else %}
+                                <span class="badge bg-danger-soft text-danger">
+                                    <i class="bi bi-x-circle me-1"></i>Absent
+                                </span>
+                            {% endif %}
+                       </td>
+                       <td>{{ record.recorded_by.name|default:"N/A" }}</td>
+                       <td>{{ record.notes|truncatechars:30|default:"-" }}</td>
+                       <!-- <td>
+                            <div class="d-flex justify-content-center">
+                                <!-- <a href="{% url 'hostel:attendance_update' record.id %}" class="btn btn-sm btn-outline-secondary me-1" title="Edit" data-bs-toggle="tooltip">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                <a href="{% url 'hostel:attendance_delete' record.id %}" class="btn btn-sm btn-outline-danger" title="Delete" data-bs-toggle="tooltip">
+                                    <i class="bi bi-trash"></i>
+                                </a> -->
+                            </div>
+                       </td> -->
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="text-center py-5">
+                            <i class="bi bi-inbox fs-1 text-muted"></i>
+                            <h5 class="mt-2">No Attendance Records Found</h5>
+                            <p class="text-muted">Try adjusting your filters or add a new attendance record.</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+</div>
+
+<!-- Export Modal -->
+<div class="modal fade" id="exportModal" tabindex="-1" aria-labelledby="exportModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title fw-bold">Export Hostels</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="get" action="{% url 'hostel:attendance_export' %}">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Export Format</label>
+                        <select class="form-select" name="format" required>
+                            <option value="csv">CSV Format</option>
+                            <option value="pdf">PDF Document</option>
+                            <option value="excel">Excel Spreadsheet</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Hostel Type</label>
+                        <select class="form-select" name="gender_type">
+                            <option value="">All Types</option>
+                            <option value="male">Male Only</option>
+                            <option value="female">Female Only</option>
+                            <option value="mixed">Mixed</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Status</label>
+                        <select class="form-select" name="is_active">
+                            <option value="">All Statuses</option>
+                            <option value="true">Active Only</option>
+                            <option value="false">Inactive Only</option>
+                        </select>
+                    </div>
+                    <div class="mb-3 form-check">
+                        <input type="checkbox" class="form-check-input" name="include_inactive" value="true" checked>
+                        <label class="form-check-label">Include inactive hostels</label>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-download me-2"></i>Export Data
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+<script>
+$(document).ready(function() {
+    $('#attendanceTable').DataTable({
+        "order": [[ 2, "desc" ]], // Order by date descending
+        "pageLength": 20,
+        "language": {
+            "search": "",
+            "searchPlaceholder": "Search records..."
+        }
+    });
+
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+
+
+});
+         // 3) Robust modal cleanup handlers
+    // Remove any leftover backdrop BEFORE a modal opens
+    document.querySelectorAll('.modal').forEach(modalEl => {
+        modalEl.addEventListener('show.bs.modal', function () {
+            // if another leftover backdrop exists, remove it
+            document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+        });
+
+        // on hidden, remove backdrops and restore body scrolling
+        modalEl.addEventListener('hidden.bs.modal', function () {
+            document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+            document.body.classList.remove('modal-open');
+            document.body.style.overflow = '';
+            document.body.style.paddingRight = '';
+        });
+    });
+
+    // 4) Safety-net: if a backdrop exists but there is no visible modal, remove it
+    // (handles cases where Bootstrap failed silently)
+    const observer = new MutationObserver(() => {
+        const backdrop = document.querySelector('.modal-backdrop');
+        const anyShown = !!document.querySelector('.modal.show');
+        if (backdrop && !anyShown) {
+            backdrop.remove();
+            document.body.classList.remove('modal-open');
+            document.body.style.overflow = '';
+            document.body.style.paddingRight = '';
+        }
+    });
+    observer.observe(document.body, { childList: true, subtree: true });
+
+    // 5) Allow manual cleanup by pressing Esc (extra safety)
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+            document.body.classList.remove('modal-open');
+            document.body.style.overflow = '';
+            document.body.style.paddingRight = '';
+            document.querySelectorAll('.modal.show').forEach(m => {
+                try { bootstrap.Modal.getInstance(m)?.hide(); } catch(e) {}
+            });
+        }
+    });
+
+    // 6) Final cleanup in case something stuck earlier
+    setTimeout(() => {
+        document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+        document.body.classList.remove('modal-open');
+        document.body.style.overflow = '';
+        document.body.style.paddingRight = '';
+    }, 500);
+</script>
+{% endblock %}

@@ -1,0 +1,659 @@
+{% extends "inventory/base.html" %}
+{% load static %}
+
+{% block title %}Update Status - {{ purchase_order.po_number }} - {{ organization.name|default:"Inventory System" }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+
+    <!-- Header Section -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div class="d-flex align-items-center">
+            <a href="{{ detail_url }}" class="btn btn-outline-secondary btn-sm me-3">
+                <i class="bi bi-arrow-left me-1"></i> Back to PO
+            </a>
+            <div>
+                <h1 class="h3 mb-1 fw-bold text-primary">Update PO Status</h1>
+                <p class="text-muted mb-0">Update the status of Purchase Order: {{ purchase_order.po_number }}</p>
+            </div>
+        </div>
+        <div class="text-end">
+            <span class="badge fs-6 
+                {% if purchase_order.status == 'draft' %}bg-info
+                {% elif purchase_order.status == 'submitted' %}bg-warning text-dark
+                {% elif purchase_order.status == 'approved' %}bg-success
+                {% elif purchase_order.status == 'rejected' %}bg-danger
+                {% elif purchase_order.status == 'ordered' %}bg-secondary
+                {% elif purchase_order.status == 'received' %}bg-primary
+                {% elif purchase_order.status == 'cancelled' %}bg-dark
+                {% endif %}">
+                Current Status: {{ purchase_order.get_status_display }}
+            </span>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Main Form -->
+        <div class="col-lg-8">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-transparent border-0 py-3">
+                    <h5 class="card-title mb-0 fw-bold text-custom">
+                        <i class="bi bi-arrow-up-circle me-2 text-success"></i>Status Update
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="post" id="statusForm">
+                        {% csrf_token %}
+                        
+                        {% if form.non_field_errors %}
+                        <div class="alert alert-danger">
+                            {% for error in form.non_field_errors %}
+                                <i class="bi bi-exclamation-triangle me-2"></i>{{ error }}
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+
+                        <!-- Current Status Display -->
+                        <div class="alert alert-info">
+                            <div class="d-flex align-items-center">
+                                <i class="bi bi-info-circle me-3 fs-4"></i>
+                                <div>
+                                    <strong>Current Status: {{ purchase_order.get_status_display }}</strong>
+                                    <p class="mb-0 mt-1">Select the new status for this purchase order below.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Status Selection -->
+                        <div class="mb-4">
+                            <label for="{{ form.status.id_for_label }}" class="form-label fw-bold">
+                                New Status <span class="text-danger">*</span>
+                            </label>
+                            <div class="status-options">
+                                {% for value, label in form.fields.status.choices %}
+                                <div class="status-option {% if form.status.value == value %}selected{% endif %}" 
+                                     data-value="{{ value }}">
+                                    <input type="radio" name="status" value="{{ value }}" 
+                                           id="status_{{ value }}" 
+                                           {% if form.status.value == value %}checked{% endif %}
+                                           class="visually-hidden">
+                                    <label for="status_{{ value }}" class="status-label">
+                                        <div class="status-icon">
+                                            <i class="bi 
+                                                {% if value == 'approved' %}bi-check-circle
+                                                {% elif value == 'rejected' %}bi-x-circle
+                                                {% elif value == 'submitted' %}bi-send
+                                                {% elif value == 'ordered' %}bi-truck
+                                                {% elif value == 'received' %}bi-check-lg
+                                                {% elif value == 'cancelled' %}bi-slash-circle
+                                                {% else %}bi-pencil{% endif %}">
+                                            </i>
+                                        </div>
+                                        <div class="status-info">
+                                            <span class="status-title">{{ label }}</span>
+                                            <span class="status-description">
+                                                {% if value == 'approved' %}
+                                                Approve this purchase order for ordering
+                                                {% elif value == 'rejected' %}
+                                                Reject this purchase order
+                                                {% elif value == 'submitted' %}
+                                                Submit for approval
+                                                {% elif value == 'ordered' %}
+                                                Mark as ordered with supplier
+                                                {% elif value == 'received' %}
+                                                Mark all items as received
+                                                {% elif value == 'cancelled' %}
+                                                Cancel this purchase order
+                                                {% else %}
+                                                Save as draft
+                                                {% endif %}
+                                            </span>
+                                        </div>
+                                    </label>
+                                </div>
+                                {% endfor %}
+                            </div>
+                            {% if form.status.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.status.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Dynamic Fields Based on Status -->
+                        <div id="dynamicFields">
+                            <!-- Received Date (for received status) -->
+                            <div class="field-group received-field" style="display: none;">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <label for="{{ form.received_date.id_for_label }}" class="form-label fw-bold">
+                                            Received Date <span class="text-danger">*</span>
+                                        </label>
+                                        {{ form.received_date }}
+                                        {% if form.received_date.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {% for error in form.received_date.errors %}
+                                                {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                        {% endif %}
+                                        <small class="text-muted">Date when all items were received</small>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Approved By (for approved status) -->
+                            <div class="field-group approved-field" style="display: none;">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <label for="{{ form.approved_by.id_for_label }}" class="form-label fw-bold">
+                                            Approved By
+                                        </label>
+                                        {{ form.approved_by }}
+                                        {% if form.approved_by.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {% for error in form.approved_by.errors %}
+                                                {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                        {% endif %}
+                                        <small class="text-muted">Person approving this purchase order</small>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Order Date (for ordered status) -->
+                            <div class="field-group ordered-field" style="display: none;">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <label for="order_date" class="form-label fw-bold">
+                                            Order Date
+                                        </label>
+                                        <input type="date" name="order_date" id="order_date" 
+                                               class="form-control" value="{{ purchase_order.order_date|date:'Y-m-d' }}">
+                                        <small class="text-muted">Date when order was placed with supplier</small>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Reason Field (for rejected/cancelled status) -->
+                            <div class="field-group reason-field" style="display: none;">
+                                <div class="row">
+                                    <div class="col-12">
+                                        <label for="reason_notes" class="form-label fw-bold">
+                                            Reason <span class="text-danger">*</span>
+                                        </label>
+                                        <textarea name="reason_notes" id="reason_notes" class="form-control" 
+                                                  rows="3" placeholder="Provide reason for rejection or cancellation..."></textarea>
+                                        <small class="text-muted">This will be added to the PO notes</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Notes -->
+                        <div class="mb-4">
+                            <label for="{{ form.notes.id_for_label }}" class="form-label fw-bold">Additional Notes</label>
+                            {{ form.notes }}
+                            {% if form.notes.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.notes.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                            <small class="text-muted">Any additional comments about this status change</small>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="d-flex justify-content-between align-items-center pt-3 border-top">
+                            <a href="{{ detail_url }}" class="btn btn-outline-secondary">
+                                <i class="bi bi-x-circle me-1"></i> Cancel
+                            </a>
+                            
+                            <div class="btn-group">
+                                <button type="submit" name="save" class="btn btn-primary">
+                                    <i class="bi bi-check-circle me-1"></i> Update Status
+                                </button>
+                                <button type="button" id="previewBtn" class="btn btn-outline-primary">
+                                    <i class="bi bi-eye me-1"></i> Preview Changes
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar Information -->
+        <div class="col-lg-4">
+            <!-- PO Summary -->
+            <div class="card shadow-sm border-0 mb-4">
+                <div class="card-header bg-transparent border-0 py-3">
+                    <h5 class="card-title mb-0 fw-bold">
+                        <i class="bi bi-receipt me-2 text-primary"></i>PO Summary
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <table class="table table-sm table-borderless">
+                        <tr>
+                            <td class="fw-bold text-muted">PO Number:</td>
+                            <td>{{ purchase_order.po_number }}</td>
+                        </tr>
+                        <tr>
+                            <td class="fw-bold text-muted">Supplier:</td>
+                            <td>{{ purchase_order.supplier }}</td>
+                        </tr>
+                        <tr>
+                            <td class="fw-bold text-muted">Total Amount:</td>
+                            <td class="fw-bold text-success">₹{{ purchase_order.total_amount|floatformat:2 }}</td>
+                        </tr>
+                        <tr>
+                            <td class="fw-bold text-muted">Items:</td>
+                            <td>{{ purchase_order.items.count }} items</td>
+                        </tr>
+                        <tr>
+                            <td class="fw-bold text-muted">Created:</td>
+                            <td>{{ purchase_order.created_by.get_full_name }}</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Status Guide -->
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-transparent border-0 py-3">
+                    <h5 class="card-title mb-0 fw-bold">
+                        <i class="bi bi-info-circle me-2 text-info"></i>Status Guide
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="status-guide">
+                        <div class="guide-item">
+                            <span class="guide-badge bg-warning"></span>
+                            <div class="guide-content">
+                                <strong>Submitted</strong>
+                                <small>Awaiting approval from administrator</small>
+                            </div>
+                        </div>
+                        <div class="guide-item">
+                            <span class="guide-badge bg-success"></span>
+                            <div class="guide-content">
+                                <strong>Approved</strong>
+                                <small>Ready to be ordered with supplier</small>
+                            </div>
+                        </div>
+                        <div class="guide-item">
+                            <span class="guide-badge bg-secondary"></span>
+                            <div class="guide-content">
+                                <strong>Ordered</strong>
+                                <small>Order placed with supplier</small>
+                            </div>
+                        </div>
+                        <div class="guide-item">
+                            <span class="guide-badge bg-primary"></span>
+                            <div class="guide-content">
+                                <strong>Received</strong>
+                                <small>All items received in inventory</small>
+                            </div>
+                        </div>
+                        <div class="guide-item">
+                            <span class="guide-badge bg-danger"></span>
+                            <div class="guide-content">
+                                <strong>Rejected/Cancelled</strong>
+                                <small>PO will not be processed</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Next Steps -->
+            <div class="card shadow-sm border-0 mt-4">
+                <div class="card-header bg-transparent border-0 py-3">
+                    <h5 class="card-title mb-0 fw-bold">
+                        <i class="bi bi-lightbulb me-2 text-warning"></i>What Happens Next?
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div id="nextStepsContent">
+                        <p class="text-muted">Select a status to see what happens next...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Preview Modal -->
+    <div class="modal fade" id="previewModal" tabindex="-1" aria-labelledby="previewModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="previewModalLabel">Preview Status Change</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle me-2"></i>
+                        This is a preview of the changes that will be made.
+                    </div>
+                    
+                    <table class="table table-bordered">
+                        <tr>
+                            <td class="fw-bold bg-light">Current Status</td>
+                            <td>
+                                <span class="badge 
+                                    {% if purchase_order.status == 'draft' %}bg-info
+                                    {% elif purchase_order.status == 'submitted' %}bg-warning text-dark
+                                    {% elif purchase_order.status == 'approved' %}bg-success
+                                    {% elif purchase_order.status == 'rejected' %}bg-danger
+                                    {% elif purchase_order.status == 'ordered' %}bg-secondary
+                                    {% elif purchase_order.status == 'received' %}bg-primary
+                                    {% elif purchase_order.status == 'cancelled' %}bg-dark
+                                    {% endif %}">
+                                    {{ purchase_order.get_status_display }}
+                                </span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="fw-bold bg-light">New Status</td>
+                            <td id="previewNewStatus"></td>
+                        </tr>
+                        <tr>
+                            <td class="fw-bold bg-light">Additional Information</td>
+                            <td id="previewAdditionalInfo"></td>
+                        </tr>
+                    </table>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="confirmSubmit">
+                        <i class="bi bi-check-circle me-1"></i> Confirm Update
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.status-options {
+    display: grid;
+    gap: 12px;
+}
+
+.status-option {
+    border: 2px solid #e9ecef;
+    border-radius: 12px;
+    padding: 0;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.status-option:hover {
+    border-color: #667eea;
+    transform: translateY(-2px);
+}
+
+.status-option.selected {
+    border-color: #667eea;
+    background-color: #f8f9ff;
+}
+
+.status-label {
+    display: flex;
+    align-items: center;
+    padding: 16px;
+    margin: 0;
+    cursor: pointer;
+    width: 100%;
+}
+
+.status-icon {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 16px;
+    font-size: 1.5rem;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+.status-option[data-value="approved"] .status-icon {
+    background: linear-gradient(135deg, #4ecdc4 0%, #44a08d 100%);
+}
+
+.status-option[data-value="rejected"] .status-icon,
+.status-option[data-value="cancelled"] .status-icon {
+    background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+}
+
+.status-option[data-value="submitted"] .status-icon {
+    background: linear-gradient(135deg, #f6d365 0%, #fda085 100%);
+}
+
+.status-option[data-value="ordered"] .status-icon {
+    background: linear-gradient(135deg, #a8c0ff 0%, #3f2b96 100%);
+}
+
+.status-option[data-value="received"] .status-icon {
+    background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+}
+
+.status-info {
+    flex: 1;
+}
+
+.status-title {
+    display: block;
+    font-weight: 600;
+    font-size: 1.1rem;
+    margin-bottom: 4px;
+}
+
+.status-description {
+    display: block;
+    font-size: 0.9rem;
+    color: #6c757d;
+}
+
+.guide-item {
+    display: flex;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.guide-badge {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    margin-right: 12px;
+}
+
+.guide-content {
+    flex: 1;
+}
+
+.guide-content strong {
+    display: block;
+    font-size: 0.9rem;
+}
+
+.guide-content small {
+    color: #6c757d;
+    font-size: 0.8rem;
+}
+
+.field-group {
+    padding: 16px;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    margin-bottom: 16px;
+    border-left: 4px solid #667eea;
+}
+
+.visually-hidden {
+    position: absolute !important;
+    width: 1px !important;
+    height: 1px !important;
+    padding: 0 !important;
+    margin: -1px !important;
+    overflow: hidden !important;
+    clip: rect(0, 0, 0, 0) !important;
+    white-space: nowrap !important;
+    border: 0 !important;
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const statusOptions = document.querySelectorAll('.status-option');
+    const dynamicFields = document.getElementById('dynamicFields');
+    const nextStepsContent = document.getElementById('nextStepsContent');
+    const previewModal = new bootstrap.Modal(document.getElementById('previewModal'));
+    
+    // Status descriptions for next steps
+    const statusDescriptions = {
+        'draft': 'PO remains in draft mode and can be edited further.',
+        'submitted': 'PO will be submitted for administrative approval.',
+        'approved': 'PO will be approved and ready for ordering with the supplier.',
+        'rejected': 'PO will be rejected and cannot be processed further.',
+        'ordered': 'PO will be marked as ordered with the supplier.',
+        'received': 'PO items will be added to inventory stock levels.',
+        'cancelled': 'PO will be cancelled and cannot be processed.'
+    };
+    
+    const nextSteps = {
+        'draft': 'You can continue editing the PO or submit it for approval when ready.',
+        'submitted': 'An administrator will review the PO and either approve or reject it.',
+        'approved': 'You can now place the order with the supplier and update the status to "Ordered".',
+        'rejected': 'The PO will be closed. You may need to create a new PO with corrections.',
+        'ordered': 'Wait for the items to be delivered, then update the status to "Received".',
+        'received': 'All items will be added to inventory. The PO process is complete.',
+        'cancelled': 'The PO will be closed. No further actions can be taken.'
+    };
+
+    // Handle status selection
+    statusOptions.forEach(option => {
+        option.addEventListener('click', function() {
+            // Remove selected class from all options
+            statusOptions.forEach(opt => opt.classList.remove('selected'));
+            // Add selected class to clicked option
+            this.classList.add('selected');
+            // Check the radio button
+            const radio = this.querySelector('input[type="radio"]');
+            radio.checked = true;
+            
+            // Show/hide dynamic fields
+            updateDynamicFields(radio.value);
+            // Update next steps
+            updateNextSteps(radio.value);
+        });
+    });
+
+    function updateDynamicFields(status) {
+        // Hide all field groups first
+        const fieldGroups = dynamicFields.querySelectorAll('.field-group');
+        fieldGroups.forEach(group => group.style.display = 'none');
+        
+        // Show relevant field groups based on status
+        switch(status) {
+            case 'received':
+                dynamicFields.querySelector('.received-field').style.display = 'block';
+                break;
+            case 'approved':
+                dynamicFields.querySelector('.approved-field').style.display = 'block';
+                break;
+            case 'ordered':
+                dynamicFields.querySelector('.ordered-field').style.display = 'block';
+                break;
+            case 'rejected':
+            case 'cancelled':
+                dynamicFields.querySelector('.reason-field').style.display = 'block';
+                break;
+        }
+    }
+
+    function updateNextSteps(status) {
+        nextStepsContent.innerHTML = `
+            <div class="alert alert-${getStatusColor(status)}">
+                <strong>${$('input[name="status"]:checked').next().find('.status-title').text()}</strong>
+                <p class="mb-0 mt-2">${nextSteps[status]}</p>
+            </div>
+        `;
+    }
+
+    function getStatusColor(status) {
+        const colors = {
+            'draft': 'info',
+            'submitted': 'warning',
+            'approved': 'success',
+            'rejected': 'danger',
+            'ordered': 'secondary',
+            'received': 'primary',
+            'cancelled': 'dark'
+        };
+        return colors[status] || 'secondary';
+    }
+
+    // Preview functionality
+    document.getElementById('previewBtn').addEventListener('click', function() {
+        const selectedStatus = $('input[name="status"]:checked').val();
+        const statusLabel = $('input[name="status"]:checked').next().find('.status-title').text();
+        
+        document.getElementById('previewNewStatus').innerHTML = `
+            <span class="badge bg-${getStatusColor(selectedStatus)}">${statusLabel}</span>
+        `;
+        
+        let additionalInfo = '';
+        if (selectedStatus === 'received') {
+            const receivedDate = document.getElementById('id_received_date').value;
+            additionalInfo = `Received Date: ${receivedDate || 'Not specified'}`;
+        } else if (selectedStatus === 'approved') {
+            const approvedBy = document.getElementById('id_approved_by').value;
+            additionalInfo = `Approved By: ${approvedBy ? $('#id_approved_by option:selected').text() : 'Not specified'}`;
+        } else if (selectedStatus === 'rejected' || selectedStatus === 'cancelled') {
+            additionalInfo = 'Reason will be recorded in PO notes';
+        }
+        
+        document.getElementById('previewAdditionalInfo').textContent = additionalInfo || 'No additional information';
+        previewModal.show();
+    });
+
+    // Confirm submit from preview modal
+    document.getElementById('confirmSubmit').addEventListener('click', function() {
+        document.getElementById('statusForm').submit();
+    });
+
+    // Initialize Select2 for approved_by field
+    $('#id_approved_by').select2({
+        theme: 'bootstrap-5',
+        width: '100%',
+        placeholder: 'Select approver...'
+    });
+
+    // Set today as default for received date
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('id_received_date').value = today;
+    document.getElementById('order_date').value = today;
+
+    // Initialize with current status
+    const currentStatus = '{{ purchase_order.status }}';
+    if (currentStatus) {
+        $(`#status_${currentStatus}`).prop('checked', true).closest('.status-option').addClass('selected');
+        updateDynamicFields(currentStatus);
+        updateNextSteps(currentStatus);
+    }
+});
+</script>
+{% endblock %}

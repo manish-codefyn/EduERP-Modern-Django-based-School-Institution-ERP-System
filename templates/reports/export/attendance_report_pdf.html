@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Academic Report - {{ organization.name }}</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 1.5cm;
+            @top-left {
+                content: "{{ organization.name }}";
+                font-size: 10px;
+                color: #666;
+            }
+            @top-right {
+                content: "Academic Report";
+                font-size: 10px;
+                color: #666;
+            }
+            @bottom-center {
+                content: "Page " counter(page) " of " counter(pages);
+                font-size: 10px;
+                color: #666;
+            }
+        }
+        
+        body {
+            font-family: 'DejaVu Sans', Arial, sans-serif;
+            font-size: 12px;
+            line-height: 1.4;
+            color: #333;
+            margin: 0;
+            padding: 0;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #2c3e50;
+            padding-bottom: 15px;
+        }
+        
+        .organization-name {
+            font-size: 18px;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 5px;
+        }
+        
+        .report-title {
+            font-size: 16px;
+            font-weight: bold;
+            color: #2c3e50;
+            margin: 10px 0;
+        }
+        
+        .summary-cards {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .summary-card {
+            flex: 1;
+            min-width: 120px;
+            margin: 0 5px 10px 5px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            text-align: center;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 15px;
+            font-size: 10px;
+        }
+        
+        th {
+            background-color: #2c3e50;
+            color: white;
+            font-weight: bold;
+            padding: 8px 5px;
+            text-align: left;
+            border: 1px solid #ddd;
+        }
+        
+        td {
+            padding: 6px 5px;
+            border: 1px solid #ddd;
+        }
+        
+        .text-right { text-align: right; }
+        .text-center { text-align: center; }
+        .text-bold { font-weight: bold; }
+        
+        .status-pass { background-color: #d4edda; color: #155724; }
+        .status-fail { background-color: #f8d7da; color: #721c24; }
+        
+        .page-break { page-break-before: always; }
+        
+        .footer {
+            margin-top: 30px;
+            padding-top: 10px;
+            border-top: 1px solid #ddd;
+            font-size: 9px;
+            color: #666;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="organization-name">{{ organization.name }}</div>
+        <div class="report-title">ACADEMIC PERFORMANCE REPORT</div>
+        <div class="report-meta">
+            Generated on: {{ export_date|date:"F d, Y \a\t h:i A" }}
+        </div>
+    </div>
+
+    <!-- Summary Statistics -->
+    <div class="summary-cards">
+        <div class="summary-card">
+            <div class="label">Total Results</div>
+            <div class="value">{{ total_count }}</div>
+        </div>
+        <div class="summary-card">
+            <div class="label">Subjects</div>
+            <div class="value">{{ subject_performance.count }}</div>
+        </div>
+        <div class="summary-card">
+            <div class="label">Avg Pass Rate</div>
+            <div class="value">
+                {% if exam_stats %}
+                    {{ exam_stats.0.pass_percentage|default:0|floatformat:1 }}%
+                {% else %}0%{% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Exam Performance Summary -->
+    <table>
+        <thead>
+            <tr>
+                <th>Exam</th>
+                <th>Subject</th>
+                <th class="text-right">Avg Marks</th>
+                <th class="text-right">Pass %</th>
+                <th class="text-right">Students</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for stat in exam_stats %}
+            <tr>
+                <td>{{ stat.exam_subject__exam__name }}</td>
+                <td>{{ stat.exam_subject__subject__name }}</td>
+                <td class="text-right">{{ stat.avg_marks|default:0|floatformat:1 }}</td>
+                <td class="text-right">{{ stat.pass_percentage|default:0|floatformat:1 }}%</td>
+                <td class="text-right">{{ stat.total_count }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <!-- Detailed Results -->
+    <div class="page-break"></div>
+    <h3>Detailed Exam Results</h3>
+    <table>
+        <thead>
+            <tr>
+                {% if 'student' in columns %}<th>Student</th>{% endif %}
+                {% if 'admission_number' in columns %}<th>Admission No.</th>{% endif %}
+                {% if 'current_class' in columns %}<th>Class</th>{% endif %}
+                {% if 'exam_name' in columns %}<th>Exam</th>{% endif %}
+                {% if 'subject' in columns %}<th>Subject</th>{% endif %}
+                {% if 'marks_obtained' in columns %}<th class="text-right">Marks</th>{% endif %}
+                {% if 'total_marks' in columns %}<th class="text-right">Total</th>{% endif %}
+                {% if 'grade' in columns %}<th>Grade</th>{% endif %}
+                {% if 'result_status' in columns %}<th>Status</th>{% endif %}
+            </tr>
+        </thead>
+        <tbody>
+            {% for result in exam_results %}
+            <tr>
+                {% if 'student' in columns %}
+                <td>{{ result.student.user.get_full_name }}</td>
+                {% endif %}
+                
+                {% if 'admission_number' in columns %}
+                <td>{{ result.student.admission_number }}</td>
+                {% endif %}
+                
+                {% if 'current_class' in columns %}
+                <td>{{ result.student.current_class.name|default:"" }}</td>
+                {% endif %}
+                
+                {% if 'exam_name' in columns %}
+                <td>{{ result.exam_subject.exam.name|default:"" }}</td>
+                {% endif %}
+                
+                {% if 'subject' in columns %}
+                <td>{{ result.exam_subject.subject.name|default:"" }}</td>
+                {% endif %}
+                
+                {% if 'marks_obtained' in columns %}
+                <td class="text-right">{{ result.marks_obtained }}</td>
+                {% endif %}
+                
+                {% if 'total_marks' in columns %}
+                <td class="text-right">{{ result.exam_subject.total_marks|default:"" }}</td>
+                {% endif %}
+                
+                {% if 'grade' in columns %}
+                <td>{{ result.grade|default:"-" }}</td>
+                {% endif %}
+                
+                {% if 'result_status' in columns %}
+                <td>
+                    <span class="status-{{ result.result_status }}">
+                        {{ result.result_status|title }}
+                    </span>
+                </td>
+                {% endif %}
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <div class="footer">
+        Generated by: {{ organization.name }} Academic System
+    </div>
+</body>
+</html>

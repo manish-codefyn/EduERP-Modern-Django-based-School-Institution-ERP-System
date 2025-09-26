@@ -1,0 +1,17 @@
+<!-- templates/emails/welcome_teacher.txt -->
+Welcome to Our School Management System
+
+Dear {{ user.get_full_name }},
+
+Your teacher account has been created successfully.
+
+Login Details:
+- Email: {{ user.email }}
+- Password: {{ password }}
+
+Please login at: {{ login_url }}
+
+We recommend changing your password after first login.
+
+Best regards,
+School Administration

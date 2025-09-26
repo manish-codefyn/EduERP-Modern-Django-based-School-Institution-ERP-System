@@ -1,0 +1,328 @@
+{% extends 'communications/base.html' %}
+{% load static %}
+
+{% block title %}SMS Logs - {{ organization.name|default:"codefyn" }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="header-section mb-4">
+        <div class="row align-items-center">
+            <div class="col-md-7 d-flex flex-column">
+                <!-- Breadcrumb -->
+                <nav aria-label="breadcrumb" class="mb-2">
+                    <ol class="breadcrumb mb-0">
+                        <li class="breadcrumb-item">
+                            <a href="{% url 'communications:dashboard' %}">
+                                <i class="bi bi-house-door me-1"></i> Dashboard
+                            </a>
+                        </li>
+                        <li class="breadcrumb-item active" aria-current="page">SMS Logs</li>
+                    </ol>
+                </nav>
+
+                <div class="d-flex align-items-center">
+                    <div class="header-icon me-3">
+                        <i class="bi bi-chat-dots display-6 text-success"></i>
+                    </div>
+                    <div>
+                        <h1 class="h3 fw-bold mb-1">SMS Logs</h1>
+                        <p class="text-custom mb-0">Track and manage SMS communication history</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-5">
+                <div class="d-flex justify-content-end align-items-center gap-2">
+                    <div class="dropdown">
+                        <button class="btn btn-secondary dropdown-toggle" type="button" id="exportDropdown"
+                            data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="bi bi-download me-1"></i> Export
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="exportDropdown">
+                            <li class="dropdown-header">Export SMS Logs</li>
+                            <li>
+                                <a class="dropdown-item" href="{% url 'communications:sms_log_export' %}?{{ request.GET.urlencode }}&format=csv">
+                                    <i class="bi bi-filetype-csv me-2"></i> Export CSV
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="{% url 'communications:sms_log_export' %}?{{ request.GET.urlencode }}&format=excel">
+                                    <i class="bi bi-file-earmark-excel me-2"></i> Export Excel
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="{% url 'communications:sms_log_export' %}?{{ request.GET.urlencode }}&format=pdf">
+                                    <i class="bi bi-file-earmark-pdf me-2"></i> Export PDF
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-xl-3 col-md-6">
+            <div class="card card-custom">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-grow-1">
+                            <h6 class="text-custom mb-2">Total SMS</h6>
+                            <h4 class="mb-0">{{ total_count }}</h4>
+                        </div>
+                        <div class="flex-shrink-0">
+                            <i class="bi bi-chat-dots text-success display-6"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card card-custom">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-grow-1">
+                            <h6 class="text-custom mb-2">Total Cost</h6>
+                            <h4 class="mb-0">{{ total_cost|floatformat:4 }}</h4>
+                        </div>
+                        <div class="flex-shrink-0">
+                            <i class="bi bi-currency-rupee text-success display-6"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card card-custom">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-grow-1">
+                            <h6 class="text-custom mb-2">Delivered</h6>
+                            <h4 class="mb-0">{{ status_counts.delivered|default:0 }}</h4>
+                        </div>
+                        <div class="flex-shrink-0">
+                            <i class="bi bi-check-circle text-info display-6"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card card-custom">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-grow-1">
+                            <h6 class="text-custom mb-2">Failed</h6>
+                            <h4 class="mb-0">{{ status_counts.failed|default:0 }}</h4>
+                        </div>
+                        <div class="flex-shrink-0">
+                            <i class="bi bi-x-circle text-danger display-6"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filter Form -->
+    <div class="card card-custom p-3 mb-4">
+        <form method="get" class="row g-3">
+            <div class="col-md-3">
+                <label class="form-label">Status</label>
+                <select name="status" class="form-select">
+                    <option value="">All Status</option>
+                    <option value="pending" {% if request.GET.status == 'pending' %}selected{% endif %}>Pending</option>
+                    <option value="sent" {% if request.GET.status == 'sent' %}selected{% endif %}>Sent</option>
+                    <option value="delivered" {% if request.GET.status == 'delivered' %}selected{% endif %}>Delivered</option>
+                    <option value="failed" {% if request.GET.status == 'failed' %}selected{% endif %}>Failed</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Date From</label>
+                <input type="date" name="date_from" class="form-control" value="{{ request.GET.date_from }}">
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Date To</label>
+                <input type="date" name="date_to" class="form-control" value="{{ request.GET.date_to }}">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Search</label>
+                <input type="text" name="search" class="form-control" placeholder="Search by number or message..." value="{{ request.GET.search }}">
+            </div>
+            <div class="col-md-2 d-flex align-items-end gap-2">
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="bi bi-search me-1"></i> Filter
+                </button>
+                <a href="{% url 'communications:sms_log_list' %}" class="btn btn-outline-secondary">
+                    <i class="bi bi-x"></i>
+                </a>
+            </div>
+        </form>
+    </div>
+
+    <!-- SMS Logs Table -->
+    <div class="card card-custom">
+        <div class="card-header bg-transparent border-0 pt-4 px-4">
+            <h5 class="card-title mb-0 fw-bold text-custom">SMS Communication History</h5>
+            <p class="text-custom mb-0">Track all SMS messages sent through the system</p>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                {% if sms_logs %}
+                <table id="smsLogsTable" class="w-100 table-custom table-hover align-middle">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Recipient</th>
+                            <th>Message</th>
+                            <th>Status</th>
+                            <th>Template</th>
+                            <th>Cost</th>
+                            <th>Message ID</th>
+                            <th>Sent At</th>
+                            <th class="text-center">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for sms in sms_logs %}
+                        <tr>
+                            <td>{{ forloop.counter }}</td>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <i class="bi bi-phone text-success me-2"></i>
+                                    <div>
+                                        <strong>{{ sms.recipient_number }}</strong>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <span title="{{ sms.message }}">
+                                    {{ sms.message|truncatewords:8 }}
+                                </span>
+                            </td>
+                            <td>
+                                {% if sms.status == 'delivered' %}
+                                    <span class="badge bg-success">Delivered</span>
+                                {% elif sms.status == 'sent' %}
+                                    <span class="badge bg-info">Sent</span>
+                                {% elif sms.status == 'failed' %}
+                                    <span class="badge bg-danger">Failed</span>
+                                {% else %}
+                                    <span class="badge bg-warning">Pending</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if sms.template %}
+                                    <span class="badge bg-light text-dark">{{ sms.template.name }}</span>
+                                {% else %}
+                                    <span class="text-custom">No Template</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if sms.cost %}
+                                    <span class="text-success">₹{{ sms.cost|floatformat:4 }}</span>
+                                {% else %}
+                                    <span class="text-custom">N/A</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <code class="text-custom">{{ sms.message_id|default:"N/A" }}</code>
+                            </td>
+                            <td>
+                                {% if sms.sent_at %}
+                                    {{ sms.sent_at|date:"M d, Y H:i" }}
+                                {% else %}
+                                    <span class="text-custom">Not sent</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-center">
+                                <a href="{% url 'communications:sms_log_detail' sms.pk %}" 
+                                   class="btn btn-sm btn-outline-primary" title="View Details">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                                <a href="{% url 'communications:sms_log_delete' sms.pk %}" 
+                                   class="btn btn-sm btn-outline-danger" title="Delete">
+                                    <i class="bi bi-trash"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% else %}
+                <div class="empty-state text-center py-5">
+                    <i class="bi bi-chat-dots fs-1"></i>
+                    <h4 class="mt-3 mb-2">No SMS Logs Found</h4>
+                    <p class="text-custom mb-4">No SMS messages match your current filters.</p>
+                    <a href="{% url 'communications:sms_log_list' %}" class="btn btn-primary">
+                        <i class="bi bi-arrow-clockwise me-1"></i> Clear Filters
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Pagination -->
+    {% if is_paginated %}
+    <nav aria-label="Page navigation" class="mt-4">
+        <ul class="pagination justify-content-center">
+            {% if page_obj.has_previous %}
+            <li class="page-item">
+                <a class="page-link" href="?page=1{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">First</a>
+            </li>
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">Previous</a>
+            </li>
+            {% endif %}
+
+            {% for num in page_obj.paginator.page_range %}
+            {% if page_obj.number == num %}
+            <li class="page-item active"><a class="page-link" href="#">{{ num }}</a></li>
+            {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ num }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">{{ num }}</a>
+            </li>
+            {% endif %}
+            {% endfor %}
+
+            {% if page_obj.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.next_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">Next</a>
+            </li>
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">Last</a>
+            </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // DataTable initialization
+    $('#smsLogsTable').DataTable({
+        "pageLength": 25,
+        "order": [[7, 'desc']],
+        "language": {
+            "search": "<i class='bi bi-search me-2'></i>Search:",
+            "lengthMenu": "Show _MENU_ entries",
+            "info": "Showing _START_ to _END_ of _TOTAL_ entries",
+            "paginate": {
+                "previous": "<i class='bi bi-chevron-left'></i>",
+                "next": "<i class='bi bi-chevron-right'></i>"
+            }
+        },
+        "columnDefs": [
+            { "targets": [0, -1], "orderable": false, "className": "dt-center" }
+        ],
+        "responsive": true
+    });
+});
+</script>
+{% endblock %}

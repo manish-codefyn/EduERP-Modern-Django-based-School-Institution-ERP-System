@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <style>
+        @page {
+            size: A4 landscape;
+            margin: 15mm;
+        }
+        body {
+            font-family: Arial, sans-serif;
+            font-size: 12px;
+            margin: 0;
+            padding: 0;
+            color: #333;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 6px;
+            text-align: center;
+            vertical-align: middle;
+        }
+        th {
+            background-color: #f2f2f2;
+            font-size: 12px;
+        }
+        td.amount {
+            text-align: right;
+            font-weight: bold;
+        }
+        .header-table {
+            width: 100%;
+            margin-bottom: 10px;
+        }
+        .header-table td {
+            border: none;
+            text-align: center;
+            vertical-align: middle;
+        }
+        .logo {
+            max-height: 60px;
+            margin-bottom: 8px;
+        }
+        .filter-table {
+            width: 100%;
+            margin-bottom: 10px;
+            background-color: #f8f9fa;
+            border: 1px solid #ddd;
+            font-size: 11px;
+        }
+        .filter-table td {
+            border: none;
+            padding: 4px 6px;
+            text-align: left;
+        }
+        .no-data {
+            text-align: center;
+            padding: 20px;
+            font-weight: bold;
+            color: #888;
+        }
+        .generated-date {
+            text-align: right;
+            margin-top: 5px;
+            font-style: italic;
+            font-size: 11px;
+        }
+        .footer {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 30px;
+            text-align: center;
+            font-size: 10px;
+            color: #777;
+        }
+        .status-paid { color: #28a745; }
+        .status-partial { color: #ffc107; }
+        .status-draft { color: #6c757d; }
+        .status-cancelled { color: #dc3545; }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <table class="header-table">
+        <tr>
+            <td>
+                {% if logo %}
+                    <img src="{{ logo }}" class="logo" alt="{{ organization.name }} Logo" width="210">
+                {% endif %}
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <strong>{{ organization.name }}</strong><br>
+                {% if organization.address %}{{ organization.address }}<br>{% endif %}
+                {% if organization.phone %}Phone: {{ organization.phone }}{% endif %}
+            </td>
+        </tr>
+        <tr>
+            <td><h1>Fee Invoices Report</h1></td>
+        </tr>
+    </table>
+
+    <!-- Filters -->
+    {% if status_filter or student_obj or start_date or end_date %}
+    <table class="filter-table">
+        <tr>
+            {% if status_filter %}
+            <td><strong>Status:</strong> {{ status_filter }}</td>
+            {% endif %}
+            {% if student_obj %}
+            <td><strong>Student:</strong> {{ student_obj.full_name }} (Roll: {{ student_obj.roll_number }})</td>
+            {% endif %}
+            {% if start_date %}
+            <td><strong>From Date:</strong> {{ start_date|date:"d/m/y" }}</td>
+            {% endif %}
+            {% if end_date %}
+            <td><strong>To Date:</strong> {{ end_date|date:"d/m/y" }}</td>
+            {% endif %}
+        </tr>
+    </table>
+    {% endif %}
+
+    <!-- Table -->
+    {% if invoices %}
+    <table>
+        <thead>
+            <tr>
+                <th>Invoice #</th>
+                <th>Student</th>
+                <th>Roll No</th>
+                <th>Class</th>
+                <th>Academic Year</th>
+                <th>Issue Date</th>
+                <th>Due Date</th>
+                <th class="amount">Total Amount</th>
+                <th class="amount">Paid Amount</th>
+                {% if include_balance %}
+                <th class="amount">Balance</th>
+                {% endif %}
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for invoice in invoices %}
+            <tr>
+                <td>{{ invoice.invoice_number }}</td>
+                <td>{{ invoice.student_name }}</td>
+                <td>{{ invoice.roll_number }}</td>
+                <td>{{ invoice.class_name }}</td>
+                <td>{{ invoice.academic_year }}</td>
+                <td>{{ invoice.issue_date }}</td>
+                <td>{{ invoice.due_date }}</td>
+                <td class="amount">Rs.{{ invoice.total_amount }}</td>
+                <td class="amount">Rs.{{ invoice.paid_amount }}</td>
+                {% if include_balance %}
+                <td class="amount">Rs.{{ invoice.balance }}</td>
+                {% endif %}
+                <td class="status-{{ invoice.status|lower }}">{{ invoice.status }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <div class="no-data">
+        No fee invoice data found for the selected filters.
+    </div>
+    {% endif %}
+
+    <!-- Generated Date -->
+    <table class="generated-date">
+        <tr>
+            <td>Generated on: {{ generated_date|date:"d/m/y H:i" }}</td>
+        </tr>
+    </table>
+
+    <!-- Footer -->
+    <div class="footer">
+        Page <pdf:pagenumber> of <pdf:pagecount> | 
+        &copy; {{ organization.name|default:"ERP System" }} - Fee Invoices Report
+    </div>
+</body>
+</html>

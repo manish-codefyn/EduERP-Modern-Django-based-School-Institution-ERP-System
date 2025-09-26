@@ -1,0 +1,86 @@
+{% load custom_filters %}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Academic Years Export</title>
+    <style>
+        @page {
+            size: A4 landscape;
+            margin: 20mm;
+        }
+        body { 
+            font-family: DejaVu Sans, Arial, Helvetica, sans-serif; 
+            font-size: 12px; 
+            color: #333; 
+            margin: 0; 
+            padding: 0;
+        }
+        table { 
+            width: 100%; 
+            border-collapse: collapse; 
+            margin-bottom: 15px; 
+            table-layout: fixed;
+        }
+        table th, table td { 
+            border: 1px solid #999; 
+            padding: 6px; 
+            text-align: center; 
+            vertical-align: middle;
+            word-wrap: break-word;
+        }
+        table th { 
+            background: #f0f0f0; 
+        }
+        .logo img { height: 80px; margin-bottom: 5px; }
+        .page-break { page-break-after: always; }
+        .header, .footer { width: 100%; text-align: center; }
+        .footer { font-size: 10px; color: #777; margin-top: 20px; }
+        h1 { margin: 5px 0; font-size: 24px; }
+    </style>
+</head>
+<body>
+
+<!-- Header -->
+<div class="header">
+    {% if logo %}
+        <div class="logo">
+            <img src="{{ logo }}" alt="Logo" width="230">
+        </div>
+    {% endif %}
+    <h1>{{ organization.name|default:"ERP System" }}</h1>
+    <p>Academic Years Report - Generated on {{ generated_date|date:"F j, Y \\a\\t H:i" }}</p>
+</div>
+
+<!-- Academic Years Table -->
+<table>
+    <thead>
+        <tr>
+            {% for col in columns %}
+                <th>{{ col|underscore_to_space|title }}</th>
+            {% endfor %}
+        </tr>
+    </thead>
+    <tbody>
+        {% for ay in academic_years %}
+        <tr>
+            {% for col in columns %}
+                <td>{{ ay|dict_get:col|default:"-" }}</td>
+            {% endfor %}
+        </tr>
+        {% empty %}
+        <tr>
+            <td colspan="{{ columns|length }}">No academic years found.</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<!-- Footer -->
+<div class="footer">
+    &copy; {{ organization.name|default:"ERP System" }} - Academic Years Report
+</div>
+
+</body>
+</html>

@@ -1,0 +1,203 @@
+{% if messages %}
+<div class="container mt-3">
+    {% for message in messages %}
+    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+        <div class="d-flex align-items-center">
+            {% if message.tags == 'success' %}
+            <i class="bi bi-check-circle-fill me-2"></i>
+            {% elif message.tags == 'warning' %}
+            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+            {% elif message.tags == 'error' %}
+            <i class="bi bi-x-circle-fill me-2"></i>
+            {% elif message.tags == 'info' %}
+            <i class="bi bi-info-circle-fill me-2"></i>
+            {% else %}
+            <i class="bi bi-bell-fill me-2"></i>
+            {% endif %}
+            <div>
+                {{ message }}
+            </div>
+        </div>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    {% endfor %}
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const messages = {
+        success: [],
+        warning: [],
+        error: [],
+        info: []
+    };
+
+    // Group messages by type
+    {% for message in messages %}
+    messages['{{ message.tags }}'].push(`{{ message|escapejs }}`);
+    {% endfor %}
+
+    // Show consolidated alert if there are multiple message types
+    const messageTypes = Object.keys(messages).filter(type => messages[type].length > 0);
+    
+    if (messageTypes.length > 1) {
+        showConsolidatedAlert(messages);
+    } else if (messageTypes.length === 1) {
+        // Show single type alert
+        const type = messageTypes[0];
+        showSingleAlert(type, messages[type]);
+    }
+
+    function showConsolidatedAlert(messages) {
+        let html = '';
+        
+        if (messages.success.length > 0) {
+            html += `<div class="mb-3">
+                <h6 class="text-success mb-2"><i class="bi bi-check-circle"></i> Success (${messages.success.length})</h6>
+                ${messages.success.map(msg => `<div class="text-success small mb-1">• ${msg}</div>`).join('')}
+            </div>`;
+        }
+        
+        if (messages.warning.length > 0) {
+            html += `<div class="mb-3">
+                <h6 class="text-warning mb-2"><i class="bi bi-exclamation-triangle"></i> Notices (${messages.warning.length})</h6>
+                ${messages.warning.map(msg => `<div class="text-warning small mb-1">• ${msg}</div>`).join('')}
+            </div>`;
+        }
+        
+        if (messages.error.length > 0) {
+            html += `<div class="mb-3">
+                <h6 class="text-danger mb-2"><i class="bi bi-x-circle"></i> Issues (${messages.error.length})</h6>
+                ${messages.error.map(msg => `<div class="text-danger small mb-1">• ${msg}</div>`).join('')}
+            </div>`;
+        }
+        
+        if (messages.info.length > 0) {
+            html += `<div class="mb-3">
+                <h6 class="text-info mb-2"><i class="bi bi-info-circle"></i> Information (${messages.info.length})</h6>
+                ${messages.info.map(msg => `<div class="text-info small mb-1">• ${msg}</div>`).join('')}
+            </div>`;
+        }
+
+        Swal.fire({
+            title: 'Invoice Generation Summary',
+            html: html,
+            icon: 'info',
+            width: '600px',
+            background: 'var(--card-bg)',
+            color: 'var(--text-color)',
+            showConfirmButton: true,
+            confirmButtonText: 'OK',
+            confirmButtonColor: 'var(--accent-color)'
+        });
+    }
+
+    function showSingleAlert(type, messages) {
+        const config = {
+            success: {
+                icon: 'success',
+                title: 'Success!',
+                color: 'var(--success)'
+            },
+            warning: {
+                icon: 'warning',
+                title: 'Notice',
+                color: 'var(--warning)'
+            },
+            error: {
+                icon: 'error',
+                title: 'Attention Required',
+                color: 'var(--danger)'
+            },
+            info: {
+                icon: 'info',
+                title: 'Information',
+                color: 'var(--info)'
+            }
+        }[type];
+
+        let html = messages.map(msg => `<div class="mb-2">${msg}</div>`).join('');
+        
+        if (messages.length > 1) {
+            html = `<div style="max-height: 200px; overflow-y: auto;">${html}</div>`;
+        }
+
+        Swal.fire({
+            icon: config.icon,
+            title: config.title,
+            html: html,
+            background: 'var(--card-bg)',
+            color: 'var(--text-color)',
+            showConfirmButton: true,
+            confirmButtonText: 'OK',
+            confirmButtonColor: config.color,
+            width: messages.length > 3 ? '600px' : 'auto'
+        });
+    }
+});
+</script>
+
+<style>
+.alert {
+    border: none;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    margin-bottom: 1rem;
+}
+
+.alert-success {
+    background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+    color: #155724;
+    border-left: 4px solid #28a745;
+}
+
+.alert-warning {
+    background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+    color: #856404;
+    border-left: 4px solid #ffc107;
+}
+
+.alert-error, .alert-danger {
+    background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
+    color: #721c24;
+    border-left: 4px solid #dc3545;
+}
+
+.alert-info {
+    background: linear-gradient(135deg, #d1ecf1 0%, #bee5eb 100%);
+    color: #0c5460;
+    border-left: 4px solid #17a2b8;
+}
+
+.alert i {
+    font-size: 1.2rem;
+}
+
+.btn-close {
+    opacity: 0.7;
+    transition: opacity 0.3s ease;
+}
+
+.btn-close:hover {
+    opacity: 1;
+}
+
+.swal2-popup {
+    background: var(--card-bg) !important;
+    color: var(--text-color) !important;
+    border-radius: 12px !important;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2) !important;
+}
+
+.swal2-title {
+    color: var(--text-color) !important;
+    font-weight: 600 !important;
+}
+
+.swal2-html-container {
+    color: var(--text-muted-color) !important;
+    text-align: left !important;
+}
+</style>
+{% endif %}

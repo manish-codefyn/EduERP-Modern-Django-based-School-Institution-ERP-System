@@ -1,0 +1,116 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Exam Results - {{ exam.name }}</title>
+   
+    <style>
+        @page {
+            size: A4 landscape;
+            margin: 1cm;
+        }
+        body {
+            font-family: "DejaVu Sans", Arial, sans-serif;
+            font-size: 13px;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .header h1, .header h2 {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        .table th, .table td {
+            vertical-align: middle;
+            text-align: center;
+            font-size: 12px;
+            padding: 6px;
+        }
+        table  {
+           border:1px solid #ccc;
+        }
+        .footer {
+            margin-top: 20px;
+            text-align: right;
+            font-size: 11px;
+            border-top: 1px solid #ccc;
+            padding-top: 5px;
+        }
+    </style>
+</head>
+<body>
+<div class="header">
+    {% if logo %}
+        <img src="{{ logo }}" alt="Organization Logo" width="180" class="mb-2">
+    {% endif %}
+    <h1>{{ title }}</h1>
+    <p>{{ organization.name }}</p>
+    <p><strong>Export Date:</strong> {{ export_date|date:"Y-m-d H:i" }}</p>
+</div>
+<div class="header mb-3">
+    <table class="table table-sm table-bordered text-center" style="width: auto; margin: auto;">
+        <tr>
+            <th>Exam Name</th>
+            <td>{{ exam_name }}</td>
+            <th>Exam Type</th>
+            <td>{{ exam_type }}</td>
+        </tr>
+        <tr>
+            <th>Academic Year</th>
+            <td>{{ academic_year }}</td>
+            <th>Duration</th>
+            <td>{{ duration }}</td>
+        </tr>
+        <tr>
+            <th>Status</th>
+            <td colspan="3">{{ status }}</td>
+        </tr>
+    </table>
+</div>
+
+<div class="mb-4">
+    <h5 class="fw-bold">Results Summary</h5>
+    <table class="table table-bordered table-sm">
+        <thead class="table-light">
+            <tr>
+                <th>Student</th>
+                <th>Admission No.</th>
+                <th>Subject</th>
+                <th>Max Marks</th>
+                <th>Marks Obtained</th>
+                <th>Percentage</th>
+                <th>Grade</th>
+                <th>Remarks</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for result in results %}
+            <tr>
+                <td>{{ result.student_name }}</td>
+                <td>{{ result.admission_number }}</td>
+                <td>{{ result.subject_name }}</td>
+                <td>{{ result.max_marks }}</td>
+                <td>{{ result.marks_obtained }}</td>
+                <td>{{ result.percentage }}%</td>
+                <td>{{ result.grade }}</td>
+                <td>{{ result.remarks|default:"-" }}</td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="8">No results available.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<div class="footer">
+    Generated on {{ export_date|date:"Y-m-d H:i" }} | 
+    Page <pdf:pagenumber> of <pdf:pagecount>
+</div>
+
+</body>
+</html>

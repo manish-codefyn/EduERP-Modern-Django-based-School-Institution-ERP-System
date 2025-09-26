@@ -1,0 +1,342 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Houses - {{ organization.name|default:"ERP System" }}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+
+    <!-- Header -->
+    <div class="header-section">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb breadcrumb-dark">
+                        <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Dashboard</a></li>
+                        <li class="breadcrumb-item active" aria-current="page">House Management</li>
+                    </ol>
+                </nav>
+                <h1 class="display-6 fw-bold mb-2">House Management</h1>
+                <p class="lead mb-0 opacity-75">Manage all student houses</p>
+            </div>
+            <div class="col-md-4 text-md-end">
+                <div class="d-flex gap-2 justify-content-md-end flex-wrap">
+                    <!-- Quick Actions -->
+                    <div class="btn-group w-100" role="group">
+                        <!-- Main Action -->
+                        <a href="{% url 'academics:house_create' %}" class="btn btn-primary">
+                            <i class="bi bi-plus-circle me-1"></i> Add House
+                        </a>
+
+                        <!-- Dropdown Toggle -->
+                        <button type="button" class="btn btn-primary dropdown-toggle dropdown-toggle-split"
+                                data-bs-toggle="dropdown" aria-expanded="false">
+                            <span class="visually-hidden">Toggle Dropdown</span>
+                        </button>
+
+                        <!-- Dropdown Menu -->
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li>
+                                <button type="button" class="dropdown-item" data-bs-toggle="modal" data-bs-target="#exportModal">
+                                    <i class="bi bi-download me-2"></i> Export Houses
+                                </button>
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <a class="dropdown-item" href="{% url 'academics:class_list' %}">
+                                    <i class="bi bi-building me-2"></i> Manage Classes
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="{% url 'academics:subject_list' %}">
+                                    <i class="bi bi-book me-2"></i> Manage Subjects
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="row g-4 mb-4">
+        <div class="col-xl-4 col-md-4">
+            <div class="card stats-card text-white" style="background: linear-gradient(135deg, #0984e3 0%, #74b9ff 100%);">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-8">
+                            <h6 class="card-title mb-1 small opacity-75">TOTAL HOUSES</h6>
+                            <h3 class="mb-0 fw-bold">{{ houses.count }}</h3>
+                        </div>
+                        <div class="col-4 text-end">
+                            <div class="stats-icon">
+                                <i class="bi bi-house-door"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-4 col-md-4">
+            <div class="card stats-card text-white" style="background: linear-gradient(135deg, #00b894 0%, #00a085 100%);">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-8">
+                            <h6 class="card-title mb-1 small opacity-75">ACTIVE HOUSES</h6>
+                            <h3 class="mb-0 fw-bold">{{ houses|dictsort:"is_active"|length }}</h3>
+                        </div>
+                        <div class="col-4 text-end">
+                            <div class="stats-icon">
+                                <i class="bi bi-check-circle"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-4 col-md-4">
+            <div class="card stats-card text-white" style="background: linear-gradient(135deg, #fdcb6e 0%, #f39c12 100%);">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-8">
+                            <h6 class="card-title mb-1 small opacity-75">INACTIVE HOUSES</h6>
+                            <h3 class="mb-0 fw-bold">{{ inactive_houses_count }}</h3>
+                        </div>
+                        <div class="col-4 text-end">
+                            <div class="stats-icon">
+                                <i class="bi bi-x-circle"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Houses Table -->
+    <div class="card card-custom">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="card-title mb-0">All Houses</h5>
+            <span class="badge bg-primary">{{ houses.count }} records</span>
+        </div>
+        <div class="card-body">
+            {% if houses %}
+            <div class="table-responsive">
+                <table id="housesTable" class="table-custom w-100 table-hover">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Color</th>
+                            <th>Status</th>
+                            <th>Created</th>
+                            <th class="text-center">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for house in houses %}
+                        <tr>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <i class="bi bi-house-door text-primary me-2"></i>
+                                    <strong>{{ house.name }}</strong>
+                                </div>
+                            </td>
+                            <td>
+                                {% if house.color %}
+                                    <div class="d-flex align-items-center">
+                                        <span class="color-badge me-2" style="background-color: {{ house.color }}; width: 20px; height: 20px; border-radius: 4px;"></span>
+                                        <span class="text-custom small">{{ house.color }}</span>
+                                    </div>
+                                {% else %}
+                                    <span class="text-custom">-</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if house.is_active %}
+                                    <span class="attendance-badge bg-success bg-opacity-10 text-success">
+                                        <i class="bi bi-check-circle me-1"></i>Active
+                                    </span>
+                                {% else %}
+                                    <span class="attendance-badge bg-danger bg-opacity-10 text-danger">
+                                        <i class="bi bi-x-circle me-1"></i>Inactive
+                                    </span>
+                                {% endif %}
+                            </td>
+                            <td>{{ house.created_at|date:"M d, Y" }}</td>
+                            <td>
+                                <div class="d-flex justify-content-center gap-1">
+                                    <a href="{% url 'academics:house_update' house.id %}" class="btn btn-sm btn-outline-primary" data-bs-toggle="tooltip" title="Edit">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                    <a href="{% url 'academics:house_delete' house.id %}" class="btn btn-sm btn-outline-danger" data-bs-toggle="tooltip" title="Delete">
+                                        <i class="bi bi-trash"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="5" class="text-center py-5">
+                                <i class="bi bi-house-door display-4 text-primary d-block mb-3"></i>
+                                <h5 class="text-primary">No houses found</h5>
+                                <p class="text-custom mb-4">Get started by adding your houses</p>
+                                <a href="{% url 'academics:house_create' %}" class="btn btn-primary">
+                                    <i class="bi bi-plus-circle me-1"></i>Add First House
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="text-center py-5">
+                <i class="bi bi-house-door display-4 text-primary d-block mb-3"></i>
+                <h5 class="text-primary">No houses found</h5>
+                <p class="text-custom mb-4">Get started by adding your houses</p>
+                <a href="{% url 'academics:house_create' %}" class="btn btn-primary">
+                    <i class="bi bi-plus-circle me-1"></i>Add First House
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Export Modal -->
+<div class="modal fade" id="exportModal" tabindex="-1" aria-labelledby="exportModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="get" action="{% url 'academics:export_houses' %}">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exportModalLabel">Export Houses Data</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="exportFormat" class="form-label">Export Format</label>
+                        <select class="form-select" id="exportFormat" name="format">
+                            <option value="csv">CSV</option>
+                            <option value="pdf">PDF</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Include Columns</label>
+                        {% for field in house_fields %}
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="include_{{ field }}" name="columns" value="{{ field }}" checked>
+                            <label class="form-check-label" for="include_{{ field }}">{{ field|capfirst }}</label>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" data-bs-dismiss="modal" type="button">Cancel</button>
+                    <button class="btn btn-primary" type="submit">Export Data</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+
+    // 1) Remove any stray backdrops and restore body state on load (force cleanup)
+    (function cleanup() {
+        document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+        document.body.classList.remove('modal-open');
+        document.body.style.overflow = '';
+        document.body.style.paddingRight = '';
+    })();
+
+    // 2) Initialize DataTable
+    try {
+        $('#housesTable').DataTable({
+            "pageLength": 10,
+            "lengthMenu": [[10, 25, 50, -1], [10, 25, 50, "All"]],
+            "order": [[0, 'asc']],
+            "language": {
+                "search": "<i class='bi bi-search me-2'></i>",
+                "searchPlaceholder": "Search houses...",
+                "lengthMenu": "Show _MENU_ entries",
+                "info": "Showing _START_ to _END_ of _TOTAL_ entries",
+                "paginate": {
+                    "previous": "<i class='bi bi-chevron-left'></i>",
+                    "next": "<i class='bi bi-chevron-right'></i>"
+                }
+            },
+            "columnDefs": [
+                { "targets": [4], "orderable": false, "searchable": false }
+            ]
+        });
+    } catch (err) {
+        console.error('DataTables init error:', err);
+    }
+
+    // 3) Robust modal cleanup handlers
+    document.querySelectorAll('.modal').forEach(modalEl => {
+        modalEl.addEventListener('show.bs.modal', function () {
+            document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+        });
+
+        modalEl.addEventListener('hidden.bs.modal', function () {
+            document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+            document.body.classList.remove('modal-open');
+            document.body.style.overflow = '';
+            document.body.style.paddingRight = '';
+        });
+    });
+
+    // 4) Safety-net: if a backdrop exists but there is no visible modal, remove it
+    const observer = new MutationObserver(() => {
+        const backdrop = document.querySelector('.modal-backdrop');
+        const anyShown = !!document.querySelector('.modal.show');
+        if (backdrop && !anyShown) {
+            backdrop.remove();
+            document.body.classList.remove('modal-open');
+            document.body.style.overflow = '';
+            document.body.style.paddingRight = '';
+        }
+    });
+    observer.observe(document.body, { childList: true, subtree: true });
+
+    // 5) Allow manual cleanup by pressing Esc (extra safety)
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+            document.body.classList.remove('modal-open');
+            document.body.style.overflow = '';
+            document.body.style.paddingRight = '';
+            document.querySelectorAll('.modal.show').forEach(m => {
+                try { bootstrap.Modal.getInstance(m)?.hide(); } catch(e) {}
+            });
+        }
+    });
+
+    // 6) Final cleanup in case something stuck earlier
+    setTimeout(() => {
+        document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+        document.body.classList.remove('modal-open');
+        document.body.style.overflow = '';
+        document.body.style.paddingRight = '';
+    }, 500);
+    
+    // Initialize tooltips
+    $('[data-bs-toggle="tooltip"]').tooltip();
+});
+</script>
+{% endblock %}

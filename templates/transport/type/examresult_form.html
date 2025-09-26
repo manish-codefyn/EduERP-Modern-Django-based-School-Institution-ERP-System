@@ -1,0 +1,44 @@
+{% extends 'examination/base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}Add Exam Result{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+
+    <div class="header-section mb-4 d-flex justify-content-between align-items-center">
+        <div class="d-flex align-items-center">
+            <i class="bi bi-file-earmark-text display-6 text-primary me-3"></i>
+            <div>
+                <h1 class="h3 fw-bold mb-1">Add Exam Result</h1>
+                <p class="text-custom mb-0">Record exam marks for students</p>
+            </div>
+        </div>
+        <a href="{% url 'examination:exam_result_list' %}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left-circle me-1"></i> Back to Results
+        </a>
+    </div>
+
+    <div class="card card-custom p-4">
+        <form method="post">
+            {% csrf_token %}
+            <div class="row g-3">
+                <div class="col-md-6">{{ form.exam_subject|as_crispy_field }}</div>
+                <div class="col-md-6">{{ form.student|as_crispy_field }}</div>
+                <div class="col-md-6">{{ form.marks_obtained|as_crispy_field }}</div>
+                <div class="col-md-6">{{ form.remarks|as_crispy_field }}</div>
+            </div>
+
+            <div class="mt-4 d-flex justify-content-end gap-2">
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-save me-1"></i> Save Result
+                </button>
+                <a href="{% url 'examination:exam_result_list' %}" class="btn btn-outline-secondary">
+                    <i class="bi bi-x-circle me-1"></i> Cancel
+                </a>
+            </div>
+        </form>
+    </div>
+
+</div>
+{% endblock %}

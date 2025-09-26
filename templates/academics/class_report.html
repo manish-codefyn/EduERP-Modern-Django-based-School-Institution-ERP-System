@@ -1,0 +1,186 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Class Report - {{ class_obj.name }} - {{ organization.name|default:"ERP System" }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <div>
+        <h1 class="h2">Class Report - {{ class_obj.name }}</h1>
+        <p class="text-custom mb-0">Comprehensive report for {{ class_obj.name }}</p>
+    </div>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <a href="{% url 'academics:class_report_pdf' class_obj.id %}" class="btn btn-success ms-2">
+    <i class="bi bi-file-earmark-pdf me-1"></i>Download PDF
+        </a>
+        <!-- <button class="btn btn-primary" onclick="window.print()">
+            <i class="bi bi-printer me-1"></i>Print Report
+        </button> -->
+        <a href="{% url 'academics:class_list' %}" class="btn btn-outline-secondary ms-2">
+            <i class="bi bi-arrow-left me-1"></i>Back to Classes
+        </a>
+    </div>
+</div>
+
+<div class="card card-custom">
+    <div class="card-body">
+        <!-- Report Header -->
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <h4>{{ organization.name|default:"School Management System" }}</h4>
+                <p class="text-custom">Class Report - {{ generated_date|date:"F j, Y" }}</p>
+            </div>
+            <div class="col-md-6 text-end">
+                <h5>{{ class_obj.name }} ({{ class_obj.code }})</h5>
+                <p class="text-custom">Capacity: {{ class_obj.capacity }} students</p>
+            </div>
+        </div>
+
+        <!-- Class Information -->
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <div class="card card-custom">
+                    <div class="card-header">
+                        <h6 class="card-title mb-0">Class Details</h6>
+                    </div>
+                    <div class="card-body">
+                        <p><strong>Name:</strong> {{ class_obj.name }}</p>
+                        <p><strong>Code:</strong> {{ class_obj.code }}</p>
+                        <p><strong>Capacity:</strong> {{ class_obj.capacity }} students</p>
+                        <p><strong>Room:</strong> {{ class_obj.room_number|default:"Not assigned" }}</p>
+                        <p><strong>Status:</strong> 
+                            <span class="badge {% if class_obj.is_active %}bg-success{% else %}bg-secondary{% endif %}">
+                                {{ class_obj.is_active|yesno:"Active,Inactive" }}
+                            </span>
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card card-custom">
+                    <div class="card-header">
+                        <h6 class="card-title mb-0">Academic Year</h6>
+                    </div>
+                    <div class="card-body">
+                        {% if current_year %}
+                        <p><strong>Year:</strong> {{ current_year.name }}</p>
+                        <p><strong>Period:</strong> {{ current_year.start_date|date:"M d, Y" }} - {{ current_year.end_date|date:"M d, Y" }}</p>
+                        <p><strong>Status:</strong> 
+                            <span class="badge {% if current_year.is_current %}bg-success{% else %}bg-secondary{% endif %}">
+                                {{ current_year.is_current|yesno:"Current,Not Current" }}
+                            </span>
+                        </p>
+                        {% else %}
+                        <p class="text-custom">No academic year configured</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sections -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card card-custom">
+                    <div class="card-header">
+                        <h6 class="card-title mb-0">Sections ({{ sections.count }})</h6>
+                    </div>
+                    <div class="card-body">
+                        {% if sections %}
+                        <div class="table-responsive">
+                            <table class="table table-sm">
+                                <thead>
+                                    <tr>
+                                        <th>Section Name</th>
+                                        <th>Capacity</th>
+                                        <th>Status</th>
+                                        <th>Created</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for section in sections %}
+                                    <tr>
+                                        <td>{{ section.name }}</td>
+                                        <td>{{ section.capacity }} students</td>
+                                        <td>
+                                            <span class="badge {% if section.is_active %}bg-success{% else %}bg-secondary{% endif %}">
+                                                {{ section.is_active|yesno:"Active,Inactive" }}
+                                            </span>
+                                        </td>
+                                        <td>{{ section.created_at|date:"M d, Y" }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        {% else %}
+                        <p class="text-custom">No sections found for this class</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Timetable Summary -->
+        <div class="row">
+            <div class="col-12">
+                <div class="card card-custom">
+                    <div class="card-header">
+                        <h6 class="card-title mb-0">Timetable Summary</h6>
+                    </div>
+                    <div class="card-body">
+                        {% if timetable_entries %}
+                        <p><strong>Total Periods:</strong> {{ timetable_entries.count }} scheduled periods</p>
+                        <div class="table-responsive">
+                            <table class="table table-sm">
+                                <thead>
+                                    <tr>
+                                        <th>Day</th>
+                                        <th>Periods</th>
+                                        <th>Subjects</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for day in days %}
+                                    {% with day_entries=timetable_entries %}
+                                    {% if day_entries %}
+                                    <tr>
+                                        <td>{{ day|title }}</td>
+                                        <td>{{ day_entries.count }}</td>
+                                        <td>
+                                            {% for entry in day_entries|slice:":3" %}
+                                                {{ entry.subject.name }}{% if not forloop.last %}, {% endif %}
+                                            {% endfor %}
+                                            {% if day_entries.count > 3 %}...{% endif %}
+                                        </td>
+                                    </tr>
+                                    {% endif %}
+                                    {% endwith %}
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        {% else %}
+                        <p class="text-custom">No timetable entries found for this class</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Report Footer -->
+        <div class="row mt-4">
+            <div class="col-12 text-center">
+                <p class="text-custom">Report generated on {{ generated_date|date:"F j, Y \\a\\t H:i" }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Add custom filter for template (you might need to create a custom template tag)
+    // This is a placeholder - you'd need to implement this as a custom template filter
+</script>
+{% endblock %}

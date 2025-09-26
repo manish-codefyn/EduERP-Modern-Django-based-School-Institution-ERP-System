@@ -1,0 +1,56 @@
+<ul class="sidebar-nav nav flex-column">
+
+    <!-- Dashboard -->
+    <li class="nav-item">
+        <a class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}" href="{% url 'dashboard' %}">
+            <i class="bi bi-speedometer2 me-2"></i>
+            <span class="nav-text">Dashboard</span>
+        </a>
+    </li>
+
+    {% if user.is_staff or user.is_super %}
+   <li class="nav-item">
+        <a class="nav-link {% if request.resolver_match.url_name == 'category_list' %}active{% endif %}" href="{% url 'inventory:category_list' %}">
+           <i class="bi bi-collection me-2"></i>
+            <span class="nav-text">Categories</span>
+        </a>
+    </li>
+   <li class="nav-item">
+        <a class="nav-link {% if request.resolver_match.url_name == 'item_list' %}active{% endif %}" href="{% url 'inventory:item_list' %}">
+           <i class="bi bi-box me-2"></i>
+            <span class="nav-text">Items</span>
+        </a>
+    </li>
+   <li class="nav-item">
+        <a class="nav-link {% if request.resolver_match.url_name == 'transaction_list' %}active{% endif %}" href="{% url 'inventory:transaction_list' %}">
+           <i class="bi bi-tag me-2"></i>
+            <span class="nav-text">Transactions</span>
+        </a>
+    </li>
+   <li class="nav-item">
+        <a class="nav-link {% if request.resolver_match.url_name == 'purchase_order_list' %}active{% endif %}" href="{% url 'inventory:purchase_order_list' %}">
+           <i class="bi bi-tag me-2"></i>
+            <span class="nav-text">Purchase Orders</span>
+        </a>
+    </li>
+    <!--  -->
+   
+
+    {% if user.is_superuser %}
+    <!-- Settings (for admins only) -->
+    <!-- <li class="nav-item">
+        <a class="nav-link" href="#">
+            <i class="bi bi-gear-fill me-2"></i>
+            <span class="nav-text">Settings</span>
+        </a>
+    </li> -->
+    {% endif %}
+
+    {% endif %}
+
+    <!-- Footer -->
+    <div class="sidebar-footer mt-5 p-3 bg-light text-center">
+        <small class="text-muted">Examination Module v1.0.0</small>
+    </div>
+
+</ul>

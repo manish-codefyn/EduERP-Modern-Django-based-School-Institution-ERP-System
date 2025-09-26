@@ -1,0 +1,284 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Complete Student Profile - {{ student }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h3 mb-0 text-gray-800">
+        <i class="fas fa-tasks me-2"></i> Complete Student Profile
+    </h1>
+    <a href="{% url 'students:student_detail' student.pk %}" class="btn btn-secondary">
+        <i class="fas fa-arrow-left me-2"></i> Back to Profile
+    </a>
+</div>
+
+<!-- Progress Card -->
+<div class="card card-custom mb-4">
+    <div class="card-header bg-warning-subtle">
+        <h6 class="m-0 font-weight-bold text-success">Completion Progress</h6>
+    </div>
+    <div class="card-body">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <div class="progress mb-3" style="height: 20px;">
+                    <div class="progress-bar bg-{% if completion_status.percentage == 100 %}success{% else %}primary{% endif %}" 
+                         role="progressbar" 
+                         style="width: {{ completion_status.percentage }}%"
+                         aria-valuenow="{{ completion_status.percentage }}" 
+                         aria-valuemin="0" 
+                         aria-valuemax="100">
+                        {{ completion_status.percentage|floatformat:0 }}%
+                    </div>
+                </div>
+                <p class="text-custom mb-0">
+                    {{ completion_status.completed_steps }} of {{ completion_status.total_steps }} steps completed
+                </p>
+            </div>
+            <div class="col-md-4 text-end">
+                {% if completion_status.percentage == 100 %}
+                <span class="badge bg-success p-2">
+                    <i class="fas fa-check-circle me-2"></i>Profile Complete
+                </span>
+                {% else %}
+                <span class="badge bg-warning p-2">
+                    <i class="fas fa-exclamation-circle me-2"></i>Incomplete
+                </span>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Steps Card -->
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card card-custom mb-4">
+            <div class="card-header bg-warning-subtle">
+                <h6 class="m-0 font-weight-bold text-warning-emphasis">Profile Completion Steps</h6>
+            </div>
+            <div class="card-body">
+                <div class="list-group list-group-flush">
+                    <!-- Basic Info -->
+                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                        <div>
+                            <i class="fas fa-user-circle text-primary me-3"></i>
+                            <span class="fw-bold">Basic Information</span>
+                        </div>
+                        <span class="badge bg-success">Completed</span>
+                         <a href="{% url 'students:student_update' student.pk %}" class="btn btn-sm btn-warning">
+                                <i class="bi bi-pencil-square me-1"></i> Update
+                        </a>
+                    </div>
+                    
+                    <!-- Guardian Info -->
+                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                        <div>
+                            <i class="bi bi-people text-primary me-3"></i>
+                            <span class="fw-bold">Guardian Information</span>
+                        </div>
+                        {% if completion_status.steps.guardian %}
+                            <span class="badge bg-success">Completed</span>
+                            <a href="{% url 'students:guardian_update' student.pk %}" class="btn btn-sm btn-warning">
+                                <i class="bi bi-pencil-square me-1"></i> Update
+                            </a>
+                        {% else %}
+                            <a href="{% url 'students:guardian_create' student.pk %}" class="btn btn-sm btn-primary">
+                                <i class="bi bi-plus-lg me-1"></i> Add Now
+                            </a>
+                        {% endif %}
+                    </div>
+
+                    
+                <!-- Medical Info -->
+                <div class="list-group-item d-flex justify-content-between align-items-center">
+                    <div>
+                        <i class="bi bi-heart-pulse text-primary me-3"></i>
+                        <span class="fw-bold">Medical Information</span>
+                    </div>
+                    {% if completion_status.steps.medical %}
+                        <span class="badge bg-success">Completed</span>
+                        <a href="{% url 'students:medical_update' student.pk %}" class="btn btn-sm btn-warning">
+                            <i class="bi bi-pencil-square me-1"></i> Update
+                        </a>
+                    {% else %}
+                        <a href="{% url 'students:medical_create' student.pk %}" class="btn btn-sm btn-primary">
+                            <i class="bi bi-plus-lg me-1"></i> Add Now
+                        </a>
+                    {% endif %}
+                </div>
+
+                <!-- Address Info -->
+                <div class="list-group-item d-flex justify-content-between align-items-center">
+                    <div>
+                        <i class="bi bi-geo-alt text-primary me-3"></i>
+                        <span class="fw-bold">Address Information</span>
+                    </div>
+                    {% if completion_status.steps.address %}
+                        <span class="badge bg-success">Completed</span>
+                        <a href="{% url 'students:address_update' student.pk %}" class="btn btn-sm btn-warning">
+                            <i class="bi bi-pencil-square me-1"></i> Update
+                        </a>
+                    {% else %}
+                        <a href="{% url 'students:address_create' student.pk %}" class="btn btn-sm btn-primary">
+                            <i class="bi bi-plus-lg me-1"></i> Add Now
+                        </a>
+                    {% endif %}
+                </div>
+
+                                    
+                <!-- Documents -->
+                <div class="list-group-item d-flex justify-content-between align-items-center">
+                    <div>
+                        <i class="bi bi-file-earmark-text text-primary me-3"></i>
+                        <span class="fw-bold">Documents</span>
+                    </div>
+                    {% if completion_status.steps.documents %}
+                        <span class="badge bg-success">Completed</span>
+                        <a href="{% url 'students:document_list' student.pk %}" class="btn btn-sm btn-warning">
+                            <i class="bi bi-pencil-square me-1"></i> Update
+                        </a>
+                    {% else %}
+                        <a href="{% url 'students:document_upload' student.pk %}" class="btn btn-sm btn-primary">
+                            <i class="bi bi-upload me-1"></i> Upload Now
+                        </a>
+                    {% endif %}
+                </div>
+
+                <!-- Transport -->
+                <div class="list-group-item d-flex justify-content-between align-items-center">
+                    <div>
+                        <i class="bi bi-bus-front text-primary me-3"></i>
+                        <span class="fw-bold">Transport</span>
+                    </div>
+                    {% if completion_status.steps.transport %}
+                        <span class="badge bg-success">Completed</span>
+                        <a href="{% url 'students:transport_update' student.pk %}" class="btn btn-sm btn-warning">
+                            <i class="bi bi-pencil-square me-1"></i> Update
+                        </a>
+                    {% else %}
+                        <a href="{% url 'students:transport_create' student.pk %}" class="btn btn-sm btn-primary">
+                            <i class="bi bi-plus-circle me-1"></i> Add Now
+                        </a>
+                    {% endif %}
+                </div>
+
+                    <!-- Hostel -->
+                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                        <div>
+                            <i class="bi bi-house-door text-primary me-3"></i>
+                            <span class="fw-bold">Hostel</span>
+                        </div>
+                        {% if completion_status.steps.hostel %}
+                            <span class="badge bg-success">Completed</span>
+                            <a href="{% url 'students:hostel_update' student.pk %}" class="btn btn-sm btn-warning">
+                                <i class="bi bi-pencil-square me-1"></i> Update
+                            </a>
+                        {% else %}
+                            <a href="{% url 'students:hostel_create' student.pk %}" class="btn btn-sm btn-primary">
+                                <i class="bi bi-plus-circle me-1"></i> Add Now
+                            </a>
+                        {% endif %}
+                    </div>
+
+                    <!-- History -->
+                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                        <div>
+                            <i class="bi bi-clock-history text-primary me-3"></i>
+                            <span class="fw-bold">History</span>
+                        </div>
+                        {% if completion_status.steps.history %}
+                            <span class="badge bg-success">Completed</span>
+                            <a href="{% url 'students:history_update' student.pk %}" class="btn btn-sm btn-warning">
+                                <i class="bi bi-pencil-square me-1"></i> Update
+                            </a>
+                        {% else %}
+                            <a href="{% url 'students:history_create' student.pk %}" class="btn btn-sm btn-primary">
+                                <i class="bi bi-plus-circle me-1"></i> Add Now
+                            </a>
+                        {% endif %}
+                    </div>
+                     <!--  -->
+                    <!-- Identification Info -->
+<div class="list-group-item d-flex justify-content-between align-items-center">
+    <div>
+        <i class="bi bi-card-list text-primary me-3"></i>
+        <span class="fw-bold">Identification Information</span>
+    </div>
+    {% if completion_status.steps.identification %}
+        <span class="badge bg-success">Completed</span>
+        <a href="{% url 'students:identification_update' student.pk %}" class="btn btn-sm btn-warning">
+            <i class="bi bi-pencil-square me-1"></i> Update
+        </a>
+    {% else %}
+        <a href="{% url 'students:identification_create' student.pk %}" class="btn btn-sm btn-primary">
+            <i class="bi bi-plus-lg me-1"></i> Add Now
+        </a>
+    {% endif %}
+</div>
+<!--  -->
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4">
+        <!-- Next Step Card -->
+        <div class="card card-custom mb-4">
+            <div class="card-header bg-warning-subtle">
+                <h6 class="m-0 font-weight-bold text-primary">Next Step</h6>
+            </div>
+            <div class="card-body text-center">
+                {% if next_step.0 %}
+                <div class="mb-3">
+                    <i class="fas fa-arrow-circle-right fa-3x text-primary"></i>
+                </div>
+                <h5>{{ next_step.1 }}</h5>
+                <a href="{{ next_step.2 }}" class="btn btn-primary mt-3">
+                    Continue <i class="fas fa-arrow-right ms-2"></i>
+                </a>
+                {% else %}
+                <div class="mb-3">
+                    <i class="fas fa-check-circle fa-3x text-success"></i>
+                </div>
+                <h5>All Steps Completed!</h5>
+                <p class="text-custom">Student profile is complete and ready.</p>
+                <a href="{% url 'students:student_detail' student.pk %}" class="btn btn-success mt-3">
+                    View Profile <i class="fas fa-eye ms-2"></i>
+                </a>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Student Summary -->
+        <div class="card card-custom">
+            <div class="card-header bg-warning-subtle">
+                <h6 class="m-0 font-weight-bold text-primary">Student Summary</h6>
+            </div>
+            <div class="card-body">
+                <div class="text-center mb-3">
+                    <div class="avatar-lg bg-primary rounded-circle text-white d-flex align-items-center justify-content-center mx-auto" style="width: 80px; height: 80px;">
+                        {{ student.first_name|first }}{{ student.last_name|first }}
+                    </div>
+                    <h5 class="mt-3">{{ student.first_name }} {{ student.last_name }}</h5>
+                    <p class="text-custom">{{ student.admission_number }}</p>
+                </div>
+                <div class="row text-center">
+                    <div class="col-6">
+                        <div class="border rounded p-2">
+                            <div class="text-warning fw-bold">{{ student.age }}</div>
+                            <small class="text-custom">Age</small>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="border rounded p-2">
+                            <div class="text-warning fw-bold">{{ student.get_gender_display }}</div>
+                            <small class="text-custom">Gender</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

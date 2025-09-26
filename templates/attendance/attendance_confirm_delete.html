@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+{% load crispy_forms_tags %}
+
+{% block title %}Confirm Delete Attendance{% endblock %}
+
+{% block content %}
+<style>
+    /* Animated pulse for danger icon */
+    .pulse-danger {
+        display: inline-block;
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        background-color: #dc3545;
+        color: white;
+        font-size: 2rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        animation: pulse 1.5s infinite;
+        margin-bottom: 20px;
+    }
+
+    @keyframes pulse {
+        0% {
+            transform: scale(1);
+            opacity: 1;
+        }
+        50% {
+            transform: scale(1.1);
+            opacity: 0.7;
+        }
+        100% {
+            transform: scale(1);
+            opacity: 1;
+        }
+    }
+
+    .delete-card {
+        border: 2px solid #dc3545;
+        border-radius: 0.75rem;
+    }
+
+    .delete-card .card-header {
+        background-color: #dc3545;
+        color: white;
+        border-bottom: 2px solid #b02a37;
+    }
+</style>
+
+<div class="container mt-5">
+    <div class="card shadow-sm delete-card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">Confirm Delete</h5>
+            <a href="{% url 'attendance:attendance_list' %}" class="btn btn-sm btn-outline-light">
+                <i class="bi bi-arrow-left me-1"></i> Back
+            </a>
+        </div>
+        <div class="card-body text-center">
+            <!-- Animated danger icon -->
+            <div class="pulse-danger mx-auto">
+                <i class="bi bi-exclamation-lg"></i>
+            </div>
+
+            <p class="lead fw-semibold">
+                Are you sure you want to <strong>delete</strong> attendance for
+                <span class="text-dark">{{ object.student.get_full_name }}</span>
+                on <strong>{{ object.date }}</strong>?
+            </p>
+            <p class="text-danger fw-bold">This action cannot be undone.</p>
+
+            <form method="post" class="mt-4">
+                {% csrf_token %}
+                <div class="d-flex justify-content-center gap-3">
+                    <a href="{% url 'attendance:attendance_list' %}" class="btn btn-outline-secondary btn-lg">
+                        <i class="bi bi-x-circle me-1"></i> Cancel
+                    </a>
+                    <button type="submit" class="btn btn-danger btn-lg">
+                        <i class="bi bi-trash me-1"></i> Delete
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

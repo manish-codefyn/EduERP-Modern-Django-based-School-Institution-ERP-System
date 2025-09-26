@@ -1,0 +1,116 @@
+{% extends 'base.html' %}
+{% load static crispy_forms_tags %}
+
+{% block title %}{{ view.object.name|default:"Add Department" }} - {{ institution.name|default:"ERP System" }}{% endblock %}
+
+{% block extra_css %}
+<!-- You can add custom CSS here if needed -->
+<style>
+    .custom-name-field {
+        display: none;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <!-- Header with Back button -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 mb-0">{{ view.object.name|default:"Add Department" }}</h1>
+        <a href="{{ back_url }}" class="btn btn-outline-secondary back-btn">
+            <i class="bi bi-arrow-left me-1"></i> Back
+        </a>
+    </div>
+
+    <!-- Form Card -->
+    <div class="card card-custom shadow-sm">
+        <div class="card-header detail-card-header">
+            <i class="bi bi-diagram-3 me-2"></i>
+            {% if view.object %}Edit Department{% else %}Create New Department{% endif %}
+        </div>
+        <div class="card-body">
+            <form method="post" novalidate>
+                {% csrf_token %}
+
+                {% if messages %}
+                    {% for message in messages %}
+                        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+
+                <div class="row">
+                    {% for field in form %}
+                        <div class="col-md-6 mb-3">
+                            {% if field.name == "custom_name" %}
+                                <div id="custom-name-group" style="display: none;">
+                                    {{ field|as_crispy_field }}
+                                    {% if field.help_text %}
+                                        <small class="form-text text-muted">{{ field.help_text }}</small>
+                                    {% endif %}
+                                </div>
+                            {% else %}
+                                {{ field|as_crispy_field }}
+                                {% if field.help_text %}
+                                    <small class="form-text text-muted">{{ field.help_text }}</small>
+                                {% endif %}
+                            {% endif %}
+
+                            {% if field.errors %}
+                                <div class="text-danger small mt-1">
+                                    {{ field.errors|striptags }}
+                                </div>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                </div>
+
+                <!-- Submit & Cancel Buttons -->
+                <div class="d-flex justify-content-end mt-4">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-check-circle me-1"></i>
+                        {% if view.object %}Update{% else %}Create{% endif %}
+                    </button>
+                    <a href="{{ back_url }}" class="btn btn-outline-secondary ms-2">
+                        <i class="bi bi-x-circle me-1"></i> Cancel
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function toggleCustomNameField() {
+    const nameSelect = document.querySelector('.department-name-select');
+    const customNameGroup = document.getElementById('custom-name-group');
+
+    if (!nameSelect || !customNameGroup) return;
+
+    if (nameSelect.value === 'other') {
+        customNameGroup.style.display = 'block';
+    } else {
+        customNameGroup.style.display = 'none';
+    }
+}
+
+// Initialize on page load and bind change event
+document.addEventListener('DOMContentLoaded', function() {
+    toggleCustomNameField();
+    const nameSelect = document.querySelector('.department-name-select');
+    if (nameSelect) {
+        nameSelect.addEventListener('change', toggleCustomNameField);
+    }
+
+    // Initialize Bootstrap tooltips if any
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+    tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl)
+    });
+});
+</script>
+{% endblock %}

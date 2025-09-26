@@ -1,0 +1,183 @@
+{% extends 'communications/base.html' %}
+{% load static %}
+
+{% block title %}Templates - {{ organization.name|default:"codefyn" }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+
+    <!-- Header with Breadcrumb on top -->
+<div class="header-section mb-4">
+    <div class="row align-items-center">
+        <div class="col-md-7 d-flex flex-column">
+            <!-- Breadcrumb on top -->
+            <nav aria-label="breadcrumb" class="mb-2">
+                <ol class="breadcrumb mb-0">
+                    <li class="breadcrumb-item">
+                        <a href="{% url 'communications:dashboard' %}">
+                            <i class="bi bi-house-door me-1"></i> Dashboard
+                        </a>
+                    </li>
+                    <li class="breadcrumb-item active" aria-current="page">Notification Templates</li>
+                </ol>
+            </nav>
+
+            <!-- Header title and description -->
+            <div class="d-flex align-items-center">
+                <div class="header-icon me-3">
+                    <i class="bi bi-journal-text display-6 text-primary"></i>
+                </div>
+                <div>
+                    <h1 class="h3 fw-bold mb-1">Notification Templates</h1>
+                    <p class="text-custom mb-0">Manage your institution's notification templates</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-5">
+            {% if request.user.is_superadmin or request.user.is_institution_admin %}
+            <div class="d-flex justify-content-end align-items-center gap-2">
+                <a href="{% url 'communications:template_create' %}" class="btn btn-primary">
+                    <i class="bi bi-plus-circle me-1"></i> New Template
+                </a>
+                <!-- Export dropdown is currently commented out -->
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+    <!-- Filter Form -->
+    <div class="card card-custom p-3 mb-4">
+        <form method="get" class="row g-3">
+            <div class="col-md-6">
+                <label class="form-label">Search</label>
+                <input type="text" name="search" class="form-control" placeholder="Search templates..." value="{{ request.GET.search }}">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Channel</label>
+                <select name="channel" class="form-select">
+                    <option value="">All</option>
+                    {% for key, value in templates.0.get_channel_choices %}
+                        <option value="{{ key }}" {% if request.GET.channel == key %}selected{% endif %}>{{ value }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3 d-flex align-items-end gap-2">
+                <button type="submit" class="btn btn-primary w-50">
+                    <i class="bi bi-search me-1"></i> Filter
+                </button>
+                <a href="{% url 'communications:template_list' %}" class="btn btn-outline-secondary w-50">
+                    <i class="bi bi-x me-1"></i> Clear
+                </a>
+            </div>
+        </form>
+    </div>
+
+    <!-- Templates Table -->
+    <div class="card card-custom">
+        <div class="card-header bg-transparent border-0 pt-4 px-4">
+            <h5 class="card-title mb-0 fw-bold text-custom">All Templates</h5>
+            <p class="text-custom mb-0">Manage notification templates for your institution</p>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                {% if templates %}
+                <table id="templatesTable" class="w-100 table-custom table-hover align-middle">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Name</th>
+                            <th>Channel</th>
+                            <th>Status</th>
+                            <th>Created By</th>
+                            <th>Created At</th>
+                            <th class="text-center">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for template in templates %}
+                        <tr>
+                            <td>{{ forloop.counter }}</td>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <i class="bi bi-journal-text me-2 text-primary"></i>
+                                    {{ template.name }}
+                                </div>
+                            </td>
+                            <td>
+                                {% if template.channel == 'email' %}
+                                    <i class="bi bi-envelope me-1"></i> Email
+                                {% elif template.channel == 'sms' %}
+                                    <i class="bi bi-chat-dots me-1"></i> SMS
+                                {% else %}
+                                    <i class="bi bi-bell me-1"></i> Other
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if template.is_active %}
+                                    <span class="badge bg-success">Active</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">Inactive</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ template.created_by.get_full_name }}</td>
+                            <td>{{ template.created_at|date:"d M Y H:i" }}</td>
+                            <td class="text-center">
+                                <a href="{% url 'communications:template_detail' template.pk %}" 
+                                   class="btn btn-sm btn-outline-primary" title="View">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                                <a href="{% url 'communications:template_update' template.pk %}" 
+                                   class="btn btn-sm btn-outline-warning" title="Edit">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                <a href="{% url 'communications:template_delete' template.pk %}" 
+                                   class="btn btn-sm btn-outline-danger" title="Delete">
+                                    <i class="bi bi-trash"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% else %}
+                <div class="empty-state text-center py-5">
+                    <i class="bi bi-journal-text fs-1"></i>
+                    <h4 class="mt-3 mb-2">No Templates Found</h4>
+                    <p class="text-custom mb-4">No notification templates have been created yet.</p>
+                    <a href="{% url 'communications:template_create' %}" class="btn btn-primary">
+                        <i class="bi bi-plus-circle me-1"></i> Create First Template
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    $('#templatesTable').DataTable({
+        "pageLength": 10,
+        "order": [[5, 'desc']],
+        "language": {
+            "search": "<i class='bi bi-search me-2'></i>Search:",
+            "lengthMenu": "Show _MENU_ entries",
+            "info": "Showing _START_ to _END_ of _TOTAL_ entries",
+            "paginate": {
+                "previous": "<i class='bi bi-chevron-left'></i>",
+                "next": "<i class='bi bi-chevron-right'></i>"
+            }
+        },
+        "columnDefs": [
+            { "targets": [-1], "orderable": false, "className": "dt-center" }
+        ],
+        "responsive": true
+    });
+});
+</script>
+{% endblock %}

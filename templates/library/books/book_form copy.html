@@ -1,0 +1,385 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}
+    {% if form.instance.pk %}Edit{% else %}Add{% endif %} Book - Library Management - {{ organization.name|default:"codefyn" }}
+{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css">
+<style>
+.select2-container .select2-selection--single {
+    height: 38px;
+    border: 1px solid #dee2e6;
+}
+.select2-container--default .select2-selection--single .select2-selection__rendered {
+    line-height: 36px;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+
+<!-- Header -->
+<div class="header-section">
+    <div class="row align-items-center">
+        <div class="col-12 mb-2">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb breadcrumb-dark">
+                    <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'library:dashboard' %}">Library</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'library:book_list' %}">Books</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">
+                        {% if form.instance.pk %}Edit{% else %}Add{% endif %} Book
+                    </li>
+                </ol>
+            </nav>
+        </div>
+
+        <div class="col-md-8">
+            <div class="d-flex align-items-center">
+                <div class="header-icon me-3">
+                   <i class="bi bi-book display-6 text-primary"></i> 
+                </div>
+                <div>
+                    <h1 class="h3 fw-bold mb-1">
+                        {% if form.instance.pk %}Edit Book{% else %}Add New Book{% endif %}
+                    </h1>
+                    <p class="text-custom mb-0">
+                        {% if form.instance.pk %}Update book information{% else %}Add a new book to the library collection{% endif %}
+                    </p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="d-flex gap-2 justify-content-md-end flex-wrap">
+                <a href="{% url 'library:book_list' %}" class="btn btn-secondary">
+                    <i class="bi bi-arrow-left me-1"></i> Back to Books
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Form Section -->
+<div class="row justify-content-center">
+    <div class="col-lg-10">
+        <div class="card card-custom">
+            <div class="card-header bg-transparent border-0 pt-4 px-4">
+                <h5 class="card-title mb-0 fw-bold text-custom">Book Information</h5>
+                <p class="text-custom mb-0">Enter all required book details</p>
+            </div>
+            <div class="card-body">
+                <form method="post" enctype="multipart/form-data" novalidate>
+                    {% csrf_token %}
+                    
+                    {% if form.non_field_errors %}
+                    <div class="alert alert-danger">
+                        {% for error in form.non_field_errors %}
+                        <div class="d-flex align-items-center">
+                            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                            {{ error }}
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+
+                    <div class="row g-4">
+                        <!-- Basic Information -->
+                        <div class="col-md-8">
+                            <div class="card mb-4">
+                                <div class="card-header bg-light">
+                                    <h6 class="mb-0 fw-bold"><i class="bi bi-info-circle me-2"></i>Basic Information</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row g-3">
+                                        <div class="col-md-12">
+                                            <label for="{{ form.title.id_for_label }}" class="form-label fw-semibold">
+                                                Title <span class="text-danger">*</span>
+                                            </label>
+                                            {{ form.title }}
+                                            {% if form.title.errors %}
+                                            <div class="invalid-feedback d-block">
+                                                {% for error in form.title.errors %}{{ error }}{% endfor %}
+                                            </div>
+                                            {% endif %}
+                                        </div>
+
+                                        <div class="col-md-6">
+                                            <label for="{{ form.author.id_for_label }}" class="form-label fw-semibold">
+                                                Author <span class="text-danger">*</span>
+                                            </label>
+                                            {{ form.author }}
+                                            {% if form.author.errors %}
+                                            <div class="invalid-feedback d-block">
+                                                {% for error in form.author.errors %}{{ error }}{% endfor %}
+                                            </div>
+                                            {% endif %}
+                                            <div class="mt-1">
+                                                <a href="{% url 'library:author_create' %}" class="text-decoration-none small">
+                                                    <i class="bi bi-plus-circle me-1"></i>Add new author
+                                                </a>
+                                            </div>
+                                        </div>
+
+                                        <div class="col-md-6">
+                                            <label for="{{ form.category.id_for_label }}" class="form-label fw-semibold">
+                                                Category <span class="text-danger">*</span>
+                                            </label>
+                                            {{ form.category }}
+                                            {% if form.category.errors %}
+                                            <div class="invalid-feedback d-block">
+                                                {% for error in form.category.errors %}{{ error }}{% endfor %}
+                                            </div>
+                                            {% endif %}
+                                        </div>
+
+                                        <div class="col-md-6">
+                                            <label for="{{ form.isbn.id_for_label }}" class="form-label fw-semibold">
+                                                ISBN <span class="text-danger">*</span>
+                                            </label>
+                                            {{ form.isbn }}
+                                            {% if form.isbn.errors %}
+                                            <div class="invalid-feedback d-block">
+                                                {% for error in form.isbn.errors %}{{ error }}{% endfor %}
+                                            </div>
+                                            {% endif %}
+                                        </div>
+
+                                        <div class="col-md-6">
+                                            <label for="{{ form.publisher.id_for_label }}" class="form-label fw-semibold">
+                                                Publisher
+                                            </label>
+                                            {{ form.publisher }}
+                                            {% if form.publisher.errors %}
+                                            <div class="invalid-feedback d-block">
+                                                {% for error in form.publisher.errors %}{{ error }}{% endfor %}
+                                            </div>
+                                            {% endif %}
+                                        </div>
+
+                                        <div class="col-md-6">
+                                            <label for="{{ form.publication_date.id_for_label }}" class="form-label fw-semibold">
+                                                Publication Date
+                                            </label>
+                                            {{ form.publication_date }}
+                                            {% if form.publication_date.errors %}
+                                            <div class="invalid-feedback d-block">
+                                                {% for error in form.publication_date.errors %}{{ error }}{% endfor %}
+                                            </div>
+                                            {% endif %}
+                                        </div>
+
+                                        <div class="col-md-6">
+                                            <label for="{{ form.language.id_for_label }}" class="form-label fw-semibold">
+                                                Language
+                                            </label>
+                                            {{ form.language }}
+                                            {% if form.language.errors %}
+                                            <div class="invalid-feedback d-block">
+                                                {% for error in form.language.errors %}{{ error }}{% endfor %}
+                                            </div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Description -->
+                            <div class="card mb-4">
+                                <div class="card-header bg-light">
+                                    <h6 class="mb-0 fw-bold"><i class="bi bi-text-paragraph me-2"></i>Description</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="mb-3">
+                                        <label for="{{ form.description.id_for_label }}" class="form-label fw-semibold">
+                                            Book Description
+                                        </label>
+                                        {{ form.description }}
+                                        {% if form.description.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {% for error in form.description.errors %}{{ error }}{% endfor %}
+                                        </div>
+                                        {% endif %}
+                                        <div class="form-text">Provide a detailed description of the book.</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Sidebar - Inventory & Status -->
+                        <div class="col-md-4">
+                            <div class="card mb-4">
+                                <div class="card-header bg-light">
+                                    <h6 class="mb-0 fw-bold"><i class="bi bi-clipboard-data me-2"></i>Inventory</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row g-3">
+                                        <div class="col-12">
+                                            <label for="{{ form.total_copies.id_for_label }}" class="form-label fw-semibold">
+                                                Total Copies <span class="text-danger">*</span>
+                                            </label>
+                                            {{ form.total_copies }}
+                                            {% if form.total_copies.errors %}
+                                            <div class="invalid-feedback d-block">
+                                                {% for error in form.total_copies.errors %}{{ error }}{% endfor %}
+                                            </div>
+                                            {% endif %}
+                                        </div>
+
+                                        <div class="col-12">
+                                            <label for="{{ form.available_copies.id_for_label }}" class="form-label fw-semibold">
+                                                Available Copies <span class="text-danger">*</span>
+                                            </label>
+                                            {{ form.available_copies }}
+                                            {% if form.available_copies.errors %}
+                                            <div class="invalid-feedback d-block">
+                                                {% for error in form.available_copies.errors %}{{ error }}{% endfor %}
+                                            </div>
+                                            {% endif %}
+                                        </div>
+
+                                        <div class="col-12">
+                                            <label for="{{ form.status.id_for_label }}" class="form-label fw-semibold">
+                                                Status <span class="text-danger">*</span>
+                                            </label>
+                                            {{ form.status }}
+                                            {% if form.status.errors %}
+                                            <div class="invalid-feedback d-block">
+                                                {% for error in form.status.errors %}{{ error }}{% endfor %}
+                                            </div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Cover Image -->
+                            <div class="card mb-4">
+                                <div class="card-header bg-light">
+                                    <h6 class="mb-0 fw-bold"><i class="bi bi-image me-2"></i>Book Cover</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="mb-3">
+                                        <label for="{{ form.cover_image.id_for_label }}" class="form-label fw-semibold">
+                                            Cover Image
+                                        </label>
+                                        {{ form.cover_image }}
+                                        {% if form.cover_image.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {% for error in form.cover_image.errors %}{{ error }}{% endfor %}
+                                        </div>
+                                        {% endif %}
+                                        
+                                        {% if form.instance.cover_image %}
+                                        <div class="mt-2">
+                                            <img src="{{ form.instance.cover_image.url }}" alt="Current cover" 
+                                                 class="img-thumbnail mt-2" style="max-height: 150px;">
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Additional Information -->
+                            <div class="card">
+                                <div class="card-header bg-light">
+                                    <h6 class="mb-0 fw-bold"><i class="bi bi-tags me-2"></i>Additional Info</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="mb-3">
+                                        <label for="{{ form.edition.id_for_label }}" class="form-label fw-semibold">
+                                            Edition
+                                        </label>
+                                        {{ form.edition }}
+                                        {% if form.edition.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {% for error in form.edition.errors %}{{ error }}{% endfor %}
+                                        </div>
+                                        {% endif %}
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label for="{{ form.pages.id_for_label }}" class="form-label fw-semibold">
+                                            Number of Pages
+                                        </label>
+                                        {{ form.pages }}
+                                        {% if form.pages.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {% for error in form.pages.errors %}{{ error }}{% endfor %}
+                                        </div>
+                                        {% endif %}
+                                    </div>
+
+                                    <div class="form-check form-switch">
+                                        {{ form.is_featured }}
+                                        <label class="form-check-label fw-semibold" for="{{ form.is_featured.id_for_label }}">
+                                            Featured Book
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Form Actions -->
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <div class="d-flex gap-2 justify-content-end">
+                                <a href="{% url 'library:book_list' %}" class="btn btn-secondary">
+                                    <i class="bi bi-x-circle me-1"></i> Cancel
+                                </a>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="bi bi-check-circle me-1"></i>
+                                    {% if form.instance.pk %}Update Book{% else %}Add Book{% endif %}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize Select2
+    $('select').select2({
+        theme: 'bootstrap-5',
+        placeholder: 'Select an option',
+        allowClear: true
+    });
+
+    // Auto-calculate available copies based on total copies
+    $('#id_total_copies').on('change', function() {
+        const totalCopies = parseInt($(this).val()) || 0;
+        const availableCopies = parseInt($('#id_available_copies').val()) || 0;
+        
+        if (availableCopies > totalCopies || availableCopies === 0) {
+            $('#id_available_copies').val(totalCopies);
+        }
+    });
+
+    // Form validation styling
+    $('input, select, textarea').addClass('form-control');
+    $('input[type="checkbox"]').removeClass('form-control').addClass('form-check-input');
+    $('input[type="file"]').removeClass('form-control');
+
+    // Add Bootstrap validation classes
+    $('form').on('submit', function() {
+        $('input, select, textarea').each(function() {
+            if ($(this).hasClass('is-invalid')) {
+                $(this).removeClass('is-invalid');
+            }
+        });
+    });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,226 @@
+<nav class="navbar navbar-expand-lg navbar-custom mb-4 py-2 shadow-sm">
+    <div class="container-fluid d-flex justify-content-between align-items-center">
+
+        <!-- Left: Sidebar Toggle + Brand -->
+        <div class="d-flex align-items-center">
+            <button class="btn btn-outline-primary me-2 d-flex align-items-center" id="sidebarToggle">
+                <i class="bi bi-list fs-5"></i>
+            </button>
+            <a class="navbar-brand fw-bold d-none d-lg-block" href="#">
+                {% block page_title %}Dashboard{% endblock %}
+            </a>
+        </div>
+
+        <!-- Right: Theme Toggle + Notifications + Account Dropdown -->
+        <div class="d-flex align-items-center">
+
+            <!-- Theme switcher -->
+            <div class="theme-switch-wrapper d-flex align-items-center me-3">
+                <i class="bi bi-sun-fill text-warning fs-6 me-1" id="theme-icon-sun"></i>
+                <label class="theme-switch mb-0" for="themeToggleCheckbox">
+                    <input type="checkbox" id="themeToggleCheckbox">
+                    <span class="slider round"></span>
+                </label>
+                <i class="bi bi-moon-stars-fill text-secondary fs-6 ms-1" id="theme-icon-moon"></i>
+            </div>
+
+            <!-- Notifications dropdown -->
+            {% if has_notification_permission %}
+            <div class="dropdown me-3">
+                <a class="nav-link dropdown-toggle position-relative" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class="bi bi-bell fs-5"></i>
+                    {% if header_notifications_count > 0 %}
+                        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                            {{ header_notifications_count }}
+                            <span class="visually-hidden">unread notifications</span>
+                        </span>
+                    {% endif %}
+                </a>
+                <div class="dropdown-menu dropdown-menu-end shadow-lg" style="width: 380px;">
+                    <!-- Header -->
+                    <div class="dropdown-header bg-light py-3">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h6 class="mb-0">
+                                <i class="bi bi-bell me-2"></i>Notifications
+                                <span class="badge bg-primary ms-2">{{ notification_stats.total }}</span>
+                            </h6>
+                            <a href="{% url 'communications:push_notification_list' %}" class="text-decoration-none small">
+                                View All
+                            </a>
+                        </div>
+                    </div>
+                    
+                    <!-- Quick Stats -->
+                    <div class="px-3 py-2 border-bottom">
+                        <div class="row text-center small">
+                            <div class="col-4">
+                                <span class="d-block fw-bold text-success">{{ notification_stats.sent }}</span>
+                                <span class="text-custom">Sent</span>
+                            </div>
+                            <div class="col-4">
+                                <span class="d-block fw-bold text-warning">{{ notification_stats.pending }}</span>
+                                <span class="text-custom">Pending</span>
+                            </div>
+                            <div class="col-4">
+                                <span class="d-block fw-bold text-primary">{{ notification_stats.today }}</span>
+                                <span class="text-custom">Today</span>
+                            </div>
+                        </div>
+                        {% if notification_stats.success_rate > 0 %}
+                        <div class="mt-2">
+                            <div class="d-flex justify-content-between small">
+                                <span class="text-custom">Success Rate</span>
+                                <span class="fw-bold text-success">{{ notification_stats.success_rate }}%</span>
+                            </div>
+                            <div class="progress" style="height: 4px;">
+                                <div class="progress-bar bg-success" style="width: {{ notification_stats.success_rate }}%"></div>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Notifications List -->
+                    <div class="notification-list" style="max-height: 300px; overflow-y: auto;">
+                        {% if header_notifications_list %}
+                            {% for notification in header_notifications_list %}
+                            <a href="{% url 'communications:push_notification_detail' notification.id %}" 
+                               class="dropdown-item py-3 border-bottom notification-item">
+                                <div class="d-flex w-100 justify-content-between align-items-start mb-1">
+                                    <span class="badge bg-{{ notification.priority }} me-2">
+                                        {{ notification.get_priority_display }}
+                                    </span>
+                                    <small class="text-custom">{{ notification.created_at|timesince }} ago</small>
+                                </div>
+                                <h6 class="mb-1 text-dark fw-semibold">{{ notification.title|truncatechars:40 }}</h6>
+                                <p class="mb-1 text-custom small">{{ notification.message|truncatechars:60 }}</p>
+                                <div class="d-flex justify-content-between align-items-center small">
+                                    <span class="badge badge-status-{{ notification.status }}">
+                                        <i class="bi bi-circle-fill me-1"></i>{{ notification.get_status_display }}
+                                    </span>
+                                    <span class="text-custom">
+                                        <i class="bi bi-people me-1"></i>{{ notification.total_recipients }}
+                                    </span>
+                                </div>
+                            </a>
+                            {% endfor %}
+                        {% else %}
+                            <div class="text-center py-4">
+                                <i class="bi bi-bell-slash text-custom mb-2" style="font-size: 2rem;"></i>
+                                <p class="text-custom mb-0 small">No notifications found</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Footer -->
+                    {% if can_create_notification %}
+                    <div class="dropdown-footer bg-light py-2 px-3 border-top">
+                        <a href="{% url 'communications:push_notification_create' %}" 
+                           class="btn btn-primary btn-sm w-100">
+                            <i class="bi bi-plus-circle me-1"></i>Create Notification
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Account dropdown -->
+            <div class="dropdown">
+                <a class="nav-link dropdown-toggle d-flex align-items-center py-1 px-3 rounded hover-bg-primary"
+                   href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class="bi bi-person-circle fs-5 me-2"></i> {{ request.user.first_name }}
+                </a>
+                <ul class="dropdown-menu dropdown-menu-end shadow-sm">
+                    <li><a class="dropdown-item d-flex align-items-center" href="{% url 'core:dashboard' %}"><i class="bi bi-speedometer2 me-2"></i>Home</a></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li><a class="dropdown-item d-flex align-items-center" href="{% url 'users_profile' %}"><i class="bi bi-person-fill me-2"></i>Profile</a></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li><a class="dropdown-item d-flex align-items-center" href="{% url 'account_logout' %}"><i class="bi bi-box-arrow-right me-2"></i>Logout</a></li>
+                </ul>
+            </div>
+        </div>
+
+    </div>
+</nav>
+
+<!-- Add this CSS for styling -->
+<style>
+.notification-item:hover {
+    background-color: #f8f9fa;
+    text-decoration: none;
+}
+
+.notification-list::-webkit-scrollbar {
+    width: 6px;
+}
+
+.notification-list::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 3px;
+}
+
+.notification-list::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 3px;
+}
+
+.notification-list::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+}
+
+/* Status badge colors */
+.badge-status-draft { background-color: #6c757d; color: white; }
+.badge-status-scheduled { background-color: #fd7e14; color: white; }
+.badge-status-sent { background-color: #198754; color: white; }
+.badge-status-failed { background-color: #dc3545; color: white; }
+
+/* Priority badge colors */
+.bg-low { background-color: #6c757d !important; }
+.bg-normal { background-color: #0d6efd !important; }
+.bg-high { background-color: #dc3545 !important; }
+
+/* Hover effect for account dropdown */
+.hover-bg-primary:hover {
+    background-color: rgba(13, 110, 253, 0.1);
+}
+
+/* Progress bar styling */
+.progress {
+    background-color: #e9ecef;
+}
+
+/* Dropdown menu sizing */
+.dropdown-menu {
+    border: 1px solid rgba(0,0,0,.15);
+    border-radius: 0.5rem;
+}
+
+.dropdown-header {
+    font-weight: 600;
+    color: #495057;
+}
+</style>
+
+<!-- Optional: Add JavaScript for better interaction -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Auto-close notification dropdown when clicking outside
+    document.addEventListener('click', function(e) {
+        if (!e.target.closest('.dropdown')) {
+            const openDropdown = document.querySelector('.dropdown-menu.show');
+            if (openDropdown) {
+                bootstrap.Dropdown.getInstance(openDropdown.closest('.dropdown').querySelector('[data-bs-toggle="dropdown"]')).hide();
+            }
+        }
+    });
+
+    // Mark notifications as read when dropdown is opened
+    const notificationDropdown = document.querySelector('.dropdown .nav-link[data-bs-toggle="dropdown"]');
+    if (notificationDropdown) {
+        notificationDropdown.addEventListener('show.bs.dropdown', function() {
+            // You can add AJAX call here to mark notifications as read
+            console.log('Notification dropdown opened');
+        });
+    }
+});
+</script>

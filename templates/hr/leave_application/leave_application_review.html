@@ -1,0 +1,117 @@
+{% extends 'hr/base.html' %}
+{% load static %}
+
+{% block title %}Review Leave Application - {{ organization.name|default:"ERP System" }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+
+    <!-- Header -->
+    <div class="header-section mb-4">
+        <div class="row align-items-center">
+            <div class="col-md-7 d-flex align-items-center">
+                <div class="header-icon me-3">
+                    <i class="bi bi-clipboard-check display-6 text-primary"></i>
+                </div>
+                <div>
+                    <h1 class="h3 fw-bold mb-1">Review Leave Application</h1>
+                    <p class="text-custom mb-0">Approve or reject leave request</p>
+                </div>
+            </div>
+            <div class="col-md-5">
+                <div class="d-flex justify-content-end align-items-center gap-2">
+                    <a href="{% url 'hr:leave_application_detail' object.pk %}" class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-left me-1"></i> Back to Details
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Review Form -->
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card card-custom">
+                <div class="card-header bg-transparent border-0 pt-4 px-4">
+                    <h5 class="card-title mb-0 fw-bold text-custom">Review Application</h5>
+                    <p class="text-custom mb-0">Make a decision on this leave request</p>
+                </div>
+                <div class="card-body">
+                    <!-- Application Summary -->
+                    <div class="application-summary p-4 border rounded bg-light mb-4">
+                        <h6 class="fw-bold mb-3">Application Summary:</h6>
+                        <div class="row">
+                            <div class="col-md-6 mb-2">
+                                <strong>Staff:</strong> {{ object.staff.user.get_full_name }}
+                            </div>
+                            <div class="col-md-6 mb-2">
+                                <strong>Leave Type:</strong> {{ object.leave_type.name }}
+                            </div>
+                            <div class="col-md-6 mb-2">
+                                <strong>Period:</strong> {{ object.start_date|date:"M d, Y" }} to {{ object.end_date|date:"M d, Y" }}
+                            </div>
+                            <div class="col-md-6 mb-2">
+                                <strong>Duration:</strong> {{ object.total_days }} days
+                            </div>
+                            <div class="col-12 mb-2">
+                                <strong>Reason:</strong> {{ object.reason }}
+                            </div>
+                            <div class="col-12">
+                                <strong>Status:</strong> 
+                                <span class="badge bg-warning">{{ object.get_status_display }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        {% if form.non_field_errors %}
+                        <div class="alert alert-danger">
+                            {% for error in form.non_field_errors %}
+                            <p class="mb-0">{{ error }}</p>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                        
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label for="{{ form.status.id_for_label }}" class="form-label">{{ form.status.label }}</label>
+                                {{ form.status }}
+                                {% if form.status.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.status.errors %}
+                                    {{ error }}
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="col-12">
+                                <label for="{{ form.remarks.id_for_label }}" class="form-label">{{ form.remarks.label }}</label>
+                                {{ form.remarks }}
+                                {% if form.remarks.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.remarks.errors %}
+                                    {{ error }}
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                                <small class="text-custom">Provide comments or reasons for your decision (optional)</small>
+                            </div>
+                        </div>
+                        
+                        <div class="d-flex justify-content-end gap-2 mt-4">
+                            <a href="{% url 'hr:leave_application_detail' object.pk %}" class="btn btn-outline-secondary">Cancel</a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-check-circle me-1"></i> Submit Review
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Student Profile - {{ student.full_name }}</title>
+    <style type="text/css">
+        @page {
+            size: A4 portrait;
+            margin: 1cm;
+            @frame header_frame {
+                -pdf-frame-content: header_content;
+                left: 40pt; top: 30pt; width: 515pt; height: 120pt;
+            }
+            @frame content_frame {
+                left: 40pt; top: 150pt; width: 515pt; height: 620pt;
+            }
+            @frame footer_frame {
+                -pdf-frame-content: footer_content;
+                left: 40pt; bottom: 30pt; width: 515pt; height: 20pt;
+            }
+        }
+
+        body {
+            font-family: "Helvetica", "Arial", sans-serif;
+            font-size: 10pt;
+            color: #34495e;
+        }
+
+        /* --- Header Styles --- */
+        #header_content .header-table {
+            width: 100%;
+        }
+        #header_content .student-photo {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            border: 3px solid #1abc9c;
+            object-fit: cover;
+        }
+        #header_content .org-details {
+            text-align: center;
+        }
+        #header_content .logo {
+            max-height: 60px;
+            margin-bottom: 5px;
+        }
+        #header_content h1 {
+            font-size: 20pt;
+            color: #2c3e50;
+            margin: 0;
+        }
+        #header_content .qr-code {
+            width: 100px;
+            height: 100px;
+            text-align: right;
+        }
+        #header_content .qr-code img {
+            max-width: 100%;
+            max-height: 100%;
+        }
+
+        /* --- Main Content Styles --- */
+        .section-title {
+            background-color: #34495e;
+            color: white;
+            padding: 8px;
+            font-size: 14pt;
+            font-weight: bold;
+            margin-top: 15px;
+            margin-bottom: 10px;
+        }
+        .details-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .details-table td {
+            padding: 6px 4px;
+            border-bottom: 1px solid #ecf0f1;
+            font-size: 9pt;
+        }
+        .details-table .label {
+            font-weight: bold;
+            color: #7f8c8d;
+            width: 40%;
+        }
+        .details-table .value {
+            color: #2c3e50;
+            width: 60%;
+        }
+
+        /* --- Footer Styles --- */
+        #footer_content .footer-table {
+            width: 100%;
+            border-top: 1px solid #bdc3c7;
+            padding-top: 5px;
+            font-size: 8pt;
+            color: #95a5a6;
+        }
+        #footer_content .page-number {
+            text-align: right;
+        }
+
+    </style>
+</head>
+<body>
+    <!-- Header: Photo, Org Details, QR Code -->
+    <div id="header_content">
+        <table class="header-table">
+            <tr>
+                <td style="width: 25%; text-align: left;">
+                    {% if photo %}
+                        <img src="{{ photo }}" class="student-photo" alt="Student Photo">
+                    {% endif %}
+                </td>
+                <td style="width: 50%;" class="org-details">
+                    {% if logo %}
+                        <img src="{{ logo }}" class="logo" alt="Logo">
+                    {% endif %}
+                    <h1>{{ organization.name }}</h1>
+                </td>
+                <td style="width: 25%;" class="qr-code">
+                    {% if qr_code %}
+                       <img src="{{ qr_code }}"  alt="QR" width="100" height="100">
+                    {% endif %}
+                </td>
+            </tr>
+        </table>
+    </div>
+
+    <!-- Footer: Generation Date, Page Number -->
+    <div id="footer_content">
+        <table class="footer-table">
+            <tr>
+                <td>Generated on: {{ generated_date|date:"F j, Y, g:i a" }}</td>
+                <td class="page-number">Page <pdf:pagecount /></td>
+            </tr>
+        </table>
+    </div>
+
+    <!-- Main Content Frame -->
+    <div id="content_frame">
+        <h2 style="text-align: center; color: #2c3e50; font-size: 18pt; margin:0 0 20px 0;">Student Profile</h2>
+
+        <table style="width: 100%; border-collapse: collapse;">
+            <tr>
+                <!-- LEFT COLUMN -->
+                <td style="width: 48%; vertical-align: top; padding-right: 2%;">
+                    <!-- Personal Information -->
+                    <div class="section-title">Personal Information</div>
+                    <table class="details-table">
+                        <tr><td class="label">Full Name:</td><td class="value">{{ student.full_name }}</td></tr>
+                        <tr><td class="label">Gender:</td><td class="value">{{ student.gender }}</td></tr>
+                        <tr><td class="label">Date of Birth:</td><td class="value">{{ student.date_of_birth }}</td></tr>
+                        <tr><td class="label">Blood Group:</td><td class="value">{{ student.blood_group }}</td></tr>
+                        <tr><td class="label">Category:</td><td class="value">{{ student.category }}</td></tr>
+                        <tr><td class="label">Religion:</td><td class="value">{{ student.religion }}</td></tr>
+                        <tr><td class="label">Mobile:</td><td class="value">{{ student.mobile }}</td></tr>
+                        <tr><td class="label">Email:</td><td class="value">{{ student.email }}</td></tr>
+                        <tr><td class="label">Current Address:</td><td class="value">{{ student.current_address }}</td></tr>
+                    </table>
+
+                    <!-- Medical Information -->
+                    <div class="section-title">Medical Information</div>
+                    <table class="details-table">
+                        <tr><td class="label">Medical Conditions:</td><td class="value">{{ student.medical_conditions }}</td></tr>
+                        <tr><td class="label">Allergies:</td><td class="value">{{ student.allergies }}</td></tr>
+                        <tr><td class="label">Disability:</td><td class="value">{{ student.disability }}</td></tr>
+                         {% if student_obj.medical_info.disability %}
+                        <tr><td class="label">Disability Type:</td><td class="value">{{ student.disability_type }}</td></tr>
+                        {% endif %}
+                    </table>
+                </td>
+                <!-- RIGHT COLUMN -->
+                <td style="width: 48%; vertical-align: top; padding-left: 2%;">
+                    <!-- Academic Information -->
+                    <div class="section-title">Academic Information</div>
+                    <table class="details-table">
+                        <tr><td class="label">Admission No:</td><td class="value">{{ student.admission_number }}</td></tr>
+                        <tr><td class="label">Roll No:</td><td class="value">{{ student.roll_number }}</td></tr>
+                        <tr><td class="label">Class & Section:</td><td class="value">{{ student.current_class }} - {{ student.section }}</td></tr>
+                        <tr><td class="label">Academic Year:</td><td class="value">{{ student.academic_year }}</td></tr>
+                        <tr><td class="label">Enrollment Date:</td><td class="value">{{ student.enrollment_date }}</td></tr>
+                        <tr><td class="label">Status:</td><td class="value">{{ student.status }}</td></tr>
+                    </table>
+
+                    <!-- Guardian Information -->
+                    {% for guardian in student_obj.guardians.all %}
+                        <div class="section-title">Guardian {{ forloop.counter }} Details</div>
+                        <table class="details-table">
+                            <tr><td class="label">Name:</td><td class="value">{{ guardian.name }}</td></tr>
+                            <tr><td class="label">Relation:</td><td class="value">{{ guardian.get_relation_display }}</td></tr>
+                            <tr><td class="label">Phone:</td><td class="value">{{ guardian.phone }}</td></tr>
+                            <tr><td class="label">Occupation:</td><td class="value">{{ guardian.get_occupation_display }}</td></tr>
+                            <tr><td class="label">Email:</td><td class="value">{{ guardian.email|default:"N/A" }}</td></tr>
+                            <tr><td class="label">Address:</td><td class="value">{{ guardian.address|default:"N/A" }}</td></tr>
+                        </table>
+                    {% endfor %}
+                </td>
+            </tr>
+        </table>
+    </div>
+</body>
+</html>
+

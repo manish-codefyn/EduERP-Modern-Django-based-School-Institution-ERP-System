@@ -1,0 +1,400 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load widget_tweaks %}
+
+{% block title %}Students - {{ organization.name|default:"School ERP System" }}{% endblock %}
+{% block extra_css %}
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+
+    <div class="header-section">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb breadcrumb-dark">
+                        <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Dashboard</a></li>
+                        <li class="breadcrumb-item active" aria-current="page">Student Management</li>
+                    </ol>
+                </nav>
+                <h1 class="display-6 fw-bold mb-2">Student Management</h1>
+                <p class="lead mb-0 opacity-75">Oversee all student records, filters, and reports</p>
+            </div>
+            <div class="col-md-4 text-md-end">
+                <div class="d-flex gap-2 justify-content-md-end flex-wrap">
+                    {% if request.user.is_superadmin or request.user.is_teacher or request.user.role == 'support_staff' %}
+                    <button type="button" class="btn btn-outline-light" data-bs-toggle="modal" data-bs-target="#exportStudentsModal">
+                        <i class="bi bi-download me-2"></i>Export
+                    </button>
+                    <a href="{% url 'students:student_create' %}" class="btn btn-light">
+                        <i class="bi bi-plus-circle me-2"></i>Add New Student
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4 mb-4">
+        <div class="col-xl-3 col-md-6">
+            <div class="card stats-card text-white" style="background: linear-gradient(135deg, #0984e3 0%, #74b9ff 100%);">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-8">
+                            <h6 class="card-title mb-1 small opacity-75">TOTAL STUDENTS</h6>
+                            <h3 class="mb-0 fw-bold">{{ total_students|default:"0" }}</h3>
+                        </div>
+                        <div class="col-4 text-end">
+                            <div class="stats-icon"><i class="bi bi-people-fill"></i></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card stats-card text-white" style="background: linear-gradient(135deg, #00b894 0%, #00a085 100%);">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-8">
+                            <h6 class="card-title mb-1 small opacity-75">ACTIVE STUDENTS</h6>
+                            <h3 class="mb-0 fw-bold">{{ active_students|default:"0" }}</h3>
+                        </div>
+                        <div class="col-4 text-end">
+                            <div class="stats-icon"><i class="bi bi-person-check-fill"></i></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card stats-card text-white" style="background: linear-gradient(135deg, #6c5ce7 0%, #a29bfe 100%);">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-8">
+                            <h6 class="card-title mb-1 small opacity-75">MALE STUDENTS</h6>
+                            <h3 class="mb-0 fw-bold">{{ male_students|default:"0" }}</h3>
+                        </div>
+                        <div class="col-4 text-end">
+                            <div class="stats-icon"><i class="bi bi-gender-male"></i></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card stats-card text-white" style="background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-8">
+                            <h6 class="card-title mb-1 small opacity-75">FEMALE STUDENTS</h6>
+                            <h3 class="mb-0 fw-bold">{{ female_students|default:"0" }}</h3>
+                        </div>
+                        <div class="col-4 text-end">
+                            <div class="stats-icon"><i class="bi bi-gender-female"></i></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card card-custom p-3 mb-4">
+        <form method="get" id="filterForm">
+            <div class="row g-3 align-items-end">
+                <div class="col-md-3">
+                    <label class="form-label">Admission No.</label>
+                    {% render_field search_form.admission_number class="form-control form-control-sm" %}
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">First Name</label>
+                    {% render_field search_form.first_name class="form-control form-control-sm" %}
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Class</label>
+                    {% render_field search_form.student_class class="form-select form-select-sm" %}
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Section</label>
+                    {% render_field search_form.section class="form-select form-select-sm" %}
+                </div>
+                <div class="col-md-12 text-end">
+                    <button type="submit" class="btn btn-primary btn-sm me-2">
+                        <i class="bi bi-search me-1"></i> Apply Filters
+                    </button>
+                    <a href="{% url 'students:student_list' %}" class="btn btn-outline-secondary btn-sm">
+                        <i class="bi bi-arrow-clockwise me-1"></i> Clear
+                    </a>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <div class="card card-custom">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="card-title mb-0">All Students</h5>
+            {% if students %}
+            <span class="badge bg-primary">{{ students.paginator.count }} students found</span>
+            {% endif %}
+        </div>
+        <div class="card-body">
+            {% if students %}
+            <div class="table-responsive">
+                <table id="studentsTable" class="table-custom table-hover w-100">
+                    <thead>
+                        <tr>
+                            <th>Photo</th>
+                            <th>Admission No.</th>
+                            <th>Name</th>
+                            <th>Class</th>
+                            <th>Contact</th>
+                            <th>Guardian</th>
+                            <th>Status</th>
+                            <th class="text-center">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for student in students %}
+                        <tr>
+                            <td>
+                                <a href="{% url 'students:student_detail' student.id %}">
+                                    {% if student.photo %}
+                                    <img src="{{ student.photo.url }}" class="rounded-circle" width="40" height="40" style="object-fit: cover;">
+                                    {% else %}
+                                    <div class="rounded-circle bg-secondary text-white d-flex align-items-center justify-content-center" style="width:40px; height:40px;">
+                                        <i class="bi bi-person"></i>
+                                    </div>
+                                    {% endif %}
+                                </a>
+                            </td>
+                            <td><strong>{{ student.admission_number }}</strong></td>
+                            <td>{{ student.get_full_name }}</td>
+                            <td>
+                                {% if student.student_class %}
+                                {{ student.student_class.name }} - {{ student.section.name }}
+                                {% else %}
+                                <span class="text-muted small">Not assigned</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {{ student.mobile }}<br>
+                                <small class="text-muted">{{ student.email }}</small>
+                            </td>
+                            <td>
+                                {{ student.guardian_name }}<br>
+                                <small class="text-muted">{{ student.guardian_contact }}</small>
+                            </td>
+                            <td>
+                                <span class="badge bg-{% if student.is_active %}success{% else %}secondary{% endif %}">
+                                    {{ student.get_status_display }}
+                                </span>
+                            </td>
+                            <td>
+                                <div class="d-flex justify-content-center gap-1">
+                                    <a href="{% url 'students:student_detail' student.id %}" class="btn btn-sm btn-outline-primary" data-bs-toggle="tooltip" title="View Details"><i class="bi bi-eye"></i></a>
+                                    {% if request.user.is_superadmin or request.user.is_teacher or request.user.role == 'support_staff' %}
+                                    <a href="{% url 'students:student-id-card' student.id %}" class="btn btn-sm btn-outline-info" data-bs-toggle="tooltip" title="Download I-Card"><i class="bi bi-person-vcard"></i></a>
+                                    {% endif %}
+                                    {% if request.user.is_superadmin %}
+                                    <a href="{% url 'students:student_delete' student.id %}" class="btn btn-sm btn-outline-danger" data-bs-toggle="tooltip" title="Delete Student"><i class="bi bi-trash"></i></a>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% if students.paginator.num_pages > 1 %}
+            <nav class="mt-4">
+                <ul class="pagination justify-content-center">
+                    {% if students.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ students.previous_page_number }}{% for key,value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">&laquo;</a>
+                    </li>
+                    {% endif %}
+                    {% for num in students.paginator.page_range %}
+                    {% if students.number == num %}
+                    <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+                    {% elif num > students.number|add:'-3' and num < students.number|add:'3' %}
+                    <li class="page-item"><a class="page-link" href="?page={{ num }}{% for key,value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">{{ num }}</a></li>
+                    {% endif %}
+                    {% endfor %}
+                    {% if students.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ students.next_page_number }}{% for key,value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">&raquo;</a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+            {% endif %}
+            {% else %}
+            <div class="text-center py-5">
+                <div class="empty-state">
+                    <i class="bi bi-people"></i>
+                    <h5>No Students Found</h5>
+                    <p class="text-muted">Try adjusting your filters or add your first student.</p>
+                    <a href="{% url 'students:student_create' %}" class="btn btn-primary mt-2">
+                        <i class="bi bi-plus-circle me-2"></i>Add First Student
+                    </a>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="exportStudentsModal" tabindex="-1" aria-labelledby="exportStudentsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <form method="get" action="{% url 'students:student_export' %}">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exportStudentsModalLabel">Export Students Data</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Export Format</label>
+                            <select class="form-select" name="format">
+                                <option value="csv">CSV</option>
+                                <option value="pdf">PDF</option>
+                            </select>
+                        </div>
+                    </div>
+                    <hr>
+                    <p class="mb-2"><strong>Filter Data to Export</strong> (Optional)</p>
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Class</label>
+                            {% render_field search_form.student_class class="form-select" name="class_id" %}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Section</label>
+                            {% render_field search_form.section class="form-select" name="section_id" %}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Status</label>
+                            {% render_field search_form.status class="form-select" name="status" %}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Gender</label>
+                            {% render_field search_form.gender class="form-select" name="gender" %}
+                        </div>
+                    </div>
+                    <hr>
+                    <div class="mb-3">
+                        <label class="form-label"><strong>Include Columns in Export</strong></label>
+                        <div class="row">
+                            {% for field, label in student_fields %}
+                            <div class="col-md-4 mb-2">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="include_{{ field }}" name="columns" value="{{ field }}" checked>
+                                    <label class="form-check-label" for="include_{{ field }}">{{ label }}</label>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" data-bs-dismiss="modal" type="button">Cancel</button>
+                    <button class="btn btn-primary" type="submit">Export Data</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize DataTable
+    try {
+        $('#studentsTable').DataTable({
+            "pageLength": 10,
+            "lengthMenu": [[10, 25, 50, -1], [10, 25, 50, "All"]],
+            "order": [[1, 'asc']], // Order by Admission No.
+            "language": {
+                "search": "<i class='bi bi-search me-2'></i>",
+                "searchPlaceholder": "Search students...",
+                "lengthMenu": "Show _MENU_ entries",
+                "info": "Showing _START_ to _END_ of _TOTAL_ entries",
+                "paginate": {
+                    "previous": "<i class='bi bi-chevron-left'></i>",
+                    "next": "<i class='bi bi-chevron-right'></i>"
+                }
+            },
+            "columnDefs": [
+                { "orderable": false, "searchable": false, "targets": [0, 7] }
+            ]
+        });
+    } catch(err) {
+        console.error("DataTables initialization failed:", err);
+    }
+
+    // Initialize tooltips
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+
+     // 3) Robust modal cleanup handlers
+    // Remove any leftover backdrop BEFORE a modal opens
+    document.querySelectorAll('.modal').forEach(modalEl => {
+        modalEl.addEventListener('show.bs.modal', function () {
+            // if another leftover backdrop exists, remove it
+            document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+        });
+
+        // on hidden, remove backdrops and restore body scrolling
+        modalEl.addEventListener('hidden.bs.modal', function () {
+            document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+            document.body.classList.remove('modal-open');
+            document.body.style.overflow = '';
+            document.body.style.paddingRight = '';
+        });
+    });
+
+    // 4) Safety-net: if a backdrop exists but there is no visible modal, remove it
+    // (handles cases where Bootstrap failed silently)
+    const observer = new MutationObserver(() => {
+        const backdrop = document.querySelector('.modal-backdrop');
+        const anyShown = !!document.querySelector('.modal.show');
+        if (backdrop && !anyShown) {
+            backdrop.remove();
+            document.body.classList.remove('modal-open');
+            document.body.style.overflow = '';
+            document.body.style.paddingRight = '';
+        }
+    });
+    observer.observe(document.body, { childList: true, subtree: true });
+
+    // 5) Allow manual cleanup by pressing Esc (extra safety)
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+            document.body.classList.remove('modal-open');
+            document.body.style.overflow = '';
+            document.body.style.paddingRight = '';
+            document.querySelectorAll('.modal.show').forEach(m => {
+                try { bootstrap.Modal.getInstance(m)?.hide(); } catch(e) {}
+            });
+        }
+    });
+
+    // 6) Final cleanup in case something stuck earlier
+    setTimeout(() => {
+        document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+        document.body.classList.remove('modal-open');
+        document.body.style.overflow = '';
+        document.body.style.paddingRight = '';
+    }, 500);
+});
+</script>
+{% endblock %}

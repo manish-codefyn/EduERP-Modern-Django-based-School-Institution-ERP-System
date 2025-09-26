@@ -1,0 +1,446 @@
+{% extends 'library/base.html' %}
+{% load static custom_filters %}
+
+
+{% block title %} Authors - Library Management - {{ organization.name|default:"codefyn" }}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
+<style>
+.author-avatar {
+    width: 50px;
+    height: 50px;
+    object-fit: cover;
+}
+.stats-card {
+    transition: transform 0.2s;
+}
+.stats-card:hover {
+    transform: translateY(-2px);
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+
+<!-- Header -->
+<div class="header-section">
+    <div class="row align-items-center">
+        <div class="col-12 mb-2">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb breadcrumb-dark">
+                    <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'library:dashboard' %}">Library</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Authors</li>
+                </ol>
+            </nav>
+        </div>
+
+        <div class="col-md-8">
+            <div class="d-flex align-items-center">
+                <div class="header-icon me-3">
+                   <i class="bi bi-people display-6 text-primary"></i> 
+                </div>
+                <div>
+                    <h1 class="h3 fw-bold mb-1">Author Management</h1>
+                    <p class="text-custom mb-0">Manage and browse all authors in the library</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            {% if request.user.is_superuser  %}
+            <div class="d-flex gap-2 justify-content-md-end flex-wrap">
+                <div class="btn-group w-100" role="group">
+                    <a href="{% url 'library:author_create' %}" class="btn btn-primary">
+                        <i class="bi bi-person-plus me-1"></i> Add Author
+                    </a>
+                    <button type="button" class="btn btn-primary dropdown-toggle dropdown-toggle-split" 
+                            data-bs-toggle="dropdown" aria-expanded="false">
+                        <span class="visually-hidden">Toggle Dropdown</span>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <li>
+                            <a class="dropdown-item" href="{% url 'library:book_create' %}">
+                                <i class="bi bi-book me-2"></i> Add Book
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item" href="{% url 'library:category_create' %}">
+                                <i class="bi bi-tags me-2"></i> Add Category
+                            </a>
+                        </li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li>
+                            <a class="dropdown-item" href="{% url 'library:search' %}">
+                                <i class="bi bi-search me-2"></i> Search Authors
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Stats Cards -->
+<div class="row g-4 mb-4">
+    <div class="col-xl-3 col-md-6">
+        <div class="card stats-card text-white h-100" style="background: var(--primary-gradient);">
+            <div class="card-body d-flex flex-column justify-content-between">
+                <div class="row align-items-center">
+                    <div class="col-8">
+                        <h6 class="card-title mb-1 small opacity-75">TOTAL AUTHORS</h6>
+                        <h3 class="mb-0 fw-bold">{{ authors.count|default:"0" }}</h3>
+                        <p class="mb-0 small opacity-75">All authors</p>
+                    </div>
+                    <div class="col-4 text-end">
+                        <div class="stats-icon">
+                            <i class="bi bi-people fs-2"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6">
+        <div class="card stats-card text-white h-100" style="background: var(--success-gradient);">
+            <div class="card-body d-flex flex-column justify-content-between">
+                <div class="row align-items-center">
+                    <div class="col-8">
+                        <h6 class="card-title mb-1 small opacity-75">ACTIVE AUTHORS</h6>
+                        <h3 class="mb-0 fw-bold">{{ active_authors|default:"0" }}</h3>
+                        <p class="mb-0 small opacity-75">With published books</p>
+                    </div>
+                    <div class="col-4 text-end">
+                        <div class="stats-icon">
+                            <i class="bi bi-check-circle fs-2"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6">
+        <div class="card stats-card text-white h-100" style="background: var(--info-gradient);">
+            <div class="card-body d-flex flex-column justify-content-between">
+                <div class="row align-items-center">
+                    <div class="col-8">
+                        <h6 class="card-title mb-1 small opacity-75">TOTAL BOOKS</h6>
+                        <h3 class="mb-0 fw-bold">{{ total_books|default:"0" }}</h3>
+                        <p class="mb-0 small opacity-75">Across all authors</p>
+                    </div>
+                    <div class="col-4 text-end">
+                        <div class="stats-icon">
+                            <i class="bi bi-book fs-2"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6">
+        <div class="card stats-card text-white h-100" style="background: var(--warning-gradient);">
+            <div class="card-body d-flex flex-column justify-content-between">
+                <div class="row align-items-center">
+                    <div class="col-8">
+                        <h6 class="card-title mb-1 small opacity-75">AVG BOOKS/AUTHOR</h6>
+                        <h3 class="mb-0 fw-bold">
+                            {% if authors.count > 0 %}
+                            {{ total_books|divide:authors.count|floatformat:1 }}
+                            {% else %}0{% endif %}
+                        </h3>
+                        <p class="mb-0 small opacity-75">Average publications</p>
+                    </div>
+                    <div class="col-4 text-end">
+                        <div class="stats-icon">
+                            <i class="bi bi-bar-chart fs-2"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Search and Filters -->
+<div class="card card-custom mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-8">
+                <input type="text" name="search" class="form-control" placeholder="Search authors by name, bio, or nationality..." 
+                       value="{{ request.GET.search }}">
+            </div>
+            <div class="col-md-2">
+                <select name="sort" class="form-select">
+                    <option value="">Sort by</option>
+                    <option value="name" {% if request.GET.sort == 'name' %}selected{% endif %}>Name A-Z</option>
+                    <option value="-name" {% if request.GET.sort == '-name' %}selected{% endif %}>Name Z-A</option>
+                    <option value="-book_count" {% if request.GET.sort == '-book_count' %}selected{% endif %}>Most Books</option>
+                    <option value="book_count" {% if request.GET.sort == 'book_count' %}selected{% endif %}>Fewest Books</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="bi bi-search me-1"></i> Search
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Authors Table -->
+<div class="card card-custom">
+    <div class="card-header bg-transparent border-0 pt-4 px-4">
+        <h5 class="card-title mb-0 fw-bold text-custom">All Authors</h5>
+        <p class="text-custom mb-0">Complete list of authors in the library</p>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            {% if authors %}
+            <table id="authorTable" class="table-custom w-100 table-hover align-middle">
+                <thead>
+                    <tr>
+                        <th>Author</th>
+                        <th>Nationality</th>
+                        <th>Date of Birth</th>
+                        <th>Total Books</th>
+                        <th>Bio</th>
+                        <th>Status</th>
+                        {% if request.user.is_superuser %}
+                        <th class="text-center">Actions</th>
+                        {% endif %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for author in authors %}
+                    <tr>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                <div class="flex-shrink-0">
+                                    {% if author.photo %}
+                                    <img src="{{ author.photo.url }}" alt="{{ author.name }}" 
+                                         class="author-avatar rounded-circle me-3">
+                                    {% else %}
+                                    <div class="author-avatar rounded-circle bg-primary bg-opacity-10 d-flex align-items-center justify-content-center me-3">
+                                        <i class="bi bi-person-fill text-primary fs-5"></i>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                                <div class="flex-grow-1">
+                                    <a href="{% url 'library:author_detail' author.id %}" class="text-decoration-none">
+                                        <h6 class="mb-0 fw-bold">{{ author.name }}</h6>
+                                    </a>
+                                    <small class="text-custom">
+                                        {% if author.date_of_birth %}
+                                        {{ author.date_of_birth|timesince }} old
+                                        {% endif %}
+                                    </small>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            {% if author.nationality %}
+                            <span class="badge bg-light text-dark">
+                                <i class="bi bi-globe me-1 text-primary"></i>
+                                {{ author.nationality }}
+                            </span>
+                            {% else %}
+                            <span class="text-custom">-</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <span class="text-custom">
+                                {% if author.date_of_birth %}
+                                {{ author.date_of_birth|date:"M d, Y" }}
+                                {% else %}
+                                <span class="text-muted">Not specified</span>
+                                {% endif %}
+                            </span>
+                        </td>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                <span class="fw-bold text-primary me-2">{{ author.book_set.count }}</span>
+                                <div class="progress flex-grow-1" style="height: 6px; max-width: 80px;">
+                                    <div class="progress-bar bg-primary" 
+                                         role="progressbar" 
+                                         style="width: {% widthratio author.book_set.count max_books_per_author 100 %}%"
+                                         aria-valuenow="{{ author.book_set.count }}" 
+                                         aria-valuemin="0" 
+                                         aria-valuemax="{{ max_books_per_author }}">
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="text-custom">
+                                {% if author.bio %}
+                                {{ author.bio|truncatewords:10 }}
+                                {% else %}
+                                <span class="text-muted">No bio available</span>
+                                {% endif %}
+                            </span>
+                        </td>
+                        <td>
+                            {% if author.book_set.count > 0 %}
+                                <span class="badge bg-success bg-opacity-10 text-success">
+                                    <i class="bi bi-check-circle me-1"></i>Active
+                                </span>
+                            {% else %}
+                                <span class="badge bg-secondary bg-opacity-10 text-secondary">
+                                    <i class="bi bi-dash-circle me-1"></i>No Books
+                                </span>
+                            {% endif %}
+                        </td>
+                        {% if request.user.is_superuser %}
+                        <td>
+                            <div class="d-flex justify-content-center">
+                                <a href="{% url 'library:author_detail' author.id %}" class="btn btn-sm btn-outline-primary me-1" title="View Details" data-bs-toggle="tooltip">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                                <a href="{% url 'library:author_update' author.id %}" class="btn btn-sm btn-outline-succuess me-1" title="Edit" data-bs-toggle="tooltip">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                <!-- <a href="{% url 'library:author_delete' author.id %}" class="btn btn-sm btn-outline-danger" title="Delete" data-bs-toggle="tooltip">
+                                    <i class="bi bi-trash"></i>
+                                </a> -->
+                            </div>
+                        </td>
+                        {% endif %}
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <div class="empty-state text-center py-5">
+                <i class="bi bi-people display-1 text-muted"></i>
+                <h4 class="mt-3 mb-2">No Authors Found</h4>
+                <p class="text-custom mb-4">
+                    {% if request.GET.search %}
+                    No authors match your search criteria "{{ request.GET.search }}"
+                    {% else %}
+                    Get started by adding your first author to the library
+                    {% endif %}
+                </p>
+                <div class="d-flex gap-2 justify-content-center">
+                    {% if request.GET.search %}
+                    <a href="{% url 'library:author_list' %}" class="btn btn-primary">
+                        <i class="bi bi-arrow-repeat me-2"></i>Clear Search
+                    </a>
+                    {% endif %}
+                    {% if request.user.is_superuser %}
+                    <a href="{% url 'library:author_create' %}" class="btn btn-outline-primary">
+                        <i class="bi bi-person-plus me-2"></i>Add First Author
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Top Authors Section -->
+{% if top_authors %}
+<div class="card card-custom mt-4">
+    <div class="card-header bg-transparent border-0 pt-4 px-4">
+        <h5 class="card-title mb-0 fw-bold text-custom">Top Authors</h5>
+        <p class="text-custom mb-0">Authors with the most books in the library</p>
+    </div>
+    <div class="card-body">
+        <div class="row g-4">
+            {% for author in top_authors|slice:":4" %}
+            <div class="col-xl-3 col-lg-6">
+                <div class="card author-card h-100 border-0 shadow-sm">
+                    <div class="card-body text-center">
+                        <div class="author-avatar mx-auto mb-3">
+                            {% if author.photo %}
+                            <img src="{{ author.photo.url }}" alt="{{ author.name }}" 
+                                 class="rounded-circle w-100 h-100 object-fit-cover">
+                            {% else %}
+                            <div class="rounded-circle bg-primary bg-opacity-10 w-100 h-100 d-flex align-items-center justify-content-center">
+                                <i class="bi bi-person-fill text-primary fs-2"></i>
+                            </div>
+                            {% endif %}
+                        </div>
+                        <h6 class="fw-bold mb-1">{{ author.name }}</h6>
+                        <p class="text-custom small mb-2">
+                            {% if author.nationality %}
+                            <i class="bi bi-globe me-1"></i>{{ author.nationality }}
+                            {% endif %}
+                        </p>
+                        <div class="d-flex justify-content-center align-items-center mb-3">
+                            <span class="badge bg-primary bg-opacity-20 text-primary">
+                                <i class="bi bi-book me-1"></i>{{ author.book_set.count }} books
+                            </span>
+                        </div>
+                        <a href="{% url 'library:author_detail' author.slug %}" class="btn btn-sm btn-outline-primary w-100">
+                            View Profile
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize DataTable
+    $('#authorTable').DataTable({
+        "pageLength": 10,
+        "order": [[0, 'asc']],
+        "language": {
+            "search": "<i class='fas fa-search me-2'></i>Search:",
+            "lengthMenu": "Show _MENU_ entries",
+            "info": "Showing _START_ to _END_ of _TOTAL_ entries",
+            "paginate": {
+                "previous": "<i class='bi bi-chevron-left'></i>",
+                "next": "<i class='bi bi-chevron-right'></i>"
+            }
+        },
+        "columnDefs": [
+            { 
+                "targets": [5, 6], 
+                "orderable": false,
+                "className": "dt-center"
+            },
+            {
+                "targets": [3],
+                "className": "dt-center"
+            }
+        ],
+        "responsive": true,
+        "dom": '<"row"<"col-md-6"l><"col-md-6"f>>rt<"row"<"col-md-6"i><"col-md-6"p>>'
+    });
+    
+    // Initialize tooltips
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl)
+    });
+
+    // Add hover effects to author cards
+    $('.author-card').hover(
+        function() {
+            $(this).addClass('shadow').css('transform', 'translateY(-2px)');
+        },
+        function() {
+            $(this).removeClass('shadow').css('transform', 'translateY(0)');
+        }
+    );
+});
+</script>
+{% endblock %}

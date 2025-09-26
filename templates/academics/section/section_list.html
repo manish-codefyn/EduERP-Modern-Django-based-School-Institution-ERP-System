@@ -1,0 +1,344 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Sections - {{ class_obj.name }} - {{ organization.name|default:"ERP System" }}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+
+    <!-- Header -->
+    <div class="header-section">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb breadcrumb-dark">
+                        <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Dashboard</a></li>
+                        <li class="breadcrumb-item"><a href="{% url 'academics:class_list' %}">Classes</a></li>
+                        <li class="breadcrumb-item active" aria-current="page">Sections - {{ class_obj.name }}</li>
+                    </ol>
+                </nav>
+                <h1 class="display-6 fw-bold mb-2">Sections - {{ class_obj.name }}</h1>
+                <p class="lead mb-0 opacity-75">Manage sections for {{ class_obj.name }}</p>
+            </div>
+            <div class="col-md-4 text-md-end">
+                <div class="d-flex gap-2 justify-content-md-end flex-wrap">
+                    <!-- Quick Actions -->
+                    <div class="btn-group w-100" role="group">
+                        <!-- Main Action -->
+                        <a href="{% url 'academics:section_add' class_obj.id %}" class="btn btn-primary">
+                            <i class="bi bi-plus-circle me-1"></i> Add Section
+                        </a>
+
+                        <!-- Dropdown Toggle -->
+                        <button type="button" class="btn btn-primary dropdown-toggle dropdown-toggle-split"
+                                data-bs-toggle="dropdown" aria-expanded="false">
+                            <span class="visually-hidden">Toggle Dropdown</span>
+                        </button>
+
+                        <!-- Dropdown Menu -->
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li>
+                                <button type="button" class="dropdown-item" data-bs-toggle="modal" data-bs-target="#exportSectionModal">
+                                    <i class="bi bi-download me-2"></i> Export Sections
+                                </button>
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <a class="dropdown-item" href="{% url 'academics:class_list' %}">
+                                    <i class="bi bi-building me-2"></i> Manage Classes
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="{% url 'academics:house_list' %}">
+                                    <i class="bi bi-house-door me-2"></i> Manage Houses
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+   <!-- Statistics Cards -->
+<div class="row g-4 mb-4">
+    <div class="col-xl-3 col-md-6">
+        <div class="card stats-card text-white h-100" style="background: linear-gradient(135deg, #0984e3 0%, #74b9ff 100%);">
+            <div class="card-body d-flex align-items-center">
+                <div class="row w-100 align-items-center">
+                    <div class="col-8">
+                        <h6 class="card-title mb-1 small opacity-75">TOTAL SECTIONS</h6>
+                        <h3 class="mb-0 fw-bold">{{ total_sections|default:0 }}</h3>
+                    </div>
+                    <div class="col-4 text-end">
+                        <div class="stats-icon">
+                            <i class="bi bi-collection"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6">
+        <div class="card stats-card text-white h-100" style="background: linear-gradient(135deg, #00b894 0%, #00a085 100%);">
+            <div class="card-body d-flex align-items-center">
+                <div class="row w-100 align-items-center">
+                    <div class="col-8">
+                        <h6 class="card-title mb-1 small opacity-75">ACTIVE SECTIONS</h6>
+                        <h3 class="mb-0 fw-bold">{{ active_sections|default:0 }}</h3>
+                    </div>
+                    <div class="col-4 text-end">
+                        <div class="stats-icon">
+                            <i class="bi bi-check-circle"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6">
+        <div class="card stats-card text-white h-100" style="background: linear-gradient(135deg, #fdcb6e 0%, #f39c12 100%);">
+            <div class="card-body d-flex align-items-center">
+                <div class="row w-100 align-items-center">
+                    <div class="col-8">
+                        <h6 class="card-title mb-1 small opacity-75">INACTIVE SECTIONS</h6>
+                        <h3 class="mb-0 fw-bold">{{ inactive_sections|default:0 }}</h3>
+                    </div>
+                    <div class="col-4 text-end">
+                        <div class="stats-icon">
+                            <i class="bi bi-x-circle"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6">
+        <div class="card stats-card text-white h-100" style="background: linear-gradient(135deg, #6c5ce7 0%, #341f97 100%);">
+            <div class="card-body d-flex align-items-center">
+                <div class="row w-100 align-items-center">
+                    <div class="col-8">
+                        <h6 class="card-title mb-1 small opacity-75">TOTAL CAPACITY</h6>
+                        <h3 class="mb-0 fw-bold">{{ total_capacity|default:0 }}</h3>
+                        <small class="opacity-75">Avg: {{ avg_capacity|default:0 }}</small>
+                    </div>
+                    <div class="col-4 text-end">
+                        <div class="stats-icon">
+                            <i class="bi bi-people"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+    <!-- Sections Table -->
+    <div class="card card-custom">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="card-title mb-0">All Sections</h5>
+            <span class="badge bg-primary">{{ sections.count }} records</span>
+        </div>
+        <div class="card-body">
+            {% if sections %}
+            <div class="table-responsive">
+                <table id="sectionsTable" class="table-custom w-100 table-hover">
+                    <thead>
+                        <tr>
+                            <th>Section Name</th>
+                            <th>Capacity</th>
+                            <th>Status</th>
+                            <th>Created</th>
+                            <th class="text-center">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for section in sections %}
+                        <tr>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <i class="bi bi-collection text-primary me-2"></i>
+                                    <strong>{{ section.name }}</strong>
+                                </div>
+                            </td>
+                            <td>
+                                <span class="badge bg-light text-dark">
+                                    <i class="bi bi-people me-1"></i>{{ section.capacity }} students
+                                </span>
+                            </td>
+                            <td>
+                                {% if section.is_active %}
+                                    <span class="attendance-badge bg-success bg-opacity-10 text-success">
+                                        <i class="bi bi-check-circle me-1"></i>Active
+                                    </span>
+                                {% else %}
+                                    <span class="attendance-badge bg-danger bg-opacity-10 text-danger">
+                                        <i class="bi bi-x-circle me-1"></i>Inactive
+                                    </span>
+                                {% endif %}
+                            </td>
+                            <td>{{ section.created_at|date:"M d, Y" }}</td>
+                            <td>
+                                <div class="d-flex justify-content-center gap-1">
+                                    <a href="{% url 'academics:section_edit' section.id %}" class="btn btn-sm btn-outline-primary" data-bs-toggle="tooltip" title="Edit">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                    <a href="{% url 'academics:section_delete' section.id %}" class="btn btn-sm btn-outline-danger" data-bs-toggle="tooltip" title="Delete">
+                                        <i class="bi bi-trash"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="text-center py-5">
+                <i class="bi bi-people display-4 text-primary d-block mb-3"></i>
+                <h5 class="text-primary">No sections found</h5>
+                <p class="text-muted mb-4">Get started by adding sections to this class</p>
+                <a href="{% url 'academics:section_add' class_obj.id %}" class="btn btn-primary">
+                    <i class="bi bi-plus-circle me-1"></i>Add First Section
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Export Modal -->
+<div class="modal fade" id="exportSectionModal" tabindex="-1" aria-labelledby="exportSectionModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="get" action="{% url 'academics:export_sections' %}">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exportSectionModalLabel">Export Sections Data</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="exportFormat" class="form-label">Export Format</label>
+                        <select class="form-select" id="exportFormat" name="format">
+                            <option value="csv">CSV</option>
+                            <option value="pdf">PDF</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Include Columns</label>
+                        {% for field in section_fields %}
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="include_{{ field }}" name="columns" value="{{ field }}" checked>
+                            <label class="form-check-label" for="include_{{ field }}">{{ field|capfirst }}</label>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" data-bs-dismiss="modal" type="button">Cancel</button>
+                    <button class="btn btn-primary" type="submit">Export Data</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+
+    // 1) Remove any stray backdrops and restore body state on load (force cleanup)
+    (function cleanup() {
+        document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+        document.body.classList.remove('modal-open');
+        document.body.style.overflow = '';
+        document.body.style.paddingRight = '';
+    })();
+
+    // 2) Initialize DataTable
+    try {
+        $('#sectionsTable').DataTable({
+            "pageLength": 10,
+            "lengthMenu": [[10, 25, 50, -1], [10, 25, 50, "All"]],
+            "order": [[0, 'asc']],
+            "language": {
+                "search": "<i class='bi bi-search me-2'></i>",
+                "searchPlaceholder": "Search sections...",
+                "lengthMenu": "Show _MENU_ entries",
+                "info": "Showing _START_ to _END_ of _TOTAL_ entries",
+                "paginate": {
+                    "previous": "<i class='bi bi-chevron-left'></i>",
+                    "next": "<i class='bi bi-chevron-right'></i>"
+                }
+            },
+            "columnDefs": [
+                { "targets": [4], "orderable": false, "searchable": false }
+            ]
+        });
+    } catch (err) {
+        console.error('DataTables init error:', err);
+    }
+
+    // 3) Robust modal cleanup handlers
+    document.querySelectorAll('.modal').forEach(modalEl => {
+        modalEl.addEventListener('show.bs.modal', function () {
+            document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+        });
+
+        modalEl.addEventListener('hidden.bs.modal', function () {
+            document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+            document.body.classList.remove('modal-open');
+            document.body.style.overflow = '';
+            document.body.style.paddingRight = '';
+        });
+    });
+
+    // 4) Safety-net: if a backdrop exists but there is no visible modal, remove it
+    const observer = new MutationObserver(() => {
+        const backdrop = document.querySelector('.modal-backdrop');
+        const anyShown = !!document.querySelector('.modal.show');
+        if (backdrop && !anyShown) {
+            backdrop.remove();
+            document.body.classList.remove('modal-open');
+            document.body.style.overflow = '';
+            document.body.style.paddingRight = '';
+        }
+    });
+    observer.observe(document.body, { childList: true, subtree: true });
+
+    // 5) Allow manual cleanup by pressing Esc (extra safety)
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+            document.body.classList.remove('modal-open');
+            document.body.style.overflow = '';
+            document.body.style.paddingRight = '';
+            document.querySelectorAll('.modal.show').forEach(m => {
+                try { bootstrap.Modal.getInstance(m)?.hide(); } catch(e) {}
+            });
+        }
+    });
+
+    // 6) Final cleanup in case something stuck earlier
+    setTimeout(() => {
+        document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+        document.body.classList.remove('modal-open');
+        document.body.style.overflow = '';
+        document.body.style.paddingRight = '';
+    }, 500);
+    
+    // Initialize tooltips
+    $('[data-bs-toggle="tooltip"]').tooltip();
+});
+</script>
+{% endblock %}

@@ -1,0 +1,239 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load widget_tweaks %}
+
+{% block title %}{{ title }} - {{ organization.name|default:"ERP System" }}{% endblock %}
+
+{% block extra_css %}
+<style>
+.icon-preview {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #f8f9fa;
+    border-radius: 4px;
+    border: 1px solid #dee2e6;
+}
+.icon-options {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
+    gap: 10px;
+    margin-top: 10px;
+}
+.icon-option {
+    text-align: center;
+    padding: 10px;
+    border: 2px solid #dee2e6;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+.icon-option:hover {
+    border-color: #0d6efd;
+    background-color: #f8f9ff;
+}
+.icon-option.selected {
+    border-color: #0d6efd;
+    background-color: #e8f4ff;
+}
+.icon-option i {
+    font-size: 1.5rem;
+    margin-bottom: 5px;
+}
+.icon-option span {
+    font-size: 0.75rem;
+    display: block;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+
+<!-- Header -->
+<div class="header-section">
+    <div class="row align-items-center">
+        <div class="col-12 mb-2">
+            <!-- Breadcrumb -->
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb breadcrumb-dark">
+                    <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'hostel:hostel_list' %}">Hostel</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'hostel:facility_list' %}">Facilities</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">{{ title }}</li>
+                </ol>
+            </nav>
+        </div>
+
+        <div class="col-md-8">
+            <div class="d-flex align-items-center">
+                <div class="header-icon me-3">
+                   <i class="bi bi-tools display-6 text-primary"></i> 
+                </div>
+                <div>
+                    <h1 class="h3 fw-bold mb-1">{{ title }}</h1>
+                    <p class="text-custom mb-0">
+                        {% if form.instance.pk %}Update{% else %}Create{% endif %} hostel amenities and services
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Form Section -->
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card card-custom">
+            <div class="card-header bg-transparent border-0 pt-4 px-4">
+                <h5 class="card-title mb-0 fw-bold text-custom">Facility Details</h5>
+                <p class="text-custom mb-0">Enter the facility information</p>
+            </div>
+            <div class="card-body">
+                <form method="post" novalidate>
+                    {% csrf_token %}
+                    
+                    {% if form.non_field_errors %}
+                    <div class="alert alert-danger">
+                        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                        {% for error in form.non_field_errors %}
+                            {{ error }}
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                    
+                    <div class="row">
+                        <!-- Name Field -->
+                        <div class="col-md-12 mb-4">
+                            <label for="{{ form.name.id_for_label }}" class="form-label fw-semibold">
+                                {{ form.name.label }} <span class="text-danger">*</span>
+                            </label>
+                            {% render_field form.name class="form-control" %}
+                            {% if form.name.errors %}
+                            <div class="text-danger small mt-1">
+                                <i class="bi bi-exclamation-circle me-1"></i>
+                                {% for error in form.name.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                            {% if form.name.help_text %}
+                            <div class="form-text">{{ form.name.help_text }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Description Field -->
+                        <div class="col-md-12 mb-4">
+                            <label for="{{ form.description.id_for_label }}" class="form-label fw-semibold">
+                                {{ form.description.label }}
+                            </label>
+                            {% render_field form.description class="form-control" rows="4" %}
+                            {% if form.description.errors %}
+                            <div class="text-danger small mt-1">
+                                <i class="bi bi-exclamation-circle me-1"></i>
+                                {% for error in form.description.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                            {% if form.description.help_text %}
+                            <div class="form-text">{{ form.description.help_text }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Icon Field -->
+                        <div class="col-md-12 mb-4">
+                            <label for="{{ form.icon.id_for_label }}" class="form-label fw-semibold">
+                                {{ form.icon.label }}
+                            </label>
+                            <div class="input-group">
+                                <span class="input-group-text icon-preview">
+                                    <i class="bi bi-{% if form.icon.value %}{{ form.icon.value }}{% else %}question-circle{% endif %} fs-5"></i>
+                                </span>
+                                {% render_field form.icon class="form-control" placeholder="e.g., wifi, tv, snow" %}
+                            </div>
+                            {% if form.icon.errors %}
+                            <div class="text-danger small mt-1">
+                                <i class="bi bi-exclamation-circle me-1"></i>
+                                {% for error in form.icon.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                            {% if form.icon.help_text %}
+                            <div class="form-text">{{ form.icon.help_text }}</div>
+                            {% endif %}
+                            
+                            <!-- Icon Selector -->
+                            <div class="mt-3">
+                                <label class="form-label fw-semibold">Quick Select Icons:</label>
+                                <div class="icon-options">
+                                    {% for icon in common_icons %}
+                                    <div class="icon-option" data-icon="{{ icon.0 }}">
+                                        <i class="bi bi-{{ icon.0 }}"></i>
+                                        <span>{{ icon.1 }}</span>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex gap-2 justify-content-end mt-4 pt-3 border-top">
+                        <a href="{% url 'hostel:facility_list' %}" class="btn btn-secondary">
+                            <i class="bi bi-arrow-left me-1"></i> Cancel
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-circle me-1"></i>
+                            {{ submit_text }}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Update icon preview when icon input changes
+    const iconInput = document.getElementById('{{ form.icon.id_for_label }}');
+    const iconPreview = document.querySelector('.icon-preview i');
+    
+    if (iconInput && iconPreview) {
+        iconInput.addEventListener('input', function() {
+            const iconClass = this.value || 'question-circle';
+            iconPreview.className = `bi bi-${iconClass} fs-5`;
+        });
+    }
+    
+    // Icon selector functionality
+    const iconOptions = document.querySelectorAll('.icon-option');
+    iconOptions.forEach(option => {
+        option.addEventListener('click', function() {
+            const iconValue = this.getAttribute('data-icon');
+            iconInput.value = iconValue;
+            iconPreview.className = `bi bi-${iconValue} fs-5`;
+            
+            // Update selection state
+            iconOptions.forEach(opt => opt.classList.remove('selected'));
+            this.classList.add('selected');
+        });
+    });
+    
+    // Select current icon if it exists
+    const currentIcon = '{{ form.icon.value }}';
+    if (currentIcon) {
+        const currentOption = document.querySelector(`.icon-option[data-icon="${currentIcon}"]`);
+        if (currentOption) {
+            currentOption.classList.add('selected');
+        }
+    }
+});
+</script>
+{% endblock %}

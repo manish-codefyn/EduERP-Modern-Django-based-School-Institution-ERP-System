@@ -1,0 +1,373 @@
+{% extends 'library/base.html' %}
+{% load static custom_filters %}
+
+{% block title %}{{ book.title }} - Library Management - {{ organization.name|default:"codefyn" }}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
+<style>
+.book-cover {
+    max-height: 400px;
+    object-fit: cover;
+}
+.info-badge {
+    font-size: 0.9rem;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+
+<!-- Header -->
+<div class="header-section">
+    <div class="row align-items-center">
+        <div class="col-12 mb-2">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb breadcrumb-dark">
+                    <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'library:dashboard' %}">Library</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'library:book_list' %}">Books</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">{{ book.title|truncatewords:5 }}</li>
+                </ol>
+            </nav>
+        </div>
+
+        <div class="col-md-8">
+            <div class="d-flex align-items-center">
+                <div class="header-icon me-3">
+                    {% if book.cover_image %}
+                    <img src="{{ book.cover_image.url }}" alt="{{ book.title }}" class="rounded" style="width: 60px; height: 80px; object-fit: cover;">
+                    {% else %}
+                    <i class="bi bi-book display-6 text-primary"></i>
+                    {% endif %}
+                </div>
+                <div>
+                    <h1 class="h3 fw-bold mb-1">{{ book.title }}</h1>
+                    <p class="text-custom mb-0">by {{ book.author.name }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="d-flex gap-2 justify-content-md-end flex-wrap">
+                <a href="{% url 'library:book_list' %}" class="btn btn-secondary">
+                    <i class="bi bi-arrow-left me-1"></i> Back to Books
+                </a>
+                {% if request.user.is_superuser %}
+                <a href="{% url 'library:book_update' book.pk %}" class="btn btn-sm btn-primary">Edit</a>
+                <a href="{% url 'library:book_delete' book.pk %}" class="btn btn-sm btn-danger">Delete</a>
+                {% endif %}
+
+                {% if book.status == 'available' and book.available_copies > 0 %}
+                <a href="{% url 'library:borrow_book' %}?book={{ book.id }}" class="btn btn-success">
+                    <i class="bi bi-arrow-up-circle me-1"></i> Borrow
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Book Details -->
+<div class="row g-4">
+    <!-- Main Book Information -->
+    <div class="col-lg-8">
+        <div class="card card-custom">
+            <div class="card-header bg-transparent border-0 pt-4 px-4">
+                <h5 class="card-title mb-0 fw-bold text-custom">Book Details</h5>
+                <p class="text-custom mb-0">Complete information about the book</p>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4 text-center mb-4">
+                        {% if book.cover_image %}
+                        <img src="{{ book.cover_image.url }}" alt="{{ book.title }}" class="book-cover img-fluid rounded shadow">
+                        {% else %}
+                        <div class="bg-light rounded d-flex align-items-center justify-content-center" style="height: 300px;">
+                            <i class="bi bi-book display-1 text-muted"></i>
+                        </div>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-8">
+                        <div class="row g-3">
+                            <div class="col-sm-6">
+                                <label class="form-label fw-semibold text-custom">Author</label>
+                                <div>
+                                    <a href="{% url 'library:author_detail' book.author.id %}" class="text-decoration-none">
+                                        <i class="bi bi-person me-1"></i>{{ book.author.name }}
+                                    </a>
+                                </div>
+                            </div>
+                            <div class="col-sm-6">
+                                <label class="form-label fw-semibold text-custom">Category</label>
+                                <div>
+                                    <span class="badge bg-primary bg-opacity-10 text-primary info-badge">
+                                        {{ book.category.name }}
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="col-sm-6">
+                                <label class="form-label fw-semibold text-custom">ISBN</label>
+                                <div class="text-custom">{{ book.isbn }}</div>
+                            </div>
+                            <div class="col-sm-6">
+                                <label class="form-label fw-semibold text-custom">Publisher</label>
+                                <div class="text-custom">{{ book.publisher|default:"Not specified" }}</div>
+                            </div>
+                            <div class="col-sm-6">
+                                <label class="form-label fw-semibold text-custom">Publication Date</label>
+                                <div class="text-custom">{{ book.publication_date|date:"F d, Y"|default:"Not specified" }}</div>
+                            </div>
+                            <div class="col-sm-6">
+                                <label class="form-label fw-semibold text-custom">Language</label>
+                                <div class="text-custom">{{ book.language|default:"Not specified" }}</div>
+                            </div>
+                            <div class="col-sm-6">
+                                <label class="form-label fw-semibold text-custom">Edition</label>
+                                <div class="text-custom">{{ book.edition|default:"First" }}</div>
+                            </div>
+                            <div class="col-sm-6">
+                                <label class="form-label fw-semibold text-custom">Pages</label>
+                                <div class="text-custom">{{ book.pages|default:"Not specified" }}</div>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label fw-semibold text-custom">Status</label>
+                                <div>
+                                    {% if book.status == 'available' %}
+                                    <span class="badge bg-success bg-opacity-10 text-success info-badge">
+                                        <i class="bi bi-check-circle me-1"></i>Available
+                                    </span>
+                                    {% else %}
+                                    <span class="badge bg-warning bg-opacity-10 text-warning info-badge">
+                                        <i class="bi bi-clock me-1"></i>Borrowed
+                                    </span>
+                                    {% endif %}
+                                    
+                                    {% if book.is_featured %}
+                                    <span class="badge bg-info bg-opacity-10 text-info info-badge ms-2">
+                                        <i class="bi bi-star me-1"></i>Featured
+                                    </span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label fw-semibold text-custom">Inventory</label>
+                                <div class="d-flex align-items-center">
+                                    <div class="progress flex-grow-1 me-3" style="height: 10px;">
+                                        <div class="progress-bar {% if book.available_copies == 0 %}bg-danger{% elif book.available_copies < book.total_copies|divisibleby:2 %}bg-warning{% else %}bg-success{% endif %}" 
+                                             role="progressbar" 
+                                             style="width: {% widthratio book.available_copies book.total_copies 100 %}%"
+                                             aria-valuenow="{% widthratio book.available_copies book.total_copies 100 %}" 
+                                             aria-valuemin="0" 
+                                             aria-valuemax="100">
+                                        </div>
+                                    </div>
+                                    <span class="fw-bold">{{ book.available_copies }} / {{ book.total_copies }} available</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Description -->
+                {% if book.description %}
+                <div class="mt-4">
+                    <label class="form-label fw-semibold text-custom">Description</label>
+                    <div class="card bg-light border-0">
+                        <div class="card-body">
+                            <p class="mb-0 text-custom">{{ book.description|linebreaks }}</p>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Borrow History -->
+        <div class="card card-custom mt-4">
+            <div class="card-header bg-transparent border-0 pt-4 px-4">
+                <h5 class="card-title mb-0 fw-bold text-custom">Borrow History</h5>
+                <p class="text-custom mb-0">Recent borrowing activity for this book</p>
+            </div>
+            <div class="card-body">
+                {% if borrow_history %}
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead>
+                            <tr>
+                                <th>Borrower</th>
+                                <th>Borrowed Date</th>
+                                <th>Due Date</th>
+                                <th>Returned Date</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for record in borrow_history %}
+                            <tr>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <i class="bi bi-person-circle text-primary me-2"></i>
+                                        {{ record.borrower.get_full_name|default:record.borrower.username }}
+                                    </div>
+                                </td>
+                                <td class="text-custom">{{ record.borrowed_date|date:"M d, Y" }}</td>
+                                <td class="text-custom">{{ record.due_date|date:"M d, Y" }}</td>
+                                <td class="text-custom">
+                                    {% if record.returned_date %}
+                                    {{ record.returned_date|date:"M d, Y" }}
+                                    {% else %}
+                                    <span class="text-muted">-</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if record.status == 'active' %}
+                                    <span class="badge bg-warning bg-opacity-10 text-warning">Active</span>
+                                    {% elif record.status == 'returned' %}
+                                    <span class="badge bg-success bg-opacity-10 text-success">Returned</span>
+                                    {% else %}
+                                    <span class="badge bg-secondary bg-opacity-10 text-secondary">{{ record.status }}</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-4">
+                    <i class="bi bi-clock-history display-1 text-muted"></i>
+                    <h5 class="mt-3 text-custom">No Borrow History</h5>
+                    <p class="text-custom">This book hasn't been borrowed yet.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Sidebar -->
+    <div class="col-lg-4">
+        <!-- Quick Actions -->
+        <div class="card card-custom mb-4">
+            <div class="card-header bg-transparent border-0 pt-4 px-4">
+                <h5 class="card-title mb-0 fw-bold text-custom">Quick Actions</h5>
+                <p class="text-custom mb-0">Manage this book</p>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    {% if book.status == 'available' and book.available_copies > 0 %}
+                    <a href="{% url 'library:borrow_book' %}?book={{ book.id }}" class="btn btn-success">
+                        <i class="bi bi-arrow-up-circle me-2"></i>Borrow This Book
+                    </a>
+                    {% else %}
+                    <button class="btn btn-secondary" disabled>
+                        <i class="bi bi-x-circle me-2"></i>Not Available for Borrowing
+                    </button>
+                    {% endif %}
+                    
+                    <a href="{% url 'library:reservation_create' %}?book={{ book.id }}" class="btn btn-warning">
+                        <i class="bi bi-bookmark-plus me-2"></i>Make Reservation
+                    </a>
+                    
+                    {% if request.user.is_superuser %}
+                    <a href="{% url 'library:book_update' book.id %}" class="btn btn-outline-primary">
+                        <i class="bi bi-pencil me-2"></i>Edit Book Details
+                    </a>
+                    {% endif %}
+                    
+                    {% if request.user.is_superuser  %}
+                    <a href="{% url 'library:book_delete' book.id %}" class="btn btn-outline-danger">
+                        <i class="bi bi-trash me-2"></i>Delete Book
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Active Reservations -->
+        <div class="card card-custom">
+            <div class="card-header bg-transparent border-0 pt-4 px-4">
+                <h5 class="card-title mb-0 fw-bold text-custom">Active Reservations</h5>
+                <p class="text-custom mb-0">Pending reservations for this book</p>
+            </div>
+            <div class="card-body">
+                {% if active_reservations %}
+                <div class="list-group list-group-flush">
+                    {% for reservation in active_reservations %}
+                    <div class="list-group-item px-0">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <h6 class="mb-1">{{ reservation.user.get_full_name|default:reservation.user.username }}</h6>
+                                <small class="text-custom">Reserved on {{ reservation.reserved_date|date:"M d, Y" }}</small>
+                            </div>
+                            <span class="badge bg-info bg-opacity-10 text-info">Pending</span>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="text-center py-3">
+                    <i class="bi bi-bookmark-check display-4 text-muted"></i>
+                    <p class="text-custom mt-2 mb-0">No active reservations</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Book Statistics -->
+        <div class="card card-custom mt-4">
+            <div class="card-header bg-transparent border-0 pt-4 px-4">
+                <h5 class="card-title mb-0 fw-bold text-custom">Book Statistics</h5>
+                <p class="text-custom mb-0">Usage and popularity metrics</p>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-6 mb-3">
+                        <div class="border-end">
+                            <h4 class="fw-bold text-primary">{{ borrow_history|length }}</h4>
+                            <small class="text-custom">Total Borrows</small>
+                        </div>
+                    </div>
+                    <div class="col-6 mb-3">
+                        <h4 class="fw-bold text-success">{{ active_reservations|length }}</h4>
+                        <small class="text-custom">Active Reservations</small>
+                    </div>
+                    <div class="col-12">
+                        <div class="bg-light rounded p-3">
+                            <small class="text-custom d-block">Added to library</small>
+                            <strong>{{ book.created_at|date:"F d, Y" }}</strong>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize DataTable for borrow history
+    $('table').DataTable({
+        "pageLength": 5,
+        "order": [[1, 'desc']],
+        "language": {
+            "search": "<i class='fas fa-search me-2'></i>Search:",
+            "lengthMenu": "Show _MENU_ entries",
+            "info": "Showing _START_ to _END_ of _TOTAL_ entries"
+        }
+    });
+
+    // Initialize tooltips
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl)
+    });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,694 @@
+{% extends 'organization/base.html' %}
+{% load static %}
+{% block title %}Organization Detail- {{ organization.name|default:"Codefyn" }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+        <!-- Institution Header Section -->
+        <div class="header-section mb-4">
+            <div class="row align-items-center">
+                <!-- Left: Icon + Title + Badges -->
+                <div class="col-md-7 d-flex align-items-center">
+                    <div class="header-icon me-3">
+                        {% if institution.logo %}
+                        <img src="{{ institution.logo.url }}" alt="{{ institution.name }}" 
+                            class="rounded-circle shadow-sm" width="60" height="60">
+                        {% else %}
+                        <i class="bi bi-building display-5 text-primary"></i>
+                        {% endif %}
+                    </div>
+                    <div>
+                        <h1 class="h3 fw-bold mb-1">{{ institution.name }}</h1>
+                        <p class="text-custom mb-1">Manage this educational institution</p>
+                        <div class="d-flex flex-wrap align-items-center gap-2">
+                            <span class="badge bg-primary">{{ institution.get_type_display }}</span>
+                            <span class="badge bg-secondary">{{ institution.code }}</span>
+                            {% if institution.short_name %}
+                            <span class="badge bg-light text-dark">{{ institution.short_name }}</span>
+                            {% endif %}
+                            {% if institution.is_active %}
+                            <span class="badge bg-success">Active</span>
+                            {% else %}
+                            <span class="badge bg-danger">Inactive</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right: Action Buttons -->
+                <div class="col-md-5">
+                    <div class="d-flex justify-content-end align-items-center gap-2">
+                        <a href="{% url 'organization:institution_update' institution.pk %}" class="btn btn-primary">
+                            <i class="bi bi-pencil me-1"></i> Edit Institution
+                        </a>
+                        <div class="dropdown">
+                            <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownActions"
+                                data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="bi bi-three-dots me-1"></i> Actions
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="dropdownActions">
+                                <li><a class="dropdown-item" href="#"><i class="bi bi-printer me-2"></i> Print Details</a></li>
+                                <li><a class="dropdown-item" href="#"><i class="bi bi-download me-2"></i> Export Data</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item text-danger" href="{% url 'organization:institution_delete' institution.pk %}">
+                                    <i class="bi bi-trash me-2"></i> Delete Institution
+                                </a></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+<!-- Stats Cards -->
+<div class="row g-3 mb-4">
+    <!-- Departments -->
+    <div class="col-xl-2 col-md-4 col-6">
+        <div class="card stats-card text-white" style="background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%); height: 120px;">
+            <div class="card-body d-flex flex-column justify-content-center align-items-center p-2">
+                <i class="bi bi-diagram-3-fill display-6 mb-1"></i>
+                <h5 class="card-title mb-1">{{ departments.count }}</h5>
+                <p class="card-text small mb-0">Departments</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Branches -->
+    <div class="col-xl-2 col-md-4 col-6">
+        <div class="card stats-card text-white" style="background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%); height: 120px;">
+            <div class="card-body d-flex flex-column justify-content-center align-items-center p-2">
+                <i class="bi bi-geo-alt-fill display-6 mb-1"></i>
+                <h5 class="card-title mb-1">{{ branches.count }}</h5>
+                <p class="card-text small mb-0">Branches</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Affiliations -->
+    <div class="col-xl-2 col-md-4 col-6">
+        <div class="card stats-card text-white" style="background: linear-gradient(135deg, #ff6a00 0%, #ee0979 100%); height: 120px;">
+            <div class="card-body d-flex flex-column justify-content-center align-items-center p-2">
+                <i class="bi bi-award-fill display-6 mb-1"></i>
+                <h5 class="card-title mb-1">{{ affiliations.count }}</h5>
+                <p class="card-text small mb-0">Affiliations</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Accreditations -->
+    <div class="col-xl-2 col-md-4 col-6">
+        <div class="card stats-card text-white" style="background: linear-gradient(135deg, #ff512f 0%, #dd2476 100%); height: 120px;">
+            <div class="card-body d-flex flex-column justify-content-center align-items-center p-2">
+                <i class="bi bi-patch-check-fill display-6 mb-1"></i>
+                <h5 class="card-title mb-1">{{ accreditations.count }}</h5>
+                <p class="card-text small mb-0">Accreditations</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Partnerships -->
+    <div class="col-xl-2 col-md-4 col-6">
+        <div class="card stats-card text-white" style="background: linear-gradient(135deg, #654ea3 0%, #eaafc8 100%); height: 120px;">
+            <div class="card-body d-flex flex-column justify-content-center align-items-center p-2">
+                <i class="bi bi-handshake-fill display-6 mb-1"></i>
+                <h5 class="card-title mb-1">{{ partnerships.count }}</h5>
+                <p class="card-text small mb-0">Partnerships</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Established -->
+    <div class="col-xl-2 col-md-4 col-6">
+        <div class="card stats-card text-white" style="background: linear-gradient(135deg, #f7971e 0%, #ffd200 100%); height: 120px;">
+            <div class="card-body d-flex flex-column justify-content-center align-items-center p-2">
+                <i class="bi bi-calendar-event-fill display-6 mb-1"></i>
+                <h5 class="card-title mb-1">
+                    {% if institution.established_date %}
+                        {{ institution.established_date|timesince }}
+                    {% else %}
+                        N/A
+                    {% endif %}
+                </h5>
+                <p class="card-text small mb-0">Established</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+    <!-- Main Content Tabs -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card dashboard-card">
+                <div class="card-header bg-transparent border-0 pt-4 px-4">
+                    <ul class="nav nav-tabs nav-tabs-custom" id="institutionTabs" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" id="overview-tab" data-bs-toggle="tab" 
+                                    data-bs-target="#overview" type="button" role="tab">
+                                <i class="bi bi-info-circle me-2"></i>Overview
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="departments-tab" data-bs-toggle="tab" 
+                                    data-bs-target="#departments" type="button" role="tab">
+                                <i class="bi bi-diagram-3 me-2"></i>Departments
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="branches-tab" data-bs-toggle="tab" 
+                                    data-bs-target="#branches" type="button" role="tab">
+                                <i class="bi bi-geo-alt me-2"></i>Branches
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="compliance-tab" data-bs-toggle="tab" 
+                                    data-bs-target="#compliance" type="button" role="tab">
+                                <i class="bi bi-patch-check me-2"></i>Compliance
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="affiliations-tab" data-bs-toggle="tab" 
+                                    data-bs-target="#affiliations" type="button" role="tab">
+                                <i class="bi bi-award me-2"></i>Affiliations
+                            </button>
+                        </li>
+                    </ul>
+                </div>
+                <div class="card-body">
+                    <div class="tab-content" id="institutionTabsContent">
+                        
+                        <!-- Overview Tab -->
+                        <div class="tab-pane fade show active" id="overview" role="tabpanel">
+                            <div class="row">
+                                <div class="col-lg-8">
+                                    <div class="row g-4">
+                                        <!-- Contact Information -->
+                                        <div class="col-12">
+                                            <h5 class="section-title mb-3">
+                                                <i class="bi bi-telephone me-2"></i>Contact Information
+                                            </h5>
+                                            <div class="card card-custom">
+                                                <div class="card-body">
+                                                    <div class="row g-3">
+                                                        <div class="col-md-6">
+                                                            <label class="form-label fw-semibold">Address</label>
+                                                            <p class="mb-2">{{ institution.address }}</p>
+                                                            <p class="mb-0 text-muted">
+                                                                {{ institution.city }}, {{ institution.state }}, 
+                                                                {{ institution.country }} - {{ institution.pincode }}
+                                                            </p>
+                                                        </div>
+                                                        <div class="col-md-6">
+                                                            <label class="form-label fw-semibold">Contact Details</label>
+                                                            <p class="mb-1">
+                                                                <i class="bi bi-envelope me-2"></i>
+                                                                <a href="mailto:{{ institution.contact_email }}">{{ institution.contact_email }}</a>
+                                                            </p>
+                                                            <p class="mb-1">
+                                                                <i class="bi bi-telephone me-2"></i>
+                                                                <a href="tel:{{ institution.contact_phone }}">{{ institution.contact_phone }}</a>
+                                                            </p>
+                                                            {% if institution.alternate_phone %}
+                                                            <p class="mb-0">
+                                                                <i class="bi bi-telephone-plus me-2"></i>
+                                                                <a href="tel:{{ institution.alternate_phone }}">{{ institution.alternate_phone }}</a>
+                                                            </p>
+                                                            {% endif %}
+                                                            {% if institution.website %}
+                                                            <p class="mb-0 mt-2">
+                                                                <i class="bi bi-globe me-2"></i>
+                                                                <a href="{{ institution.website }}" target="_blank">{{ institution.website }}</a>
+                                                            </p>
+                                                            {% endif %}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Academic Settings -->
+                                        <div class="col-12">
+                                            <h5 class="section-title mb-3">
+                                                <i class="bi bi-calendar me-2"></i>Academic Settings
+                                            </h5>
+                                            <div class="card card-custom">
+                                                <div class="card-body">
+                                                    <div class="row g-3">
+                                                        <div class="col-md-4">
+                                                            <label class="form-label fw-semibold">Academic Year</label>
+                                                            <p class="mb-0">
+                                                                {% if institution.academic_year_start and institution.academic_year_end %}
+                                                                {{ institution.academic_year_start|date:"M Y" }} - {{ institution.academic_year_end|date:"M Y" }}
+                                                                {% else %}
+                                                                Not set
+                                                                {% endif %}
+                                                            </p>
+                                                        </div>
+                                                        <div class="col-md-4">
+                                                            <label class="form-label fw-semibold">Fiscal Year Start</label>
+                                                            <p class="mb-0">
+                                                                {% if institution.fiscal_year_start %}
+                                                                {{ institution.fiscal_year_start|date:"d M Y" }}
+                                                                {% else %}
+                                                                Not set
+                                                                {% endif %}
+                                                            </p>
+                                                        </div>
+                                                        <div class="col-md-4">
+                                                            <label class="form-label fw-semibold">Timezone</label>
+                                                            <p class="mb-0">{{ institution.timezone }}</p>
+                                                        </div>
+                                                        <div class="col-md-6">
+                                                            <label class="form-label fw-semibold">Language</label>
+                                                            <p class="mb-0">{{ institution.language }}</p>
+                                                        </div>
+                                                        <div class="col-md-6">
+                                                            <label class="form-label fw-semibold">Currency</label>
+                                                            <p class="mb-0">{{ institution.currency }}</p>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Branding Colors -->
+                                        <div class="col-12">
+                                            <h5 class="section-title mb-3">
+                                                <i class="bi bi-palette me-2"></i>Branding Colors
+                                            </h5>
+                                            <div class="card card-custom">
+                                                <div class="card-body">
+                                                    <div class="row g-3 text-center">
+                                                        <div class="col-2">
+                                                            <div class="color-swatch" 
+                                                                 style="background-color: {{ institution.primary_color }};"
+                                                                 data-bs-toggle="tooltip" title="Primary Color"></div>
+                                                            <small class="d-block mt-1">Primary</small>
+                                                        </div>
+                                                        <div class="col-2">
+                                                            <div class="color-swatch" 
+                                                                 style="background-color: {{ institution.secondary_color }};"
+                                                                 data-bs-toggle="tooltip" title="Secondary Color"></div>
+                                                            <small class="d-block mt-1">Secondary</small>
+                                                        </div>
+                                                        <div class="col-2">
+                                                            <div class="color-swatch" 
+                                                                 style="background-color: {{ institution.accent_color }};"
+                                                                 data-bs-toggle="tooltip" title="Accent Color"></div>
+                                                            <small class="d-block mt-1">Accent</small>
+                                                        </div>
+                                                        <div class="col-2">
+                                                            <div class="color-swatch" 
+                                                                 style="background-color: {{ institution.text_dark_color }};"
+                                                                 data-bs-toggle="tooltip" title="Dark Text"></div>
+                                                            <small class="d-block mt-1">Dark Text</small>
+                                                        </div>
+                                                        <div class="col-2">
+                                                            <div class="color-swatch" 
+                                                                 style="background-color: {{ institution.text_light_color }};"
+                                                                 data-bs-toggle="tooltip" title="Light Text"></div>
+                                                            <small class="d-block mt-1">Light Text</small>
+                                                        </div>
+                                                        <div class="col-2">
+                                                            <div class="color-swatch" 
+                                                                 style="background-color: {{ institution.text_muted_color }};"
+                                                                 data-bs-toggle="tooltip" title="Muted Text"></div>
+                                                            <small class="d-block mt-1">Muted Text</small>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Sidebar with Branding -->
+                                <div class="col-lg-4">
+                                    <div class="sticky-top" style="top: 100px;">
+                                        <!-- Branding Assets -->
+                                        <div class="card card-custom mb-4">
+                                            <div class="card-header">
+                                                <h6 class="card-title mb-0">
+                                                    <i class="bi bi-images me-2"></i>Branding Assets
+                                                </h6>
+                                            </div>
+                                            <div class="card-body">
+                                                <div class="row g-3 text-center">
+                                                    {% if institution.logo %}
+                                                    <div class="col-6">
+                                                        <div class="branding-asset">
+                                                            <img src="{{ institution.logo.url }}" alt="Logo" 
+                                                                 class="img-fluid rounded border">
+                                                            <small class="d-block mt-2">Logo</small>
+                                                        </div>
+                                                    </div>
+                                                    {% endif %}
+                                                    {% if institution.stamp %}
+                                                    <div class="col-6">
+                                                        <div class="branding-asset">
+                                                            <img src="{{ institution.stamp.url }}" alt="Stamp" 
+                                                                 class="img-fluid rounded border">
+                                                            <small class="d-block mt-2">Stamp</small>
+                                                        </div>
+                                                    </div>
+                                                    {% endif %}
+                                                    {% if institution.favicon %}
+                                                    <div class="col-6">
+                                                        <div class="branding-asset">
+                                                            <img src="{{ institution.favicon.url }}" alt="Favicon" 
+                                                                 class="img-fluid rounded border">
+                                                            <small class="d-block mt-2">Favicon</small>
+                                                        </div>
+                                                    </div>
+                                                    {% endif %}
+                                                    {% if institution.banner %}
+                                                    <div class="col-6">
+                                                        <div class="branding-asset">
+                                                            <img src="{{ institution.banner.url }}" alt="Banner" 
+                                                                 class="img-fluid rounded border">
+                                                            <small class="d-block mt-2">Banner</small>
+                                                        </div>
+                                                    </div>
+                                                    {% endif %}
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Quick Actions -->
+                                        <div class="card card-custom">
+                                            <div class="card-header">
+                                                <h6 class="card-title mb-0">
+                                                    <i class="bi bi-lightning me-2"></i>Quick Actions
+                                                </h6>
+                                            </div>
+                                            <div class="card-body">
+                                                <div class="d-grid gap-2">
+                                                    <a href="#" class="btn btn-outline-primary btn-sm">
+                                                        <i class="bi bi-plus-circle me-2"></i>Add Department
+                                                    </a>
+                                                    <a href="#" class="btn btn-outline-primary btn-sm">
+                                                        <i class="bi bi-plus-circle me-2"></i>Add Branch
+                                                    </a>
+                                                    <a href="#" class="btn btn-outline-primary btn-sm">
+                                                        <i class="bi bi-plus-circle me-2"></i>Add Affiliation
+                                                    </a>
+                                                    <a href="#" class="btn btn-outline-primary btn-sm">
+                                                        <i class="bi bi-eye me-2"></i>View ID Card Template
+                                                    </a>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Departments Tab -->
+                        <div class="tab-pane fade" id="departments" role="tabpanel">
+                            <div class="d-flex justify-content-between align-items-center mb-4">
+                                <h5 class="mb-0">Departments ({{ departments.count }})</h5>
+                                <a href="#" class="btn btn-primary btn-sm">
+                                    <i class="bi bi-plus-circle me-1"></i> Add Department
+                                </a>
+                            </div>
+                            
+                            {% if departments %}
+                            <div class="row g-3">
+                                {% for dept in departments %}
+                                <div class="col-xl-4 col-md-6">
+                                    <div class="card department-card h-100">
+                                        <div class="card-body">
+                                            <div class="d-flex justify-content-between align-items-start mb-3">
+                                                <h6 class="card-title mb-0">{{ dept.name }}</h6>
+                                                <span class="badge bg-secondary">{{ dept.code }}</span>
+                                            </div>
+                                            <p class="card-text small text-muted mb-2">
+                                                <i class="bi bi-diagram-3 me-1"></i>{{ dept.get_department_type_display }}
+                                            </p>
+                                            {% if dept.head_of_department %}
+                                            <p class="card-text small mb-2">
+                                                <i class="bi bi-person me-1"></i>
+                                                {{ dept.head_of_department.staff.user.get_full_name }}
+                                            </p>
+                                            {% endif %}
+                                            {% if dept.email %}
+                                            <p class="card-text small mb-2">
+                                                <i class="bi bi-envelope me-1"></i>
+                                                <a href="mailto:{{ dept.email }}">{{ dept.email }}</a>
+                                            </p>
+                                            {% endif %}
+                                            <div class="d-flex justify-content-between align-items-center mt-3">
+                                                <small class="text-muted">
+                                                    Established: {% if dept.established_date %}{{ dept.established_date|date:"Y" }}{% else %}N/A{% endif %}
+                                                </small>
+                                                {% if dept.is_active %}
+                                                <span class="badge bg-success">Active</span>
+                                                {% else %}
+                                                <span class="badge bg-danger">Inactive</span>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                        <div class="card-footer bg-transparent border-0 pt-0">
+                                            <div class="btn-group w-100">
+                                                <a href="#" class="btn btn-outline-primary btn-sm">View</a>
+                                                <a href="#" class="btn btn-outline-secondary btn-sm">Edit</a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                            {% else %}
+                            <div class="text-center py-5">
+                                <i class="bi bi-diagram-3 fs-1 text-muted"></i>
+                                <h5 class="mt-3 mb-2">No Departments Found</h5>
+                                <p class="text-muted">Start by adding departments to this institution</p>
+                                <a href="#" class="btn btn-primary">
+                                    <i class="bi bi-plus-circle me-2"></i>Add First Department
+                                </a>
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Branches Tab -->
+                        <div class="tab-pane fade" id="branches" role="tabpanel">
+                            <div class="d-flex justify-content-between align-items-center mb-4">
+                                <h5 class="mb-0">Branches ({{ branches.count }})</h5>
+                                <a href="#" class="btn btn-primary btn-sm">
+                                    <i class="bi bi-plus-circle me-1"></i> Add Branch
+                                </a>
+                            </div>
+                            
+                            {% if branches %}
+                            <div class="table-responsive">
+                                <table class="table table-modern">
+                                    <thead>
+                                        <tr>
+                                            <th>Branch Name</th>
+                                            <th>Code</th>
+                                            <th>Location</th>
+                                            <th>Type</th>
+                                            <th>Manager</th>
+                                            <th>Status</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for branch in branches %}
+                                        <tr>
+                                            <td>
+                                                <div class="d-flex align-items-center">
+                                                    <i class="bi bi-geo-alt-fill text-primary me-2"></i>
+                                                    <strong>{{ branch.name }}</strong>
+                                                    {% if branch.is_main_campus %}
+                                                    <span class="badge bg-warning ms-2">Main Campus</span>
+                                                    {% endif %}
+                                                </div>
+                                            </td>
+                                            <td>{{ branch.code }}</td>
+                                            <td>
+                                                <small class="text-muted">
+                                                    {{ branch.city }}, {{ branch.state }}<br>
+                                                    {{ branch.country }}
+                                                </small>
+                                            </td>
+                                            <td>
+                                                <span class="badge bg-secondary">
+                                                    {{ branch.get_branch_type_display|default:"Branch" }}
+                                                </span>
+                                            </td>
+                                            <td>
+                                                {% if branch.branch_manager %}
+                                                {{ branch.branch_manager.user.get_full_name }}
+                                                {% else %}
+                                                <span class="text-muted">Not assigned</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {% if branch.is_active %}
+                                                <span class="badge bg-success">Active</span>
+                                                {% else %}
+                                                <span class="badge bg-danger">Inactive</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                <div class="btn-group">
+                                                    <a href="#" class="btn btn-sm btn-outline-primary">View</a>
+                                                    <a href="#" class="btn btn-sm btn-outline-secondary">Edit</a>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                            {% else %}
+                            <div class="text-center py-5">
+                                <i class="bi bi-geo-alt fs-1 text-muted"></i>
+                                <h5 class="mt-3 mb-2">No Branches Found</h5>
+                                <p class="text-muted">Add branches to expand your institution's presence</p>
+                                <a href="#" class="btn btn-primary">
+                                    <i class="bi bi-plus-circle me-2"></i>Add First Branch
+                                </a>
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Compliance Tab -->
+                        <div class="tab-pane fade" id="compliance" role="tabpanel">
+                            <div class="row">
+                                <div class="col-lg-8">
+                                    {% if institution.compliance %}
+                                    <div class="card card-custom">
+                                        <div class="card-header">
+                                            <h6 class="card-title mb-0">Compliance Details</h6>
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="row g-3">
+                                                <div class="col-md-6">
+                                                    <label class="form-label fw-semibold">GST Number</label>
+                                                    <p class="mb-3">{{ institution.compliance.gst_number|default:"Not provided" }}</p>
+                                                    
+                                                    <label class="form-label fw-semibold">PAN Number</label>
+                                                    <p class="mb-3">{{ institution.compliance.pan_number|default:"Not provided" }}</p>
+                                                    
+                                                    <label class="form-label fw-semibold">TAN Number</label>
+                                                    <p class="mb-3">{{ institution.compliance.tan_number|default:"Not provided" }}</p>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <label class="form-label fw-semibold">Registration Number</label>
+                                                    <p class="mb-3">{{ institution.compliance.registration_no|default:"Not provided" }}</p>
+                                                    
+                                                    <label class="form-label fw-semibold">Registration Authority</label>
+                                                    <p class="mb-3">{{ institution.compliance.registration_authority|default:"Not provided" }}</p>
+                                                    
+                                                    <label class="form-label fw-semibold">Registration Date</label>
+                                                    <p class="mb-3">
+                                                        {% if institution.compliance.registration_date %}
+                                                        {{ institution.compliance.registration_date|date:"d M Y" }}
+                                                        {% else %}
+                                                        Not provided
+                                                        {% endif %}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            
+                                            <hr>
+                                            
+                                            <h6 class="mb-3">Educational Compliance</h6>
+                                            <div class="row g-3">
+                                                <div class="col-md-4">
+                                                    <label class="form-label fw-semibold">UDISE Code</label>
+                                                    <p class="mb-0">{{ institution.compliance.udise_code|default:"Not provided" }}</p>
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <label class="form-label fw-semibold">AICTE Code</label>
+                                                    <p class="mb-0">{{ institution.compliance.aicte_code|default:"Not provided" }}</p>
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <label class="form-label fw-semibold">UGC Code</label>
+                                                    <p class="mb-0">{{ institution.compliance.ugc_code|default:"Not provided" }}</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {% else %}
+                                    <div class="text-center py-5">
+                                        <i class="bi bi-patch-check fs-1 text-muted"></i>
+                                        <h5 class="mt-3 mb-2">No Compliance Data</h5>
+                                        <p class="text-muted">Add compliance information for this institution</p>
+                                        <a href="#" class="btn btn-primary">
+                                            <i class="bi bi-plus-circle me-2"></i>Add Compliance Details
+                                        </a>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                                
+                                <div class="col-lg-4">
+                                    <div class="card card-custom">
+                                        <div class="card-header">
+                                            <h6 class="card-title mb-0">Compliance Status</h6>
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="compliance-status">
+                                                {% with comp=institution.compliance %}
+                                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                                    <span>GST Number</span>
+                                                    <span class="badge {% if comp.gst_number %}bg-success{% else %}bg-warning{% endif %}">
+                                                        {% if comp.gst_number %}Provided{% else %}Missing{% endif %}
+                                                    </span>
+                                                </div>
+                                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                                    <span>PAN Number</span>
+                                                    <span class="badge {% if comp.pan_number %}bg-success{% else %}bg-warning{% endif %}">
+                                                        {% if comp.pan_number %}Provided{% else %}Missing{% endif %}
+                                                    </span>
+                                                </div>
+                                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                                    <span>Registration</span>
+                                                    <span class="badge {% if comp.registration_no %}bg-success{% else %}bg-warning{% endif %}">
+                                                        {% if comp.registration_no %}Provided{% else %}Missing{% endif %}
+                                                    </span>
+                                                </div>
+                                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                                    <span>Educational Codes</span>
+                                                    <span class="badge {% if comp.udise_code or comp.aicte_code or comp.ugc_code %}bg-success{% else %}bg-warning{% endif %}">
+                                                        {% if comp.udise_code or comp.aicte_code or comp.ugc_code %}Partial{% else %}Missing{% endif %}
+                                                    </span>
+                                                </div>
+                                                {% endwith %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Affiliations Tab -->
+                        <div class="tab-pane fade" id="affiliations" role="tabpanel">
+                            <!-- Content for affiliations tab would go here -->
+                            <div class="text-center py-5">
+                                <i class="bi bi-award fs-1 text-muted"></i>
+                                <h5 class="mt-3 mb-2">Affiliations & Accreditations</h5>
+                                <p class="text-muted">Manage institutional affiliations and accreditations</p>
+                                <div class="d-flex justify-content-center gap-2">
+                                    <a href="#" class="btn btn-primary">
+                                        <i class="bi bi-plus-circle me-2"></i>Add Affiliation
+                                    </a>
+                                    <a href="#" class="btn btn-outline-primary">
+                                        <i class="bi bi-plus-circle me-2"></i>Add Accreditation
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+
+{% endblock %}

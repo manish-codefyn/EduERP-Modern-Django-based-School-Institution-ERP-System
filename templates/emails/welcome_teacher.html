@@ -1,0 +1,22 @@
+<!-- templates/emails/welcome_teacher.html -->
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Welcome to School Management System</title>
+</head>
+<body>
+    <h2>Welcome to Our School Management System</h2>
+    <p>Dear {{ user.get_full_name }},</p>
+    <p>Your teacher account has been created successfully.</p>
+    <p><strong>Login Details:</strong></p>
+    <ul>
+        <li><strong>Email:</strong> {{ user.email }}</li>
+        <li><strong>Password:</strong> {{ password }}</li>
+    </ul>
+    <p>Please login at: <a href="{{ login_url }}">{{ login_url }}</a></p>
+    <p>We recommend changing your password after first login.</p>
+    <br>
+    <p>Best regards,<br>School Administration</p>
+</body>
+</html>

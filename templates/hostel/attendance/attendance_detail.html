@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Attendance Details - {{ organization.name|default:"ERP System" }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="fw-bold mb-0">Attendance Details</h5>
+            <a href="{% url 'hostel:attendance_list' %}" class="btn btn-secondary btn-sm">
+                <i class="bi bi-arrow-left-circle me-1"></i> Back
+            </a>
+        </div>
+        <div class="card-body">
+            <table class="table table-borderless">
+                <tr>
+                    <th>Date:</th>
+                    <td>{{ attendance.date|date:"d M, Y" }}</td>
+                </tr>
+                <tr>
+                    <th>Student:</th>
+                    <td>{{ attendance.student.full_name }}</td>
+                </tr>
+                <tr>
+                    <th>Hostel:</th>
+                    <td>{{ attendance.student.hostel.name }}</td>
+                </tr>
+                <tr>
+                    <th>Room:</th>
+                    <td>{{ attendance.student.room.name }}</td>
+                </tr>
+                <tr>
+                    <th>Status:</th>
+                    <td>
+                        {% if attendance.status == 'present' %}
+                        <span class="badge bg-success">Present</span>
+                        {% else %}
+                        <span class="badge bg-danger">Absent</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                <tr>
+                    <th>Marked By:</th>
+                    <td>{{ attendance.marked_by.get_full_name }}</td>
+                </tr>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

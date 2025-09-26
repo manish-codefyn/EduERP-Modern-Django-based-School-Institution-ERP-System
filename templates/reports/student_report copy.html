@@ -1,0 +1,114 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Student Reports - School ERP{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">Student Reports</h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <a href="?format=csv" class="btn btn-sm btn-outline-success me-2">
+            <i class="bi bi-download me-1"></i>Export CSV
+        </a>
+        <a href="?format=pdf" class="btn btn-sm btn-outline-danger">
+            <i class="bi bi-file-pdf me-1"></i>Export PDF
+        </a>
+    </div>
+</div>
+
+<!-- Filters -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-4">
+                <label class="form-label">Class</label>
+                <select name="class" class="form-select">
+                    <option value="">All Classes</option>
+                    <!-- Add class options here -->
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">Academic Year</label>
+                <select name="academic_year" class="form-select">
+                    <option value="">All Years</option>
+                    <!-- Add academic year options here -->
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">&nbsp;</label>
+                <div class="d-grid">
+                    <button type="submit" class="btn btn-primary">Generate Report</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Admission No.</th>
+                        <th>Name</th>
+                        <th>Class</th>
+                        <th>Section</th>
+                        <th>Gender</th>
+                        <th>Contact</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for student in students %}
+                    <tr>
+                        <td>{{ student.admission_number }}</td>
+                        <td>{{ student.user.get_full_name }}</td>
+                        <td>{{ student.current_class.name }}</td>
+                        <td>{{ student.section.name }}</td>
+                        <td>{{ student.get_gender_display }}</td>
+                        <td>{{ student.user.phone }}</td>
+                        <td>
+                            <span class="badge bg-{% if student.is_active %}success{% else %}danger{% endif %}">
+                                {% if student.is_active %}Active{% else %}Inactive{% endif %}
+                            </span>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="text-center py-4">
+                            <i class="bi bi-people display-4 text-muted d-block mb-2"></i>
+                            <p class="text-muted">No students found for the selected criteria.</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        {% if students.has_other_pages %}
+        <nav class="mt-4">
+            <ul class="pagination justify-content-center">
+                {% if students.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ students.previous_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">Previous</a>
+                </li>
+                {% endif %}
+                
+                {% for i in students.paginator.page_range %}
+                <li class="page-item {% if students.number == i %}active{% endif %}">
+                    <a class="page-link" href="?page={{ i }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">{{ i }}</a>
+                </li>
+                {% endfor %}
+                
+                {% if students.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ students.next_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">Next</a>
+                </li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,324 @@
+{% extends 'communications/base.html' %}
+{% load static %}
+
+{% block title %}Email Log Details - {{ organization.name|default:"codefyn" }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="header-section mb-4">
+        <div class="row align-items-center">
+            <div class="col-md-8 d-flex flex-column">
+                <nav aria-label="breadcrumb" class="mb-2">
+                    <ol class="breadcrumb mb-0">
+                        <li class="breadcrumb-item">
+                            <a href="{% url 'communications:dashboard' %}">
+                                <i class="bi bi-house-door me-1"></i> Dashboard
+                            </a>
+                        </li>
+                        <li class="breadcrumb-item">
+                            <a href="{% url 'communications:email_log_list' %}">Email Logs</a>
+                        </li>
+                        <li class="breadcrumb-item active" aria-current="page">Details</li>
+                    </ol>
+                </nav>
+
+                <div class="d-flex align-items-center">
+                    <div class="header-icon me-3">
+                        <i class="bi bi-envelope display-6 text-danger"></i>
+                    </div>
+                    <div>
+                        <h1 class="h3 fw-bold mb-1">Email Log Details</h1>
+                        <p class="text-custom mb-0">Complete email message information and engagement tracking</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="d-flex justify-content-end align-items-center gap-2">
+                    <a href="{% url 'communications:email_log_list' %}" class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-left me-1"></i> Back to List
+                    </a>
+                    <a href="{% url 'communications:email_log_delete' email_log.pk %}" class="btn btn-outline-danger">
+                        <i class="bi bi-trash me-1"></i> Delete
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Email Information -->
+        <div class="col-lg-8">
+            <div class="card card-custom mb-4">
+                <div class="card-header bg-transparent border-0">
+                    <h5 class="card-title mb-0 fw-bold text-custom">Email Message Details</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <table class="table table-borderless">
+                                <tr>
+                                    <td width="40%"><strong>Recipient Email:</strong></td>
+                                    <td>
+                                        <i class="bi bi-envelope text-danger me-2"></i>
+                                        {{ email_log.recipient_email }}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Status:</strong></td>
+                                    <td>
+                                        {% if email_log.status == 'clicked' %}
+                                            <span class="badge bg-success">Clicked</span>
+                                        {% elif email_log.status == 'opened' %}
+                                            <span class="badge bg-info">Opened</span>
+                                        {% elif email_log.status == 'delivered' %}
+                                            <span class="badge bg-primary">Delivered</span>
+                                        {% elif email_log.status == 'sent' %}
+                                            <span class="badge bg-secondary">Sent</span>
+                                        {% elif email_log.status == 'failed' %}
+                                            <span class="badge bg-danger">Failed</span>
+                                        {% else %}
+                                            <span class="badge bg-warning">Pending</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Message ID:</strong></td>
+                                    <td><code>{{ email_log.message_id|default:"Not available" }}</code></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Opened:</strong></td>
+                                    <td>
+                                        {% if email_log.opened_at %}
+                                            <i class="bi bi-eye text-success me-1"></i>
+                                            {{ email_log.opened_at|date:"M d, Y H:i" }}
+                                        {% else %}
+                                            <span class="text-muted">Not opened</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                        <div class="col-md-6">
+                            <table class="table table-borderless">
+                                <tr>
+                                    <td width="40%"><strong>Template:</strong></td>
+                                    <td>
+                                        {% if email_log.template %}
+                                            <span class="badge bg-light text-dark">{{ email_log.template.name }}</span>
+                                        {% else %}
+                                            <span class="text-muted">No Template</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Scheduled For:</strong></td>
+                                    <td>
+                                        {% if email_log.scheduled_for %}
+                                            {{ email_log.scheduled_for|date:"M d, Y H:i" }}
+                                        {% else %}
+                                            <span class="text-muted">Immediate</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Sent At:</strong></td>
+                                    <td>
+                                        {% if email_log.sent_at %}
+                                            {{ email_log.sent_at|date:"M d, Y H:i" }}
+                                        {% else %}
+                                            <span class="text-muted">Not sent</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Clicked:</strong></td>
+                                    <td>
+                                        {% if email_log.clicked_at %}
+                                            <i class="bi bi-cursor-fill text-info me-1"></i>
+                                            {{ email_log.clicked_at|date:"M d, Y H:i" }}
+                                        {% else %}
+                                            <span class="text-muted">Not clicked</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Subject -->
+                    <div class="mb-4">
+                        <h6 class="fw-bold mb-3">Subject</h6>
+                        <div class="card bg-light">
+                            <div class="card-body">
+                                <h5 class="mb-0">{{ email_log.subject }}</h5>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Message Content -->
+                    <div class="mb-4">
+                        <h6 class="fw-bold mb-3">Message Content</h6>
+                        <div class="card">
+                            <div class="card-body">
+                                <div class="email-content" style="max-height: 400px; overflow-y: auto;">
+                                    {{ email_log.message|safe }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Template Variables -->
+                    {% if email_log.template_variables %}
+                    <div class="mb-4">
+                        <h6 class="fw-bold mb-3">Template Variables</h6>
+                        <div class="card">
+                            <div class="card-body">
+                                <pre class="mb-0"><code>{{ email_log.template_variables|pprint }}</code></pre>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Provider Response -->
+                    {% if email_log.provider_response %}
+                    <div>
+                        <h6 class="fw-bold mb-3">Provider Response</h6>
+                        <div class="card">
+                            <div class="card-body">
+                                <pre class="mb-0"><code>{{ email_log.provider_response|pprint }}</code></pre>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Engagement Tracking -->
+        <div class="col-lg-4">
+            <!-- Engagement Card -->
+            <div class="card card-custom mb-4">
+                <div class="card-header bg-transparent border-0">
+                    <h5 class="card-title mb-0 fw-bold text-custom">Engagement Tracking</h5>
+                </div>
+                <div class="card-body">
+                    <div class="text-center mb-4">
+                        <div class="engagement-chart mb-3">
+                            <div class="d-flex justify-content-center">
+                                <div class="position-relative">
+                                    <div class="progress" style="width: 100px; height: 100px; transform: rotate(-90deg);">
+                                        <div class="progress-bar bg-success" role="progressbar" 
+                                             style="width: {% if email_log.opened_at %}100{% else %}0{% endif %}%">
+                                        </div>
+                                    </div>
+                                    <div class="position-absolute top-50 start-50 translate-middle">
+                                        {% if email_log.opened_at %}
+                                            <i class="bi bi-eye text-success fs-1"></i>
+                                        {% else %}
+                                            <i class="bi bi-eye-slash text-muted fs-1"></i>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <h5>{% if email_log.opened_at %}Opened{% else %}Not Opened{% endif %}</h5>
+                    </div>
+
+                    <div class="timeline">
+                        <div class="timeline-item {% if email_log.created_at %}completed{% endif %}">
+                            <div class="timeline-marker bg-primary"></div>
+                            <div class="timeline-content">
+                                <h6>Email Created</h6>
+                                <p class="text-muted mb-0">{{ email_log.created_at|date:"M d, Y H:i" }}</p>
+                            </div>
+                        </div>
+                        
+                        <div class="timeline-item {% if email_log.sent_at %}completed{% endif %}">
+                            <div class="timeline-marker bg-info"></div>
+                            <div class="timeline-content">
+                                <h6>Sent to Provider</h6>
+                                <p class="text-muted mb-0">
+                                    {% if email_log.sent_at %}
+                                        {{ email_log.sent_at|date:"M d, Y H:i" }}
+                                    {% else %}
+                                        Pending
+                                    {% endif %}
+                                </p>
+                            </div>
+                        </div>
+                        
+                        <div class="timeline-item {% if email_log.opened_at %}completed{% endif %}">
+                            <div class="timeline-marker bg-success"></div>
+                            <div class="timeline-content">
+                                <h6>Opened by Recipient</h6>
+                                <p class="text-muted mb-0">
+                                    {% if email_log.opened_at %}
+                                        {{ email_log.opened_at|date:"M d, Y H:i" }}
+                                    {% else %}
+                                        Not opened
+                                    {% endif %}
+                                </p>
+                            </div>
+                        </div>
+                        
+                        <div class="timeline-item {% if email_log.clicked_at %}completed{% endif %}">
+                            <div class="timeline-marker bg-warning"></div>
+                            <div class="timeline-content">
+                                <h6>Link Clicked</h6>
+                                <p class="text-muted mb-0">
+                                    {% if email_log.clicked_at %}
+                                        {{ email_log.clicked_at|date:"M d, Y H:i" }}
+                                    {% else %}
+                                        No clicks
+                                    {% endif %}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="card card-custom">
+                <div class="card-header bg-transparent border-0">
+                    <h5 class="card-title mb-0 fw-bold text-custom">Quick Actions</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a href="mailto:{{ email_log.recipient_email }}" class="btn btn-outline-primary">
+                            <i class="bi bi-reply me-2"></i>Reply to Recipient
+                        </a>
+                        {% if email_log.template %}
+                        <a href="{% url 'communications:template_detail' email_log.template.pk %}" class="btn btn-outline-info">
+                            <i class="bi bi-file-earmark-text me-2"></i>View Template
+                        </a>
+                        {% endif %}
+                        <button class="btn btn-outline-secondary" onclick="navigator.clipboard.writeText('{{ email_log.subject }}')">
+                            <i class="bi bi-clipboard me-2"></i>Copy Subject
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Add copy feedback
+    const copyButton = document.querySelector('button[onclick*="clipboard.writeText"]');
+    if (copyButton) {
+        copyButton.addEventListener('click', function() {
+            const originalText = this.innerHTML;
+            this.innerHTML = '<i class="bi bi-check me-2"></i>Copied!';
+            setTimeout(() => {
+                this.innerHTML = originalText;
+            }, 2000);
+        });
+    }
+});
+</script>
+{% endblock %}

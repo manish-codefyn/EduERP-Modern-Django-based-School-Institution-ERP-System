@@ -1,0 +1,71 @@
+{% extends "library/base.html" %}
+{% load static %}
+
+{% block title %}Category Details - {{ category.name }} - Library Management{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8 col-md-10">
+            <div class="card card-custom shadow-lg rounded-4 border-0">
+
+                <!-- Header -->
+                <div class="card-header detail-card-header">
+                    <i class="bi bi-tags"></i>
+                    <h4 class="mb-0">Category Details</h4>
+                </div>
+
+                <!-- Body -->
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <h6 class="text-custom">Name</h6>
+                            <p class="fw-bold">{{ category.name }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="text-custom">Slug</h6>
+                            <p class="fw-bold">{{ category.slug }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="text-custom">Institution</h6>
+                            <p class="fw-bold">{{ category.institution.name }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="text-custom">Created At</h6>
+                            <p class="fw-bold">{{ category.created_at|date:"M d, Y H:i" }}</p>
+                        </div>
+                        <div class="col-12">
+                            <h6 class="text-custom">Description</h6>
+                            <p class="fw-bold">
+                                {% if category.description %}
+                                    {{ category.description }}
+                                {% else %}
+                                    <span class="text-custom">No description provided.</span>
+                                {% endif %}
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="d-flex justify-content-between mt-4">
+                        <a href="{% url 'library:category_list' %}" class="btn btn-outline-secondary rounded-pill px-4 py-2">
+                            <i class="bi bi-arrow-left-circle me-1"></i> Back
+                        </a>
+                        {% if request.user.is_superuser %}
+                        <div class="d-flex gap-2">
+                            <a href="{% url 'library:category_update' category.id %}" class="btn btn-primary rounded-pill px-4 py-2">
+                                <i class="bi bi-pencil me-1"></i> Edit
+                            </a>
+                            <a href="{% url 'library:category_delete' category.id %}" class="btn btn-danger rounded-pill px-4 py-2">
+                                <i class="bi bi-trash me-1"></i> Delete
+                            </a>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

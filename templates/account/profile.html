@@ -1,0 +1,33 @@
+{% extends "account/base.html" %}
+
+{% block title %}My Profile - {{ organization.name }}{% endblock %}
+{% load crispy_forms_tags %}
+
+
+{% block content %}
+<div class="px-5 mt-5">
+    <h2 class="text-center mb-4">Update Profile</h2>
+
+    <div class="card shadow-lg border-0 rounded-4 p-4">
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            
+            {% for field in form %}
+                <div class="mb-3">
+                    <label class="form-label fw-bold">{{ field.label }}</label>
+                    {{ field }}
+                    {% if field.errors %}
+                        <div class="text-danger">
+                            {{ field.errors|join:", " }}
+                        </div>
+                    {% endif %}
+                </div>
+            {% endfor %}
+
+            <button type="submit" class="btn btn-primary shadow-sm">
+                <i class="bi bi-save"></i> Save Changes
+            </button>
+        </form>
+    </div>
+</div>
+{% endblock %}

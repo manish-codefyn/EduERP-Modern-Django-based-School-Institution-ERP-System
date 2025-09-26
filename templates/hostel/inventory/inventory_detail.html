@@ -1,0 +1,113 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %} Hostel Inventory - {{ item.item_name }} {% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <!-- Header with actions -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="mb-0">
+            <i class="bi bi-box-seam me-2"></i> {{ item.item_name }}
+        </h2>
+        <div class="d-flex gap-2">
+            <a href="{% url 'hostel:inventory_update' item.id %}" class="btn btn-warning">
+                <i class="bi bi-pencil-square me-1"></i> Edit
+            </a>
+            <a href="{% url 'hostel:inventory_list' %}" class="btn btn-secondary">
+                <i class="bi bi-arrow-left me-1"></i> Back to List
+            </a>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Item Details -->
+        <div class="col-md-6">
+            <div class="card shadow-sm border-0">
+                <div class="card-header detail-card-header">
+                    <h5 class="mb-0">
+                        <i class="bi bi-info-circle me-2"></i> Item Details
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <table class="table table-borderless mb-0">
+                        <tr>
+                            <th class="text-muted">Hostel:</th>
+                            <td>{{ item.hostel.name }}</td>
+                        </tr>
+                        <tr>
+                            <th class="text-muted">Institution:</th>
+                            <td>{{ item.institution.name }}</td>
+                        </tr>
+                        <tr>
+                            <th class="text-muted">Quantity:</th>
+                            <td>
+                                <span class="badge bg-light text-dark px-3 py-2">
+                                    <i class="bi bi-boxes me-1"></i> {{ item.quantity }}
+                                </span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th class="text-muted">Condition:</th>
+                            <td>
+                                <span class="badge px-3 py-2
+                                    {% if item.condition == 'excellent' %} bg-success
+                                    {% elif item.condition == 'good' %} bg-primary
+                                    {% elif item.condition == 'fair' %} bg-warning text-dark
+                                    {% else %} bg-danger
+                                    {% endif %}">
+                                    <i class="bi bi-clipboard-check me-1"></i>
+                                    {{ item.get_condition_display }}
+                                </span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th class="text-muted">Last Maintenance:</th>
+                            <td>
+                                <i class="bi bi-calendar-check me-1 text-success"></i>
+                                {{ item.last_maintenance|default:"Not specified" }}
+                            </td>
+                        </tr>
+                        <tr>
+                            <th class="text-muted">Next Maintenance:</th>
+                            <td>
+                                {% if item.next_maintenance %}
+                                    {% if item.next_maintenance < today %}
+                                        <span class="text-danger">
+                                            <i class="bi bi-exclamation-triangle me-1"></i>
+                                            {{ item.next_maintenance }} (Overdue)
+                                        </span>
+                                    {% else %}
+                                        <i class="bi bi-calendar-event me-1 text-primary"></i>
+                                        {{ item.next_maintenance }}
+                                    {% endif %}
+                                {% else %}
+                                    <span class="text-muted">Not specified</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Notes -->
+        <div class="col-md-6">
+            <div class="card shadow-sm border-0">
+                <div class="card-header detail-card-header">
+                    <h5 class="mb-0">
+                        <i class="bi bi-journal-text me-2"></i> Notes
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if item.notes %}
+                        <p class="mb-0">{{ item.notes|linebreaks }}</p>
+                    {% else %}
+                        <p class="text-muted mb-0">No notes available.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

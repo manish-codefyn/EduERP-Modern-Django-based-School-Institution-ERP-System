@@ -1,0 +1,31 @@
+[
+  {
+    "name": "Main Campus",
+    "code": "main-campus",
+    "slug": "main-campus",
+    "type": "school",
+    "address": "123 Education Street",
+    "city": "City Name",
+    "state": "State Name",
+    "country": "India",
+    "pincode": "123456",
+    "website": "https://maincampus.edu",
+    "contact_email": "info@maincampus.edu",
+    "contact_phone": "+1234567890",
+    "alternate_phone": "+0987654321",
+    "primary_color": "#0D47A1",
+    "secondary_color": "#1976D2",
+    "accent_color": "#42A5F5",
+    "text_dark_color": "#212121",
+    "text_light_color": "#FFFFFF",
+    "text_muted_color": "#757575",
+    "academic_year_start": "2023-09-01",
+    "academic_year_end": "2024-06-30",
+    "timezone": "Asia/Kolkata",
+    "fiscal_year_start": "2023-04-01",
+    "language": "English",
+    "currency": "INR",
+    "is_active": true,
+    "established_date": "2000-01-01"
+  }
+]

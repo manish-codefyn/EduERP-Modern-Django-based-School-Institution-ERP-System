@@ -1,0 +1,16 @@
+[
+  {
+    "name": "Red House",
+    "institution_code": "main-campus",
+    "color": "Red",
+    "description": "House of courage and determination",
+    "is_active": true
+  },
+  {
+    "name": "Blue House",
+    "institution_code": "main-campus",
+    "color": "Blue",
+    "description": "House of wisdom and loyalty",
+    "is_active": true
+  }
+]

@@ -1,0 +1,344 @@
+{% extends 'organization/base.html' %}
+
+{% block title %} Organization  - {{ organization.name|default:"Codefyn" }}{% endblock %}
+
+{% block extra_css %}
+
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header Section -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h2 fw-bold text-custom mb-2">Organization Dashboard</h1>
+            <p class="text-custom mb-0">Welcome to your organization management dashboard</p>
+        </div>
+        <div class="btn-group">
+            <button type="button" class="btn btn-outline-primary">
+                <i class="bi bi-calendar3 me-2"></i>This Week
+            </button>
+            <a type="button" class="btn btn-primary" href="{% url 'organization:institution_create' %}">
+                <i class="bi bi-plus-circle me-2"></i> Add Institution
+            </a>
+        </div>
+    </div>
+
+   <!-- Stats Cards -->
+<div class="row g-4 mb-4">
+    <div class="col-md-6 col-xl-3 d-flex">
+        <div class="stats-card gradient-primary flex-fill d-flex align-items-center p-4 rounded-4 shadow-sm">
+            <div class="stats-content flex-grow-1">
+                <h6 class="text-white-50 mb-2">TOTAL INSTITUTIONS</h6>
+                <h2 class="display-6 fw-bold text-white mb-2">{{ total_institutions }}</h2>
+                <span class="badge bg-white text-primary badge-modern">{{ active_institutions }} Active</span>
+            </div>
+            <i class="bi bi-building-fill card-icon fs-1 text-white ms-3"></i>
+        </div>
+    </div>
+
+    <div class="col-md-6 col-xl-3 d-flex">
+        <div class="stats-card gradient-success flex-fill d-flex align-items-center p-4 rounded-4 shadow-sm">
+            <div class="stats-content flex-grow-1">
+                <h6 class="text-white-50 mb-2">TOTAL DEPARTMENTS</h6>
+                <h2 class="display-6 fw-bold text-white mb-2">{{ total_departments }}</h2>
+                <span class="badge bg-white text-success badge-modern">{{ active_departments }} Active</span>
+            </div>
+            <i class="bi bi-diagram-3-fill card-icon fs-1 text-white ms-3"></i>
+        </div>
+    </div>
+
+    <div class="col-md-6 col-xl-3 d-flex">
+        <div class="stats-card gradient-warning flex-fill d-flex align-items-center p-4 rounded-4 shadow-sm">
+            <div class="stats-content flex-grow-1">
+                <h6 class="text-white-50 mb-2">TOTAL BRANCHES</h6>
+                <h2 class="display-6 fw-bold text-white mb-2">{{ total_branches }}</h2>
+                <span class="badge bg-white text-warning badge-modern">{{ active_branches }} Active</span>
+            </div>
+            <i class="bi bi-geo-alt-fill card-icon fs-1 text-white ms-3"></i>
+        </div>
+    </div>
+
+    <div class="col-md-6 col-xl-3 d-flex">
+        <div class="stats-card gradient-info flex-fill d-flex align-items-center p-4 rounded-4 shadow-sm">
+            <div class="stats-content flex-grow-1">
+                <h6 class="text-white-50 mb-2">COMPLIANCE STATUS</h6>
+                <p class="mb-1 text-white fw-semibold">{{ compliance_stats.with_gst }} with GST</p>
+                <p class="mb-0 text-white fw-semibold">{{ compliance_stats.with_pan }} with PAN</p>
+                <span class="badge bg-white text-info badge-modern mt-2">Good</span>
+            </div>
+            <i class="bi bi-patch-check-fill card-icon fs-1 text-white ms-3"></i>
+        </div>
+    </div>
+</div>
+
+
+    <!-- Charts Section -->
+    <div class="row g-4 mb-4">
+        <div class="col-xl-7">
+            <div class="dashboard-card">
+                <div class="card-header bg-transparent border-0 pt-4 px-4">
+                    <h5 class="card-title fw-bold text-custom mb-0">
+                        <i class="bi bi-bar-chart-line-fill me-2 text-primary"></i>Institution Types Breakdown
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="chart-container">
+                        <canvas id="institutionTypeChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-xl-5">
+            <div class="dashboard-card">
+                <div class="card-header bg-transparent border-0 pt-4 px-4">
+                    <h5 class="card-title fw-bold text-custom mb-0">
+                        <i class="bi bi-pie-chart-fill me-2 text-success"></i>Compliance Distribution
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="chart-container">
+                        <canvas id="complianceChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Institutions -->
+    <div class="dashboard-card">
+        <div class="card-header bg-transparent border-0 pt-4 px-4">
+            <div class="d-flex justify-content-between align-items-center">
+                <h5 class="card-title fw-bold text-custom mb-0">
+                    <i class="bi bi-clock-history me-2 text-warning"></i>Recently Added Institutions
+                </h5>
+                <a href="#" class="btn btn-sm btn-outline-primary">View All</a>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-modern">
+                    <thead>
+                        <tr>
+                            <th>Name & Details</th>
+                            <th>Type</th>
+                            <th>Location</th>
+                            <th>Date Added</th>
+                            <th>Status</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for inst in recent_institutions %}
+                        <tr>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    {% if inst.logo %}
+                                    <img src="{{ inst.logo.url }}" alt="{{ inst.name }}" 
+                                         class="rounded-circle me-3" width="40" height="40">
+                                    {% else %}
+                                    <div class="bg-light rounded-circle d-flex align-items-center justify-content-center me-3" 
+                                         style="width: 40px; height: 40px;">
+                                        <i class="bi bi-building text-custom"></i>
+                                    </div>
+                                    {% endif %}
+                                    <div>
+                                        <strong class="text-custom">{{ inst.name }}</strong>
+                                        <br>
+                                        <small class="text-custom">{{ inst.code }}</small>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <span class="badge bg-primary bg-opacity-10 text-primary badge-modern">
+                                    {{ inst.get_type_display }}
+                                </span>
+                            </td>
+                            <td>
+                                <small class="text-custom">{{ inst.city|default:"-" }}, {{ inst.country }}</small>
+                            </td>
+                            <td>
+                                <span class="text-custom fw-semibold">{{ inst.created_at|date:"d M Y" }}</span>
+                            </td>
+                            <td>
+                                {% if inst.is_active %}
+                                <span class="badge bg-success bg-opacity-10 text-success badge-modern">
+                                    <i class="bi bi-check-circle me-1"></i>Active
+                                </span>
+                                {% else %}
+                                <span class="badge bg-danger bg-opacity-10 text-danger badge-modern">
+                                    <i class="bi bi-x-circle me-1"></i>Inactive
+                                </span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="btn-group">
+                                    <a href="#" class="btn btn-sm btn-outline-primary action-btn">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                    <a href="#" class="btn btn-sm btn-outline-secondary action-btn">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="6" class="text-center py-5">
+                                <div class="empty-state">
+                                    <i class="bi bi-building"></i>
+                                    <h5 class="mt-3 mb-2">No Institutions Found</h5>
+                                    <p class="text-custom">Start by adding your first institution</p>
+                                    <a href="#" class="btn btn-primary mt-3">
+                                        <i class="bi bi-plus-circle me-2"></i>Add Institution
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    // Institution Type Bar Chart
+    const typeCtx = document.getElementById('institutionTypeChart').getContext('2d');
+    
+    // Sample data - replace with actual data from your context
+    const typeLabels = ['School', 'College', 'University', 'Institute', 'Training Center'];
+    const typeData = [12, 8, 5, 7, 3];
+
+    new Chart(typeCtx, {
+        type: 'bar',
+        data: {
+            labels: typeLabels,
+            datasets: [{
+                label: 'Number of Institutions',
+                data: typeData,
+                backgroundColor: [
+                    'rgba(102, 126, 234, 0.8)',
+                    'rgba(78, 205, 196, 0.8)',
+                    'rgba(240, 147, 251, 0.8)',
+                    'rgba(79, 172, 254, 0.8)',
+                    'rgba(255, 159, 64, 0.8)'
+                ],
+                borderColor: [
+                    'rgba(102, 126, 234, 1)',
+                    'rgba(78, 205, 196, 1)',
+                    'rgba(240, 147, 251, 1)',
+                    'rgba(79, 172, 254, 1)',
+                    'rgba(255, 159, 64, 1)'
+                ],
+                borderWidth: 2,
+                borderRadius: 10,
+                borderSkipped: false,
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                },
+                tooltip: {
+                    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                    titleFont: { size: 14 },
+                    bodyFont: { size: 13 },
+                    padding: 10,
+                    cornerRadius: 8
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    grid: {
+                        color: 'rgba(0, 0, 0, 0.05)'
+                    },
+                    ticks: {
+                        font: { size: 12 }
+                    }
+                },
+                x: {
+                    grid: {
+                        display: false
+                    },
+                    ticks: {
+                        font: { size: 12 }
+                    }
+                }
+            }
+        }
+    });
+
+    // Compliance Pie Chart
+    const complianceCtx = document.getElementById('complianceChart').getContext('2d');
+    
+    new Chart(complianceCtx, {
+        type: 'doughnut',
+        data: {
+            labels: ['With GST', 'With PAN', 'Without Compliance'],
+            datasets: [{
+                data: [
+                    {{ compliance_stats.with_gst }},
+                    {{ compliance_stats.with_pan }},
+                    {{ total_institutions|default:0 }} - {{ compliance_stats.with_gst }} - {{ compliance_stats.with_pan }}
+                ],
+                backgroundColor: [
+                    'rgba(78, 205, 196, 0.8)',
+                    'rgba(79, 172, 254, 0.8)',
+                    'rgba(220, 220, 220, 0.8)'
+                ],
+                borderColor: [
+                    'rgba(78, 205, 196, 1)',
+                    'rgba(79, 172, 254, 1)',
+                    'rgba(169, 169, 169, 1)'
+                ],
+                borderWidth: 2,
+                hoverOffset: 15
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            cutout: '70%',
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        padding: 20,
+                        font: { size: 12 }
+                    }
+                },
+                tooltip: {
+                    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                    padding: 10,
+                    cornerRadius: 8
+                }
+            }
+        }
+    });
+
+    // Add hover animations to table rows
+    const tableRows = document.querySelectorAll('.table-modern tbody tr');
+    tableRows.forEach(row => {
+        row.addEventListener('mouseenter', function() {
+            this.style.transform = 'scale(1.01)';
+            this.style.transition = 'all 0.2s ease';
+        });
+        
+        row.addEventListener('mouseleave', function() {
+            this.style.transform = 'scale(1)';
+        });
+    });
+});
+</script>
+{% endblock %}

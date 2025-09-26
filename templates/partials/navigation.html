@@ -1,0 +1,96 @@
+              <ul class="sidebar-nav nav flex-column">
+                
+                <li class="nav-item">
+                  <a class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}" href="{% url 'dashboard' %}">
+                    <i class="bi bi-speedometer2 me-2"></i>
+                     <span class="nav-text">Dashboard</span>
+                    </a>
+                </li>
+                
+                {% if user.is_admin or user.is_staff %}
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'students:student_list' %}">
+                         <i class="bi bi-people-fill me-2"></i>
+                        <span class="nav-text">All Students</span></a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'teacher_list' %}"> <i class="bi bi-person-badge me-2"></i><span class="nav-text">Teachers</span></a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'academics:class_list' %}">  <i class="bi bi-journal-bookmark-fill me-2"></i><span class="nav-text"> Academics</span></a>
+                </li>
+                  
+                <li class="nav-item"><a class="nav-link" href="{% url 'attendance:attendance_list' %}"><i class="bi bi-calendar-check me-2"></i><span class="nav-text">  Attendance</span></a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'finance:fee_structure_list' %}"><i class="bi bi-cash-coin me-2"></i>
+                <span class="nav-text">Finance</span></a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'hostel:hostel_list' %}"><i class="bi bi-house-door me-2"></i> 
+                <span class="nav-text">Hostels</span></a>
+                </li>
+                 <li class="nav-item">
+                 <a class="nav-link" href="{% url 'hr:hr_dashboard' %}"> <i class="bi bi-person-lines-fill me-2"></i>
+                   <span class="nav-text">HR</span></a>
+                </li>
+                <li class="nav-item">
+                <a class="nav-link" href="{% url 'library:dashboard' %}">
+                    <i class="bi bi-clipboard-data me-2"></i>
+                  <span class="nav-text"> library </span> 
+                </a>
+               </li>
+                <li class="nav-item">
+                <a class="nav-link" href="{% url 'examination:exam_list' %}">
+                    <i class="bi bi-clipboard-data me-2"></i>
+                  <span class="nav-text"> Examination</span> 
+                </a>
+               </li>
+
+               
+                            <!-- Inventory Menu -->
+            <li class="nav-item">
+                <a class="nav-link" href="{% url 'inventory:dashboard' %}">
+                    <i class="bi bi-box-seam me-2"></i>
+                  <span class="nav-text">Inventory</span>  
+                </a>
+            </li>
+
+              <!-- Transport Menu -->
+            <li class="nav-item">
+                <a class="nav-link" href="{% url 'transport:transport-dashboard' %}">
+                    <i class="bi bi-bus-front me-2"></i>
+                   <span class="nav-text">Transport</span> 
+                </a>
+            </li>
+            
+            <!-- Communications Menu -->
+            <li class="nav-item">
+                <a class="nav-link" href="{% url 'communications:notice_list' %}">
+                    <i class="bi bi-megaphone me-2"></i>
+                   <span class="nav-text">Communications</span>  
+                </a>
+            </li>
+                       <!-- Reports Menu -->
+            <li class="nav-item">
+                <a class="nav-link" href="{% url 'dashboard' %}">
+                    <i class="bi bi-bar-chart-line me-2"></i>
+                    <span class="nav-text">Reports</span> 
+                </a>
+            </li>
+
+             <!-- Settings Menu (Admin Only) -->
+               {% if user.is_superuser %}
+                <li class="nav-item"><a class="nav-link" href="{% url 'organization:dashboard' %}">
+                    <i class="bi bi-gear me-2"></i>
+                    <span class="nav-text">Settings</span></a></li>
+                <!-- <li class="nav-item"><a class="nav-link" href="{% url 'payment_gateway_list' %}"><i class="bi bi-credit-card-fill"></i><span class="nav-text">Payments Settings</span></a></li> -->
+                {% else %}
+                <li class="nav-item"><a class="nav-link" href="{% url 'account_login' %}"><i class="bi bi-card-checklist"></i><span class="nav-text">Login</span></a></li>
+    
+                 {% endif %}
+               {% endif %}
+                <div class="sidebar-footer mt-5 p-3 bg-light text-center">
+            <small class="text-muted">v1.0.0</small>
+        </div>
+            </ul>

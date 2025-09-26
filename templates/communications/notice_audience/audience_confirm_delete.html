@@ -1,0 +1,38 @@
+{% extends 'communications/base.html' %}
+{% load static %}
+
+{% block title %}{{ audience_member.user.get_full_name }} - Notice Audience - {{ organization.name|default:"codefyn" }}{% endblock %}
+
+
+{% block content %}
+<div class="container mt-4">
+   
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <h3 class="card-title text-danger mb-3">
+                <i class="bi bi-exclamation-triangle-fill me-2"></i> Confirm Deletion
+            </h3>
+            <p>Are you sure you want to delete the audience entry for:</p>
+            <ul class="list-group mb-3">
+                <li class="list-group-item"><strong>Notice:</strong> {{ object.notice.title }}</li>
+                <li class="list-group-item"><strong>User:</strong> {{ object.user.get_full_name }} ({{ object.user.email }})</li>
+                <li class="list-group-item"><strong>Read Status:</strong> {{ object.read|yesno:"Read,Unread" }}</li>
+                <li class="list-group-item"><strong>Delivery Status:</strong> {{ object.delivered|yesno:"Delivered,Not Delivered" }}</li>
+            </ul>
+
+            <form method="post">
+                {% csrf_token %}
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-danger">
+                        <i class="bi bi-trash me-1"></i> Yes, Delete
+                    </button>
+                    <a href="{% url 'communications:audience_list' %}" class="btn btn-secondary">
+                        <i class="bi bi-x-circle me-1"></i> Cancel
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

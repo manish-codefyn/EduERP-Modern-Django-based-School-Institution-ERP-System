@@ -1,0 +1,503 @@
+{% extends 'hr/base.html' %}
+{% load static %}
+
+{% block title %}{{ staff.user.get_full_name }} - Staff Details - {{ organization.name|default:"ERP System" }}{% endblock %}
+
+{% block extra_css %}
+<style>
+.staff-profile-header {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+    border-radius: 15px;
+    color: white;
+    position: relative;
+  
+}
+
+.staff-profile-header::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -50%;
+    width: 100%;
+    height: 200%;
+    background: rgba(255, 255, 255, 0.1);
+    transform: rotate(45deg);
+}
+
+.profile-image-container {
+    width: 150px;
+    height: 150px;
+    border: 4px solid white;
+    border-radius: 50%;
+    overflow: hidden;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+}
+
+.profile-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.default-avatar {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--light);
+    color: var(--dark);
+    font-size: 3rem;
+}
+
+.info-card {
+    border: none;
+    border-radius: 15px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.info-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+}
+
+.info-card .card-header {
+    background: transparent;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+    font-weight: 600;
+    padding: 1.25rem 1.5rem;
+}
+
+.info-card .card-body {
+    padding: 1.5rem;
+}
+
+.info-item {
+    display: flex;
+    justify-content: between;
+    margin-bottom: 1rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.info-item:last-child {
+    margin-bottom: 0;
+    padding-bottom: 0;
+    border-bottom: none;
+}
+
+.info-label {
+    font-weight: 600;
+    color: var(--dark);
+    min-width: 140px;
+}
+
+.info-value {
+    color: var(--secondary);
+    flex: 1;
+}
+
+.badge-custom {
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-weight: 500;
+}
+
+.document-list {
+    list-style: none;
+    padding: 0;
+}
+
+.document-list li {
+    padding: 0.75rem 0;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.document-list li:last-child {
+    border-bottom: none;
+}
+
+.document-link {
+    display: flex;
+    align-items: center;
+    text-decoration: none;
+    color: var(--dark);
+    transition: color 0.2s ease;
+}
+
+.document-link:hover {
+    color: var(--primary);
+}
+
+.status-badge {
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-weight: 500;
+}
+
+.action-buttons .btn {
+    border-radius: 10px;
+    padding: 0.5rem 1.5rem;
+    font-weight: 500;
+}
+
+.experience-badge {
+    background: linear-gradient(135deg, var(--success) 0%, var(--info) 100%);
+    color: white;
+    padding: 0.75rem 1.5rem;
+    border-radius: 25px;
+    font-weight: 600;
+    font-size: 1.1rem;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb breadcrumb-dark">
+            <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Dashboard</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'hr:staff_list' %}">Staff</a></li>
+            <li class="breadcrumb-item active" aria-current="page">{{ staff.user.get_full_name }}</li>
+        </ol>
+    </nav>
+
+    <!-- Staff Profile Header -->
+    <div class="card  staff-profile-header mb-4">
+        <div class="card-body position-relative">
+            <div class="row align-items-center">
+                <div class="col-md-7">
+                    <div class="d-flex align-items-center">
+                        <div class="profile-image-container me-4">
+                            {% if staff.photo %}
+                                <img src="{{ staff.photo.url }}" alt="{{ staff.user.get_full_name }}" class="profile-image">
+                            {% else %}
+                                <div class="default-avatar">
+                                    <i class="bi bi-person-circle"></i>
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div>
+                            <h1 class="h2 fw-bold mb-1 text-white">{{ staff.user.get_full_name }}</h1>
+                            <p class="mb-2 text-white opacity-75">{{ staff.designation.name }} • {{ staff.department.name }}</p>
+                            <div class="d-flex align-items-center gap-2">
+                                <span class="badge bg-white text-dark badge-custom">
+                                    <i class="bi bi-person-badge me-1"></i>{{ staff.employee_id }}
+                                </span>
+                                <span class="badge bg-light text-dark badge-custom">
+                                    <i class="bi bi-{{ staff.get_staff_type_display|lower }} me-1"></i>{{ staff.get_staff_type_display }}
+                                </span>
+                                {% if staff.is_active %}
+                                <span class="badge bg-success status-badge">
+                                    <i class="bi bi-check-circle me-1"></i>Active
+                                </span>
+                                {% else %}
+                                <span class="badge bg-danger status-badge">
+                                    <i class="bi bi-x-circle me-1"></i>Inactive
+                                </span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+<div class="col-md-5 d-flex justify-content-end align-items-center gap-3 flex-wrap">
+
+    <!-- Action Buttons -->
+    <a href="{% url 'hr:staff_update' staff.pk %}" class="btn btn-primary d-flex align-items-center shadow-sm">
+        <i class="bi bi-pencil-square me-2"></i> Edit Profile
+    </a>
+
+    <a href="{% url 'hr:staff_list' %}" class="btn btn-light d-flex align-items-center border">
+        <i class="bi bi-arrow-left-circle me-2"></i> Back
+    </a>
+
+    <!-- Export Dropdown -->
+    <div class="dropdown">
+        <button class="btn btn-success dropdown-toggle d-flex align-items-center shadow-sm" type="button" 
+                id="exportDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+            <i class="bi bi-download me-2"></i> Export
+        </button>
+        <ul class="dropdown-menu dropdown-menu-end shadow" aria-labelledby="exportDropdown">
+            <li class="dropdown-header text-custom small">Export Staff Data</li>
+            <li><hr class="dropdown-divider"></li>
+            <li>
+                <a class="dropdown-item d-flex align-items-center py-2" 
+                   href="{% url 'hr:staff-detail-export' staff.pk %}?{{ request.GET.urlencode }}&format=csv">
+                    <i class="bi bi-file-earmark-text me-2 text-primary"></i> CSV Format
+                </a>
+            </li>
+            <li>
+                <a class="dropdown-item d-flex align-items-center py-2" 
+                   href="{% url 'hr:staff-detail-export' staff.pk %}?{{ request.GET.urlencode }}&format=excel">
+                    <i class="bi bi-file-earmark-spreadsheet me-2 text-success"></i> Excel Format
+                </a>
+            </li>
+            <li>
+                <a class="dropdown-item d-flex align-items-center py-2" 
+                   href="{% url 'hr:staff-detail-export' staff.pk %}?{{ request.GET.urlencode }}&format=pdf">
+                    <i class="bi bi-file-earmark-pdf me-2 text-danger"></i> PDF Format
+                </a>
+            </li>
+        </ul>
+    </div>
+</div>
+</div>
+</div>
+</div>
+
+    <!-- Experience Badge -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="text-center">
+                <span class="experience-badge">
+                    <i class="bi bi-award me-2"></i>Total Experience: {{ staff.experience }}
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Personal Information -->
+        <div class="col-xl-6">
+            <div class="card card-custom h-100">
+                <div class="card-header detail-card-header  d-flex align-items-center">
+                    <i class="bi bi-person-circle me-2"></i>
+                    Personal Information
+                </div>
+                <div class="card-body">
+                    <div class="info-item">
+                        <span class="info-label">Date of Birth:</span>
+                        <span class="info-value">{{ staff.date_of_birth|date:"M d, Y"|default:"Not specified" }}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Gender:</span>
+                        <span class="info-value">{{ staff.get_gender_display|default:"Not specified" }}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Blood Group:</span>
+                        <span class="info-value">{{ staff.get_blood_group_display|default:"Not specified" }}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Marital Status:</span>
+                        <span class="info-value">{{ staff.get_marital_status_display|default:"Not specified" }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Contact Information -->
+        <div class="col-xl-6">
+            <div class="card  card-custom  h-100">
+                <div class="card-header detail-card-header d-flex align-items-center">
+                    <i class="bi bi-telephone me-2"></i>
+                    Contact Information
+                </div>
+                <div class="card-body">
+                    <div class="info-item">
+                        <span class="info-label">Personal Email:</span>
+                        <span class="info-value">
+                            {% if staff.personal_email %}
+                                <a href="mailto:{{ staff.personal_email }}" class="text-decoration-none">{{ staff.personal_email }}</a>
+                            {% else %}
+                                Not specified
+                            {% endif %}
+                        </span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Personal Phone:</span>
+                        <span class="info-value">
+                            {% if staff.personal_phone %}
+                                <a href="tel:{{ staff.personal_phone }}" class="text-decoration-none">{{ staff.personal_phone }}</a>
+                            {% else %}
+                                Not specified
+                            {% endif %}
+                        </span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Emergency Contact:</span>
+                        <span class="info-value">
+                            {% if staff.emergency_contact_name %}
+                                {{ staff.emergency_contact_name }} ({{ staff.emergency_contact_relation }})<br>
+                                <small class="text-custom">{{ staff.emergency_contact_phone }}</small>
+                            {% else %}
+                                Not specified
+                            {% endif %}
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Employment Details -->
+        <div class="col-xl-6">
+            <div class="card  card-custom  h-100">
+                <div class="card-header detail-card-header d-flex align-items-center">
+                    <i class="bi bi-briefcase me-2"></i>
+                    Employment Details
+                </div>
+                <div class="card-body">
+                    <div class="info-item">
+                        <span class="info-label">Employment Type:</span>
+                        <span class="info-value">{{ staff.get_employment_type_display }}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Joining Date:</span>
+                        <span class="info-value">{{ staff.joining_date|date:"M d, Y" }}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Contract End:</span>
+                        <span class="info-value">{{ staff.contract_end_date|date:"M d, Y"|default:"Not specified" }}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Probation End:</span>
+                        <span class="info-value">{{ staff.probation_end_date|date:"M d, Y"|default:"Not specified" }}</span>
+                    </div>
+                    {% if staff.resignation_date %}
+                    <div class="info-item">
+                        <span class="info-label">Resignation Date:</span>
+                        <span class="info-value">{{ staff.resignation_date|date:"M d, Y" }}</span>
+                    </div>
+                    {% if staff.resignation_reason %}
+                    <div class="info-item">
+                        <span class="info-label">Resignation Reason:</span>
+                        <span class="info-value">{{ staff.resignation_reason }}</span>
+                    </div>
+                    {% endif %}
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Financial Information -->
+        <div class="col-xl-6">
+            <div class="card  card-custom h-100">
+                <div class="card-header  detail-card-header d-flex align-items-center">
+                    <i class="bi bi-currency-dollar me-2"></i>
+                    Financial Information
+                </div>
+                <div class="card-body">
+                    <div class="info-item">
+                        <span class="info-label">Salary:</span>
+                        <span class="info-value">₹{{ staff.salary }}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Bank Account:</span>
+                        <span class="info-value">{{ staff.bank_account|default:"Not specified" }}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Bank Name:</span>
+                        <span class="info-value">{{ staff.bank_name|default:"Not specified" }}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">IFSC Code:</span>
+                        <span class="info-value">{{ staff.ifsc_code|default:"Not specified" }}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">PAN Number:</span>
+                        <span class="info-value">{{ staff.pan_number|default:"Not specified" }}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Aadhaar Number:</span>
+                        <span class="info-value">{{ staff.aadhaar_number|default:"Not specified" }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Documents -->
+        <div class="col-12">
+            <div class="card  card-custom info-card">
+                <div class="card-header detail-card-header d-flex align-items-center">
+                    <i class="bi bi-folder me-2"></i>
+                    Documents
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6 class="mb-3">Uploaded Documents</h6>
+                            <ul class="document-list">
+                                <li>
+                                    {% if staff.photo %}
+                                    <a href="{{ staff.photo.url }}" target="_blank" class="document-link">
+                                        <i class="bi bi-image me-2"></i>Profile Photo
+                                    </a>
+                                    {% else %}
+                                    <span class="text-custom"><i class="bi bi-image me-2"></i>No profile photo uploaded</span>
+                                    {% endif %}
+                                </li>
+                                <li>
+                                    {% if staff.resume %}
+                                    <a href="{{ staff.resume.url }}" target="_blank" class="document-link">
+                                        <i class="bi bi-file-earmark-text me-2"></i>Resume/CV
+                                    </a>
+                                    {% else %}
+                                    <span class="text-custom"><i class="bi bi-file-earmark-text me-2"></i>No resume uploaded</span>
+                                    {% endif %}
+                                </li>
+                                <li>
+                                    {% if staff.id_proof %}
+                                    <a href="{{ staff.id_proof.url }}" target="_blank" class="document-link">
+                                        <i class="bi bi-card-text me-2"></i>ID Proof
+                                    </a>
+                                    {% else %}
+                                    <span class="text-custom"><i class="bi bi-card-text me-2"></i>No ID proof uploaded</span>
+                                    {% endif %}
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="mb-3">Additional Documents</h6>
+                            <ul class="document-list">
+                                <li>
+                                    {% if staff.address_proof %}
+                                    <a href="{{ staff.address_proof.url }}" target="_blank" class="document-link">
+                                        <i class="bi bi-house me-2"></i>Address Proof
+                                    </a>
+                                    {% else %}
+                                    <span class="text-custom"><i class="bi bi-house me-2"></i>No address proof uploaded</span>
+                                    {% endif %}
+                                </li>
+                                <li>
+                                    {% if staff.qualification_proof %}
+                                    <a href="{{ staff.qualification_proof.url }}" target="_blank" class="document-link">
+                                        <i class="bi bi-mortarboard me-2"></i>Qualification Proof
+                                    </a>
+                                    {% else %}
+                                    <span class="text-custom"><i class="bi bi-mortarboard me-2"></i>No qualification proof uploaded</span>
+                                    {% endif %}
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize tooltips
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl)
+    });
+
+    // Add smooth scrolling for anchor links
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener('click', function (e) {
+            e.preventDefault();
+            document.querySelector(this.getAttribute('href')).scrollIntoView({
+                behavior: 'smooth'
+            });
+        });
+    });
+});
+</script>
+{% endblock %}

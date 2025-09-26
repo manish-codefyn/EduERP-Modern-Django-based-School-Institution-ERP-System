@@ -1,0 +1,75 @@
+{% extends 'communications/base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}{{ view.title|default:"Template Form" }} - {{ organization.name|default:"codefyn" }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+
+    <!-- Header -->
+    <div class="header-section mb-4">
+        <div class="row align-items-center">
+            <div class="col-md-7 d-flex align-items-center">
+                <div class="header-icon me-3">
+                    <i class="bi bi-journal-text display-6 text-primary"></i>
+                </div>
+                <div>
+                    <h1 class="h3 fw-bold mb-1">{{ view.title|default:"Manage Template" }}</h1>
+                    <p class="text-custom mb-0">Create or update notification templates for your institution</p>
+                </div>
+            </div>
+            <div class="col-md-5 d-flex justify-content-end">
+                <a href="{% url 'communications:template_list' %}" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left me-1"></i> Back to Templates
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Form Card -->
+    <div class="card card-custom mb-4">
+        <div class="card-body px-4 py-4">
+            <form method="post">
+                {% csrf_token %}
+                <div class="row g-3">
+
+                    <!-- Left Column -->
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            {{ form.name|as_crispy_field }}
+                        </div>
+                        <div class="mb-3">
+                            {{ form.template_type|as_crispy_field }}
+                        </div>
+                        <div class="mb-3">
+                            {{ form.subject|as_crispy_field }}
+                        </div>
+                    </div>
+
+                    <!-- Right Column -->
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            {{ form.is_active|as_crispy_field }}
+                        </div>
+                        <div class="mb-3">
+                            {{ form.variables|as_crispy_field }}
+                        </div>
+                        <div class="mb-3">
+                            {{ form.content|as_crispy_field }}
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- Submit -->
+                <div class="d-flex justify-content-end mt-3">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-save me-1"></i> Save Template
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

@@ -1,0 +1,372 @@
+{% extends 'transport/base.html' %}
+{% load static %}
+
+{% block title %}{{ assignment.vehicle.vehicle_number }} - Assignment Details{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+
+    <!-- Header -->
+    <div class="header-section mb-4">
+        <div class="row align-items-center">
+            <div class="col-md-7 d-flex align-items-center">
+                <div class="header-icon me-3">
+                    <i class="bi bi-truck display-6 text-primary"></i>
+                </div>
+                <div>
+                    <h1 class="h3 fw-bold mb-1">Assignment Details</h1>
+                    <p class="text-custom mb-0">{{ assignment.vehicle.vehicle_number }} • {{ assignment.route.name }} • {{ assignment.driver.name }}</p>
+                </div>
+            </div>
+            <div class="col-md-5">
+                <div class="d-flex justify-content-end align-items-center gap-2">
+                    <a href="{% url 'transport:assignment_update' assignment.pk %}" class="btn btn-outline-secondary">
+                        <i class="bi bi-pencil me-1"></i> Edit
+                    </a>
+                    <div class="dropdown">
+                        <button class="btn btn-primary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                            <i class="bi bi-download me-1"></i> Export
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item" href="{% url 'transport:assignment_export' %}?vehicle={{ assignment.vehicle.pk }}&format=csv">
+                                <i class="bi bi-filetype-csv me-2"></i> CSV</a></li>
+                            <li><a class="dropdown-item" href="{% url 'transport:assignment_export' %}?vehicle={{ assignment.vehicle.pk }}&format=excel">
+                                <i class="bi bi-file-earmark-excel me-2"></i> Excel</a></li>
+                            <li><a class="dropdown-item" href="{% url 'transport:assignment_export' %}?vehicle={{ assignment.vehicle.pk }}&format=pdf">
+                                <i class="bi bi-file-earmark-pdf me-2"></i> PDF</a></li>
+                        </ul>
+                    </div>
+                    <a href="{% url 'transport:assignment_list' %}" class="btn btn-outline-primary">
+                        <i class="bi bi-arrow-left me-1"></i> Back
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Assignment Details -->
+    <div class="row g-4">
+        <!-- Vehicle Information -->
+        <div class="col-xl-4">
+            <div class="card card-custom h-100">
+                <div class="card-header bg-transparent border-0">
+                    <h5 class="card-title fw-bold text-custom mb-0">
+                        <i class="bi bi-truck me-2"></i>Vehicle Information
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="text-center mb-4">
+                        <i class="bi bi-truck display-4 text-primary"></i>
+                        <h4 class="mt-2 fw-bold">{{ assignment.vehicle.vehicle_number }}</h4>
+                        <span class="badge bg-primary bg-opacity-10 text-primary">
+                            {{ assignment.vehicle.get_vehicle_type_display }}
+                        </span>
+                    </div>
+                    
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <label class="form-label small text-custom">Make & Model</label>
+                            <p class="fw-semibold">{{ assignment.vehicle.make }} {{ assignment.vehicle.model }}</p>
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label small text-custom">Year</label>
+                            <p class="fw-semibold">{{ assignment.vehicle.year }}</p>
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label small text-custom">Color</label>
+                            <p class="fw-semibold">{{ assignment.vehicle.color }}</p>
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label small text-custom">Capacity</label>
+                            <p class="fw-semibold">{{ assignment.vehicle.capacity }} seats</p>
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label small text-custom">Fuel Type</label>
+                            <p class="fw-semibold">{{ assignment.vehicle.get_fuel_type_display }}</p>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label small text-custom">Vehicle Status</label>
+                            <p>
+                                {% if assignment.vehicle.is_active %}
+                                <span class="badge bg-success bg-opacity-10 text-success">
+                                    <i class="bi bi-check-circle me-1"></i>Active
+                                </span>
+                                {% else %}
+                                <span class="badge bg-danger bg-opacity-10 text-danger">
+                                    <i class="bi bi-x-circle me-1"></i>Inactive
+                                </span>
+                                {% endif %}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Driver Information -->
+        <div class="col-xl-4">
+            <div class="card card-custom h-100">
+                <div class="card-header bg-transparent border-0">
+                    <h5 class="card-title fw-bold text-custom mb-0">
+                        <i class="bi bi-person-badge me-2"></i>Driver Information
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="text-center mb-4">
+                        <i class="bi bi-person-circle display-4 text-success"></i>
+                        <h4 class="mt-2 fw-bold">{{ assignment.driver.name }}</h4>
+                        <span class="badge bg-success bg-opacity-10 text-success">
+                            License: {{ assignment.driver.license_number }}
+                        </span>
+                    </div>
+                    
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <label class="form-label small text-custom">Contact Number</label>
+                            <p class="fw-semibold">{{ assignment.driver.phone_number|default:"Not provided" }}</p>
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label small text-custom">License Type</label>
+                            <p class="fw-semibold">{{ assignment.driver.get_license_type_display|default:"-" }}</p>
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label small text-custom">Experience</label>
+                            <p class="fw-semibold">{{ assignment.driver.experience_years|default:"0" }} years</p>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label small text-custom">Address</label>
+                            <p class="fw-semibold">{{ assignment.driver.address|default:"Not provided"|truncatewords:8 }}</p>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label small text-custom">Driver Status</label>
+                            <p>
+                                {% if assignment.driver.is_active %}
+                                <span class="badge bg-success bg-opacity-10 text-success">
+                                    <i class="bi bi-check-circle me-1"></i>Active
+                                </span>
+                                {% else %}
+                                <span class="badge bg-danger bg-opacity-10 text-danger">
+                                    <i class="bi bi-x-circle me-1"></i>Inactive
+                                </span>
+                                {% endif %}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Route & Assignment Details -->
+        <div class="col-xl-4">
+            <div class="card card-custom h-100">
+                <div class="card-header bg-transparent border-0">
+                    <h5 class="card-title fw-bold text-custom mb-0">
+                        <i class="bi bi-signpost-split me-2"></i>Route & Assignment
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="text-center mb-4">
+                        <i class="bi bi-geo-alt display-4 text-warning"></i>
+                        <h4 class="mt-2 fw-bold">{{ assignment.route.name }}</h4>
+                        <span class="badge bg-warning bg-opacity-10 text-warning">
+                            {{ assignment.route.distance }} km
+                        </span>
+                    </div>
+                    
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <label class="form-label small text-custom">Route Description</label>
+                            <p class="fw-semibold">{{ assignment.route.description|default:"No description"|truncatewords:10 }}</p>
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label small text-custom">Start Point</label>
+                            <p class="fw-semibold">{{ assignment.route.start_point }}</p>
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label small text-custom">End Point</label>
+                            <p class="fw-semibold">{{ assignment.route.end_point }}</p>
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label small text-custom">Start Date</label>
+                            <p class="fw-semibold">{{ assignment.start_date }}</p>
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label small text-custom">End Date</label>
+                            <p class="fw-semibold">{{ assignment.end_date|default:"Not set" }}</p>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label small text-custom">Assignment Status</label>
+                            <p>
+                                {% if assignment.current_status == 'active' %}
+                                <span class="badge bg-success bg-opacity-10 text-success">
+                                    <i class="bi bi-check-circle me-1"></i>Active
+                                </span>
+                                {% elif assignment.current_status == 'scheduled' %}
+                                <span class="badge bg-warning bg-opacity-10 text-warning">
+                                    <i class="bi bi-clock me-1"></i>Scheduled
+                                </span>
+                                {% elif assignment.current_status == 'expired' %}
+                                <span class="badge bg-danger bg-opacity-10 text-danger">
+                                    <i class="bi bi-exclamation-triangle me-1"></i>Expired
+                                </span>
+                                {% else %}
+                                <span class="badge bg-secondary bg-opacity-10 text-secondary">
+                                    <i class="bi bi-x-circle me-1"></i>Inactive
+                                </span>
+                                {% endif %}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Timeline & Additional Information -->
+        <div class="col-12">
+            <div class="card card-custom">
+                <div class="card-header bg-transparent border-0">
+                    <h5 class="card-title fw-bold text-custom mb-0">
+                        <i class="bi bi-clock-history me-2"></i>Timeline & Metadata
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6 class="fw-bold mb-3">Assignment Timeline</h6>
+                            <div class="timeline">
+                                <div class="timeline-item {% if assignment.current_status == 'scheduled' %}timeline-item-active{% endif %}">
+                                    <div class="timeline-marker"></div>
+                                    <div class="timeline-content">
+                                        <small class="text-custom">Start Date</small>
+                                        <p class="mb-1 fw-semibold">{{ assignment.start_date }}</p>
+                                        <small class="text-custom">Assignment begins</small>
+                                    </div>
+                                </div>
+                                {% if assignment.end_date %}
+                                <div class="timeline-item {% if assignment.current_status == 'expired' %}timeline-item-expired{% endif %}">
+                                    <div class="timeline-marker"></div>
+                                    <div class="timeline-content">
+                                        <small class="text-custom">End Date</small>
+                                        <p class="mb-1 fw-semibold">{{ assignment.end_date }}</p>
+                                        <small class="text-custom">Assignment ends</small>
+                                    </div>
+                                </div>
+                                {% endif %}
+                                <div class="timeline-item timeline-item-current">
+                                    <div class="timeline-marker bg-primary"></div>
+                                    <div class="timeline-content">
+                                        <small class="text-custom">Current Status</small>
+                                        <p class="mb-1 fw-semibold text-primary">{{ assignment.current_status|title }}</p>
+                                        <small class="text-custom">As of {% now "F d, Y" %}</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <h6 class="fw-bold mb-3">System Information</h6>
+                            <div class="row g-3">
+                                <div class="col-6">
+                                    <label class="form-label small text-custom">Created On</label>
+                                    <p class="fw-semibold">{{ assignment.created_at|date:"M d, Y H:i" }}</p>
+                                </div>
+                                <div class="col-6">
+                                    <label class="form-label small text-custom">Last Updated</label>
+                                    <p class="fw-semibold">{{ assignment.updated_at|date:"M d, Y H:i" }}</p>
+                                </div>
+                                <div class="col-6">
+                                    <label class="form-label small text-custom">Institution</label>
+                                    <p class="fw-semibold">{{ assignment.institution.name }}</p>
+                                </div>
+                                <div class="col-6">
+                                    <label class="form-label small text-custom">Assignment ID</label>
+                                    <p class="fw-semibold"><small>{{ assignment.id }}</small></p>
+                                </div>
+                            </div>
+                            
+                            <div class="mt-4 p-3 bg-light rounded">
+                                <h6 class="fw-bold mb-2">Quick Actions</h6>
+                                <div class="d-flex gap-2 flex-wrap">
+                                    <a href="{% url 'transport:vehicle_detail' assignment.vehicle.pk %}" class="btn btn-outline-primary btn-sm">
+                                        <i class="bi bi-truck me-1"></i>View Vehicle
+                                    </a>
+                                    <a href="{% url 'transport:driver_detail' assignment.driver.pk %}" class="btn btn-outline-success btn-sm">
+                                        <i class="bi bi-person me-1"></i>View Driver
+                                    </a>
+                                    <a href="{% url 'transport:route_detail' assignment.route.pk %}" class="btn btn-outline-warning btn-sm">
+                                        <i class="bi bi-signpost me-1"></i>View Route
+                                    </a>
+                                    {% if assignment.current_status == 'active' %}
+                                    <form method="post" action="{% url 'transport:assignment_toggle_status' assignment.pk %}" class="d-inline">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-outline-danger btn-sm">
+                                            <i class="bi bi-pause-circle me-1"></i>Deactivate
+                                        </button>
+                                    </form>
+                                    {% elif assignment.current_status == 'inactive' %}
+                                    <form method="post" action="{% url 'transport:assignment_toggle_status' assignment.pk %}" class="d-inline">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-outline-success btn-sm">
+                                            <i class="bi bi-play-circle me-1"></i>Activate
+                                        </button>
+                                    </form>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.timeline {
+    position: relative;
+    padding-left: 20px;
+}
+
+.timeline-item {
+    position: relative;
+    margin-bottom: 20px;
+}
+
+.timeline-marker {
+    position: absolute;
+    left: -20px;
+    top: 5px;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: #6c757d;
+    border: 2px solid white;
+}
+
+.timeline-item-active .timeline-marker {
+    background: #198754;
+}
+
+.timeline-item-expired .timeline-marker {
+    background: #dc3545;
+}
+
+.timeline-item-current .timeline-marker {
+    background: #0d6efd;
+    width: 16px;
+    height: 16px;
+    left: -22px;
+    top: 3px;
+}
+
+.timeline-content {
+    padding: 10px;
+    background: #f8f9fa;
+    border-radius: 5px;
+    border-left: 3px solid #0d6efd;
+}
+</style>
+{% endblock %}

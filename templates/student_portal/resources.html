@@ -1,0 +1,36 @@
+{% extends "student_portal/base.html" %}
+
+{% block title %}{{ page_title }} - {{ organization.name|default:"Codefyn" }}{% endblock %}
+{% block header_name %}{{ student.full_name }}{% endblock %}
+{% block header_avatar %}{{ student.avatar_url|default:"https://i.pravatar.cc/60?img=32" }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+
+    <h4 class="mb-3">{{ page_title }}</h4>
+
+    {% if resources %}
+    <div class="row g-3">
+        {% for res in resources %}
+        <div class="col-md-6 col-lg-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-body">
+                    <h5 class="card-title">{{ res.title }}</h5>
+                    <p class="card-text"><strong>Subject:</strong> {{ res.subject }}</p>
+                    <p class="card-text"><strong>Type:</strong> {{ res.type }}</p>
+                    {% if res.link %}
+                        <a href="{{ res.link }}" class="btn btn-primary btn-sm" target="_blank">View</a>
+                    {% else %}
+                        <button class="btn btn-secondary btn-sm" disabled>Not available</button>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+        <p class="text-muted">No learning resources available.</p>
+    {% endif %}
+
+</div>
+{% endblock %}

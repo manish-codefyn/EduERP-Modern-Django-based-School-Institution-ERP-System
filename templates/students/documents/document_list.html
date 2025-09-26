@@ -1,0 +1,254 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load crispy_forms_tags %}
+
+{% block title %}Documents - {{ student }} {% endblock %}
+
+{% block content %}
+{% include 'partials/messages.html' %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h5 class="h3 mb-0 text-gray-800">
+        <i class="bi bi-file-earmark-text me-2"></i> {{ student.full_name }} - Documents
+    </h5>
+    <div>
+        <a href="{% url 'students:document_upload' student.pk %}" class="btn btn-sm btn-primary">
+            <i class="bi bi-plus-circle me-2"></i> Upload New Document
+        </a>
+        <a href="{% url 'students:student_detail' student.pk %}" class="btn  btn-sm btn-secondary">
+            <i class="bi bi-arrow-left me-2"></i> Back to Profile
+        </a>
+    </div>
+</div>
+
+<!-- Compact Statistics Cards -->
+<div class="row g-3 mb-4">
+    <!-- Total Documents -->
+    <div class="col-sm-6 col-md-3">
+        <div class="card h-100 text-center py-2 shadow-sm" style="background-color: #e3f2fd;">
+            <div class="card-body p-2">
+                <i class="bi bi-files fs-3 text-primary mb-1"></i>
+                <div class="text-uppercase fw-bold text-xs text-muted mb-1">Total Documents</div>
+                <div class="h6 fw-bold mb-0">{{ documents|length }}</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Verified Documents -->
+    <div class="col-sm-6 col-md-3">
+        <div class="card h-100 text-center py-2 shadow-sm" style="background-color: #e6f4ea;">
+            <div class="card-body p-2">
+                <i class="bi bi-patch-check fs-3 text-success mb-1"></i>
+                <div class="text-uppercase fw-bold text-xs text-muted mb-1">Verified</div>
+                <div class="h6 fw-bold mb-0">{{ verified_count }}</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pending Verification -->
+    <div class="col-sm-6 col-md-3">
+        <div class="card h-100 text-center py-2 shadow-sm" style="background-color: #fff4e5;">
+            <div class="card-body p-2">
+                <i class="bi bi-clock-history fs-3 text-warning mb-1"></i>
+                <div class="text-uppercase fw-bold text-xs text-muted mb-1">Pending</div>
+                <div class="h6 fw-bold mb-0">{{ pending_count }}</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Rejected Documents -->
+    <div class="col-sm-6 col-md-3">
+        <div class="card h-100 text-center py-2 shadow-sm" style="background-color: #fdecea;">
+            <div class="card-body p-2">
+                <i class="bi bi-x-circle fs-3 text-danger mb-1"></i>
+                <div class="text-uppercase fw-bold text-xs text-muted mb-1">Rejected</div>
+                <div class="h6 fw-bold mb-0">{{ rejected_count }}</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Documents Table -->
+<div class="card card-custom shadow">
+    <div class="card-header  py-3">
+        <div class="d-flex justify-content-between align-items-center">
+            <h6 class="m-0 font-weight-bold text-custom">Document List</h6>
+            <div class="dropdown">
+                <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" id="filterDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class="bi bi-filter me-1"></i> Filter
+                </button>
+                <ul class="dropdown-menu" aria-labelledby="filterDropdown">
+                    <li><a class="dropdown-item" href="?filter=all">All Documents</a></li>
+                    <li><a class="dropdown-item" href="?filter=verified">Verified Only</a></li>
+                    <li><a class="dropdown-item" href="?filter=pending">Pending Verification</a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    <div class="card-body">
+        {% if documents %}
+        <div class="table-responsive">
+            <table class="table-custom table-hover w-100">
+                <thead>
+                    <tr>
+                        <th>Document Type</th>
+                        <th>File Name</th>
+                        <th>Uploaded</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for doc in documents %}
+                    <tr>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                <div class="document-icon me-3">
+                                    {% if doc.doc_type == "PHOTO" %}
+                                    <i class="bi bi-person-badge fs-4 text-custom"></i>
+                                    {% elif doc.doc_type == "BIRTH_CERTIFICATE" %}
+                                    <i class="bi bi-file-earmark-medical fs-4 text-success"></i>
+                                    {% elif doc.doc_type == "AADHAAR" %}
+                                    <i class="bi bi-credit-card fs-4 text-info"></i>
+                                    {% elif doc.doc_type == "TRANSFER_CERTIFICATE" %}
+                                    <i class="bi bi-file-earmark-text fs-4 text-warning"></i>
+                                    {% else %}
+                                    <i class="bi bi-file-earmark fs-4 text-secondary"></i>
+                                    {% endif %}
+                                </div>
+                                <div>
+                                    <strong>{{ doc.get_doc_type_display }}</strong>
+                                    {% if doc.description %}
+                                    <br>
+                                    <small class="text-custom">{{ doc.description|truncatewords:5 }}</small>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="text-truncate d-inline-block" style="max-width: 200px;">
+                                {{ doc.file.name|cut:"student_documents/" }}
+                            </span>
+                        </td>
+                        <td>
+                            <small class="text-custom">{{ doc.uploaded_at|date:"M d, Y" }}</small>
+                        </td>
+                        <td>
+                            {% if doc.is_verified %}
+                            <span class="badge bg-success">
+                                <i class="bi bi-patch-check me-1"></i> Verified
+                            </span>
+                            {% else %}
+                            <span class="badge bg-warning text-dark">
+                                <i class="bi bi-clock-history me-1"></i> Pending
+                            </span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="btn-group btn-group-sm">
+                                <a href="{{ doc.file.url }}" target="_blank" class="btn btn-outline-primary" data-bs-toggle="tooltip" title="View Document">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                                <a href="{% url 'students:document_update' doc.student.pk doc.pk %}" class="btn btn-outline-warning" data-bs-toggle="tooltip" title="Edit Document">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                <a href="{% url 'students:document_delete' doc.student.pk doc.pk %}" class="btn btn-outline-danger" data-bs-toggle="tooltip"  title="Delete Document">
+                                    <i class="bi bi-trash"></i>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-5">
+            <i class="bi bi-folder-x fs-1 text-custom mb-3"></i>
+            <h5 class="text-custom">No documents found</h5>
+            <p class="text-custom">Get started by uploading your first document</p>
+            <a href="{% url 'students:document_upload' student.pk %}" class="btn btn-primary mt-2">
+                <i class="bi bi-plus-circle me-2"></i> Upload Document
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Quick Stats Section -->
+<div class="row mt-4">
+    <div class="col-lg-6">
+        <div class="card card-custom">
+            <div class="card-header ">
+                <h6 class="m-0 font-weight-bold text-custom">Document Types</h6>
+            </div>
+            <div class="card-body ">
+                <div class="list-group list-group-flush ">
+                    {% for doc_type, count in doc_type_counts.items %}
+                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                        <div>
+                            {% if doc_type == "PHOTO" %}
+                            <i class="bi bi-person-badge text-custom me-2"></i>
+                            {% elif doc_type == "BIRTH_CERTIFICATE" %}
+                            <i class="bi bi-file-earmark-medical text-success me-2"></i>
+                            {% elif doc_type == "AADHAAR" %}
+                            <i class="bi bi-credit-card text-info me-2"></i>
+                            {% elif doc_type == "TRANSFER_CERTIFICATE" %}
+                            <i class="bi bi-file-earmark-text text-warning me-2"></i>
+                            {% else %}
+                            <i class="bi bi-file-earmark text-secondary me-2"></i>
+                            {% endif %}
+                            {{ doc_type|title }}
+                        </div>
+                        <span class="badge bg-primary rounded-pill">{{ count }}</span>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-6">
+        <div class="card card-custom">
+            <div class="card-header ">
+                <h6 class="m-0 font-weight-bold text-custom">Recent Uploads</h6>
+            </div>
+            <div class="card-body">
+                {% if recent_documents %}
+                <div class="list-group list-group-flush">
+                    {% for doc in recent_documents %}
+                    <div class="list-group-item">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <strong>{{ doc.get_doc_type_display }}</strong>
+                                <br>
+                                <small class="text-custom">{{ doc.uploaded_at|timesince }} ago</small>
+                            </div>
+                            {% if doc.is_verified %}
+                            <i class="bi bi-patch-check text-success" data-bs-toggle="tooltip" title="Verified"></i>
+                            {% else %}
+                            <i class="bi bi-clock text-warning" data-bs-toggle="tooltip" title="Pending Verification"></i>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-custom text-center py-3">No recent uploads</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Initialize tooltips
+document.addEventListener('DOMContentLoaded', function() {
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl)
+    })
+});
+</script>
+{% endblock %}

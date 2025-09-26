@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Login {{ organization.name|default:"Codefyn" }} {% endblock %}</title>
+  
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+
+    {% block extra_css %}{% endblock %}
+
+    <style>
+        body {
+            background: #f8f9fa;
+        }
+        .login-card {
+            border-radius: 1rem;
+            box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.1);
+        }
+        .login-logo {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #0d6efd;
+        }
+
+  .bg-light {
+    background-color: #f8f9fa !important;
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .bg-light::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'%3E%3Cpath fill='%23e9ecef' fill-opacity='0.2' d='M20,20 L80,20 L80,80 L20,80 Z'/%3E%3C/svg%3E");
+    background-size: 100px 100px;
+    opacity: 0.1;
+    z-index: 0;
+  }
+  
+  .edu-bg-icons {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    pointer-events: none;
+    z-index: 0;
+  }
+  
+  .edu-icon {
+    position: absolute;
+    opacity: 0.05;
+    color: #6c757d;
+  }
+  
+  .edu-icon.book {
+    font-size: 120px;
+    top: 10%;
+    left: 5%;
+    transform: rotate(-10deg);
+  }
+  
+  .edu-icon.pencil {
+    font-size: 80px;
+    top: 70%;
+    right: 10%;
+    transform: rotate(15deg);
+  }
+  
+  .edu-icon.calculator {
+    font-size: 90px;
+    bottom: 15%;
+    left: 15%;
+    transform: rotate(5deg);
+  }
+  
+  .edu-icon.graduation-cap {
+    font-size: 100px;
+    top: 20%;
+    right: 5%;
+    transform: rotate(-5deg);
+  }
+  
+  .card {
+    position: relative;
+    z-index: 1;
+    border: none;
+    border-radius: 12px;
+  }
+  
+  .btn-primary {
+    background-color: #3f51b5;
+    border-color: #3f51b5;
+  }
+  
+  .btn-primary:hover {
+    background-color: #303f9f;
+    border-color: #303f9f;
+  }
+</style>
+</head>
+<body>
+
+<!-- Messages -->
+{% if messages %}
+    <div class="mb-3">
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        {% endfor %}
+    </div>
+{% endif %}
+
+<!-- Content -->
+{% block content %}{% endblock %}
+
+        <div class="text-center mt-3 text-muted">
+             <footer class="text-center py-4 mt-auto" style="color: var(--text-muted-color);"><small>&copy; {{ organization.name|default:"ERP System" }} {% now "Y" %}. All rights reserved.</small></footer>
+        </div>
+    </div>
+</div>
+
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+{% block extra_js %}{% endblock %}
+</body>
+</html>

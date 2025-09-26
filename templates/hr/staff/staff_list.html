@@ -1,0 +1,265 @@
+{% extends 'hr/base.html' %}
+{% load static %}
+
+{% block title %}Employee- {{ organization.name|default:"ERP System" }}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css">
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+
+    <!-- Header -->
+    <div class="header-section mb-4">
+        <div class="row align-items-center">
+            <div class="col-md-7 d-flex align-items-center">
+                <div class="header-icon me-3">
+                    <i class="bi bi-people-fill display-6 text-primary"></i>
+                </div>
+                <div>
+                    <h1 class="h3 fw-bold mb-1">Employee Management</h1>
+                    <p class="text-custom mb-0">Manage all staff members and their details</p>
+                </div>
+            </div>
+            <div class="col-md-5">
+                {% if request.user.is_superadmin or request.user.is_institution_admin or request.user.is_principal %}
+                <div class="d-flex justify-content-end align-items-center gap-2">
+                    <a href="{% url 'hr:staff_create' %}" class="btn btn-primary">
+                        <i class="bi bi-plus-circle me-1"></i> New Employee
+                    </a>
+                    <div class="dropdown">
+                        <button class="btn btn-secondary dropdown-toggle" type="button" id="exportDropdown"
+                            data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="bi bi-download me-1"></i> Export
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="exportDropdown">
+                            <li class="dropdown-header">Export Staff Data</li>
+                            <li><a class="dropdown-item" href="{% url 'hr:staff_export' %}?{{ request.GET.urlencode }}&format=csv">
+                                <i class="bi bi-filetype-csv me-2"></i> Export CSV</a></li>
+                            <li><a class="dropdown-item" href="{% url 'hr:staff_export' %}?{{ request.GET.urlencode }}&format=excel">
+                                <i class="bi bi-file-earmark-excel me-2"></i> Export Excel</a></li>
+                            <li><a class="dropdown-item" href="{% url 'hr:staff_export' %}?{{ request.GET.urlencode }}&format=pdf">
+                                <i class="bi bi-file-earmark-pdf me-2"></i> Export PDF</a></li>
+                        </ul>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Filter Form -->
+    <div class="card card-custom p-3 mb-4">
+        <form id="filterForm" method="get" class="row g-3">
+            <!-- <div class="col-md-3">
+                <label class="form-label">Search</label>
+                <input type="text" name="search" class="form-control"
+                       placeholder="Search by name or ID" value="{{ request.GET.search }}">
+            </div> -->
+            <div class="col-md-2">
+                <label class="form-label">Status</label>
+                <select name="status" class="form-select">
+                    <option value="">All</option>
+                    <option value="active" {% if request.GET.status == 'active' %}selected{% endif %}>Active</option>
+                    <option value="inactive" {% if request.GET.status == 'inactive' %}selected{% endif %}>Inactive</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Staff Type</label>
+                <select name="staff_type" class="form-select">
+                    <option value="">All</option>
+                    {% for code, name in staff_types %}
+                    <option value="{{ code }}" {% if request.GET.staff_type == code %}selected{% endif %}>{{ name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Department</label>
+                <select name="department" class="form-select">
+                    <option value="">All</option>
+                    {% for dept in departments %}
+                    <option value="{{ dept.id }}" {% if request.GET.department == dept.id|stringformat:"s" %}selected{% endif %}>
+                        {{ dept.name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Designation</label>
+                <select name="designation" class="form-select">
+                    <option value="">All</option>
+                    {% for des in designations %}
+                    <option value="{{ des.id }}" {% if request.GET.designation == des.id|stringformat:"s" %}selected{% endif %}>
+                        {{ des.name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-4 d-flex align-items-end gap-2">
+                <button type="submit" class="btn btn-primary w-50">
+                    <i class="bi bi-search me-1"></i> Apply
+                </button>
+                <a href="{% url 'hr:staff_list' %}" class="btn btn-outline-secondary w-50">
+                    <i class="bi bi-x me-1"></i> Clear
+                </a>
+            </div>
+        </form>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="row g-4 mb-4">
+        <div class="col-xl-3 col-md-6">
+            <div class="card stats-card text-white h-100" style="background: var(--primary-gradient);">
+                <div class="card-body">
+                    <h6 class="card-title mb-1 small opacity-75">TOTAL STAFF</h6>
+                    <h3 class="mb-0 fw-bold">{{ total_staff|default:"0" }}</h3>
+                    <p class="mb-0 small opacity-75"><i class="bi bi-people me-1"></i>All staff</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card stats-card text-white h-100" style="background: var(--success-gradient);">
+                <div class="card-body">
+                    <h6 class="card-title mb-1 small opacity-75">ACTIVE STAFF</h6>
+                    <h3 class="mb-0 fw-bold">{{ active_staff|default:"0" }}</h3>
+                    <p class="mb-0 small opacity-75"><i class="bi bi-person-check me-1"></i>Currently active</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card stats-card text-white h-100" style="background: var(--warning-gradient);">
+                <div class="card-body">
+                    <h6 class="card-title mb-1 small opacity-75">TEACHING STAFF</h6>
+                    <h3 class="mb-0 fw-bold">{{ teaching_staff|default:"0" }}</h3>
+                    <p class="mb-0 small opacity-75"><i class="bi bi-book me-1"></i>Faculty members</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card stats-card text-white h-100" style="background: var(--info-gradient);">
+                <div class="card-body">
+                    <h6 class="card-title mb-1 small opacity-75">NON-TEACHING STAFF</h6>
+                    <h3 class="mb-0 fw-bold">{{ non_teaching_staff|default:"0" }}</h3>
+                    <p class="mb-0 small opacity-75"><i class="bi bi-person-workspace me-1"></i>Administrative staff</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Staff Table -->
+    <div class="card card-custom">
+        <div class="card-header bg-transparent border-0 pt-4 px-4">
+            <h5 class="card-title mb-0 fw-bold text-custom">All Staff Members</h5>
+            <p class="text-custom mb-0">Manage and review all staff details</p>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                {% if staff_list %}
+                <table id="staffTable" class="w-100 table-custom table-hover align-middle">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Employee ID</th>
+                            <th>Department</th>
+                            <th>Designation</th>
+                            <th>Staff Type</th>
+                            <th>Status</th>
+                            {% if request.user.is_superadmin or request.user.is_institution_admin or request.user.is_principal %}
+                            <th class="text-center">Actions</th>
+                            {% endif %}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for staff in staff_list %}
+                        <tr>
+                            <td>{{ staff.user.get_full_name|default:staff.user.username }}</td>
+                            <td>{{ staff.employee_id }}</td>
+                            <td>{{ staff.department.name|default:"-" }}</td>
+                            <td>{{ staff.designation.name|default:"-" }}</td>
+                            <td>{{ staff.get_staff_type_display }}</td>
+                            <td>
+                                {% if staff.is_active %}
+                                <span class="badge bg-success bg-opacity-10 text-success">
+                                    <i class="bi bi-check-circle me-1"></i>Active
+                                </span>
+                                {% else %}
+                                <span class="badge bg-danger bg-opacity-10 text-danger">
+                                    <i class="bi bi-x-circle me-1"></i>Inactive
+                                </span>
+                                {% endif %}
+                            </td>
+                            {% if request.user.is_superadmin or request.user.is_institution_admin or request.user.is_principal %}
+                            <td class="text-center">
+                                <a href="{% url 'hr:staff_detail' staff.pk %}" class="btn btn-sm btn-outline-primary me-1" title="View">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                                <a href="{% url 'hr:staff_idcard' staff.pk %}" class="btn btn-sm btn-outline-success me-1" title="I-card">
+                                    <i class="bi bi-people"></i>
+                                </a>
+                                <a href="{% url 'hr:staff-detail-export' staff.pk %}" class="btn btn-sm btn-outline-success me-1" title="I-card">
+                                    <i class="bi-file-earmark-pdf"></i>
+                                </a>
+                                <!-- <a href="{% url 'hr:staff_update' staff.pk %}" class="btn btn-sm btn-outline-secondary me-1" title="Edit">
+                                    <i class="bi bi-pencil"></i>
+                                </a> -->
+                                <!-- <a href="{% url 'hr:staff_delete' staff.pk %}" class="btn btn-sm btn-outline-danger" title="Delete">
+                                    <i class="bi bi-trash"></i>
+                                </a> -->
+                            </td>
+                            {% endif %}
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% else %}
+                <div class="empty-state text-center py-5">
+                    <i class="bi bi-people-fill fs-1"></i>
+                    <h4 class="mt-3 mb-2">No Staff Members Found</h4>
+                    <p class="text-custom mb-4">Start by adding your first staff member</p>
+                    {% if request.user.is_superadmin or request.user.is_institution_admin or request.user.is_principal %}
+                    <a href="{% url 'hr:staff_create' %}" class="btn btn-primary">
+                        <i class="bi bi-plus-circle me-2"></i> Add First Staff Member
+                    </a>
+                    {% endif %}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    $('#staffTable').DataTable({
+        "pageLength": 10,
+        "order": [[0, 'asc']],
+        "language": {
+            "search": "<i class='bi bi-search me-2'></i>Search:",
+            "lengthMenu": "Show _MENU_ entries",
+            "info": "Showing _START_ to _END_ of _TOTAL_ entries",
+            "paginate": {
+                "previous": "<i class='bi bi-chevron-left'></i>",
+                "next": "<i class='bi bi-chevron-right'></i>"
+            }
+        },
+        "columnDefs": [
+            { "targets": [-1], "orderable": false, "className": "dt-center" }
+        ],
+        "responsive": true
+    });
+
+    // Initialize Select2
+    $('select').select2({ theme: 'bootstrap-5', width: '100%' });
+});
+</script>
+{% endblock %}

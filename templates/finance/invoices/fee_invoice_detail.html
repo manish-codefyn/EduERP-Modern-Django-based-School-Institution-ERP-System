@@ -1,0 +1,281 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Invoice {{ invoice.invoice_number }} - {{ organization.name|default:"ERP System" }}{% endblock %}
+
+{% block extra_css %}
+
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+
+    <!-- Header -->
+    <div class="header-section">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb breadcrumb-dark">
+                        <li class="breadcrumb-item"><a href="{% url 'finance:fee_invoice_list' %}" class="text-white">Fee Invoices</a></li>
+                        <li class="breadcrumb-item active text-white" aria-current="page">Invoice Details</li>
+                    </ol>
+                </nav>
+                <h1 class="display-6 fw-bold mb-2">Invoice #{{ invoice.invoice_number }}</h1>
+                <p class="lead mb-0 opacity-75">Fee invoice details and payment history</p>
+            </div>
+            <div class="col-md-4 text-md-end">
+                <span class="status-badge bg-{% if invoice.status == 'paid' %}warning{% elif invoice.status == 'partial' %}warning{% elif invoice.status == 'issued' %}info{% else %}secondary{% endif %} bg-opacity-10 text-{% if invoice.status == 'paid' %}success{% elif invoice.status == 'partial' %}warning{% elif invoice.status == 'issued' %}info{% else %}secondary{% endif %}">
+                    <i class="bi bi-{% if invoice.status == 'paid' %}check-circle{% elif invoice.status == 'partial' %}clock{% elif invoice.status == 'issued' %}file-text{% else %}x-circle{% endif %} me-2"></i>
+                    {{ invoice.get_status_display }}
+                </span>
+                  <a href="{% url 'finance:fee_invoice_list' %}" class="btn btn-outline-secondary">
+                   <i class="bi bi-arrow-left me-2"></i>Back to List
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Main Information -->
+        <div class="col-lg-8">
+            <!-- Invoice Details -->
+            <div class="card card-custom mb-4">
+                <div class="detail-card-header">
+                    <i class="bi bi-receipt me-2"></i>Invoice Information
+                </div>
+                <div class="detail-card-body">
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <span class="info-label">Invoice Number</span>
+                            <span class="info-value">{{ invoice.invoice_number }}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Issue Date</span>
+                            <span class="info-value">{{ invoice.issue_date }}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Due Date</span>
+                            <span class="info-value">
+                                {{ invoice.due_date }}
+                                {% if invoice.overdue %}
+                                <span class="badge bg-danger ms-2">Overdue</span>
+                                {% endif %}
+                            </span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Academic Year</span>
+                            <span class="info-value">
+                                <i class="bi bi-calendar-event me-2 text-info"></i>
+                                {{ invoice.academic_year.name }}
+                            </span>
+                        </div>
+                    </div>
+                    
+                    <div class="text-center mt-4">
+                        <div class="amount-display">
+                            ₹{{ invoice.total_amount }}
+                        </div>
+                        <p class="text-custom">Total invoice amount</p>
+                    </div>
+                    
+                    <div class="row mt-4">
+                        <div class="col-md-6 text-center">
+                            <div class="info-item">
+                                <span class="info-label">Amount Paid</span>
+                                <span class="info-value text-success">₹{{ invoice.paid_amount }}</span>
+                            </div>
+                        </div>
+                        <div class="col-md-6 text-center">
+                            <div class="info-item">
+                                <span class="info-label">Balance Due</span>
+                                <span class="info-value {% if invoice.balance > 0 %}text-danger{% else %}text-success{% endif %}">
+                                    ₹{{ invoice.balance }}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Student Information -->
+            <div class="card card-custom mb-4">
+                <div class="detail-card-header">
+                    <i class="bi bi-person-circle me-2"></i>Student Information
+                </div>
+                <div class="detail-card-body">
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <span class="info-label">Student Name</span>
+                            <span class="info-value">{{ invoice.student.user.get_full_name }}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Admission Number</span>
+                            <span class="info-value">{{ invoice.student.admission_number }}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Class</span>
+                            <span class="info-value">
+                                <i class="bi bi-mortarboard me-2 text-primary"></i>
+                                {{ invoice.student.current_class.name }}
+                            </span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Section</span>
+                            <span class="info-value">{{ invoice.student.section.name }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="col-lg-4">
+            <!-- Export Actions -->
+            <div class="card card-custom mb-4">
+                <div class="detail-card-header">
+                    <i class="bi bi-download me-2"></i>Export Options
+                </div>
+                <div class="detail-card-body">
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'finance:fee_invoice_export_detail' invoice.id %}?format=pdf" 
+                           class="btn btn-outline-primary" target="_blank">
+                            <i class="bi bi-file-earmark-pdf me-2"></i>Export PDF
+                        </a>
+                        <a href="{% url 'finance:fee_invoice_export_detail' invoice.id %}?format=csv" 
+                           class="btn btn-outline-success">
+                            <i class="bi bi-file-earmark-spreadsheet me-2"></i>Export CSV
+                        </a>
+                        <a href="{% url 'finance:fee_invoice_export_detail' invoice.id %}?format=excel" 
+                           class="btn btn-outline-info">
+                            <i class="bi bi-file-earmark-excel me-2"></i>Export Excel
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="card card-custom mb-4">
+                <div class="detail-card-header">
+                    <i class="bi bi-lightning me-2"></i>Quick Actions
+                </div>
+                <div class="detail-card-body">
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'finance:fee_invoice_update' invoice.id %}" class="btn btn-outline-warning">
+                            <i class="bi bi-pencil me-2"></i>Edit Invoice
+                        </a>
+                        <a href="{% url 'finance:payment_create' %}?invoice={{ invoice.id }}" class="btn btn-outline-success">
+                            <i class="bi bi-cash me-2"></i>Receive Payment
+                        </a>
+                      
+                    </div>
+                </div>
+            </div>
+
+            <!-- Status Timeline -->
+            <div class="card card-custom">
+                <div class="detail-card-header">
+                    <i class="bi bi-clock-history me-2"></i>Invoice Timeline
+                </div>
+                <div class="detail-card-body">
+                    <div class="timeline">
+                        <div class="timeline-item">
+                            <div class="timeline-content">
+                                <div class="d-flex justify-content-between">
+                                    <strong>Invoice Created</strong>
+                                    <small class="text-custom">{{ invoice.created_at|date:"M d, Y" }}</small>
+                                </div>
+                                <p class="mb-0 small text-custom">Invoice was issued to student</p>
+                            </div>
+                        </div>
+                        <div class="timeline-item">
+                            <div class="timeline-content">
+                                <div class="d-flex justify-content-between">
+                                    <strong>Due Date</strong>
+                                    <small class="text-custom">{{ invoice.due_date|date:"M d, Y" }}</small>
+                                </div>
+                                <p class="mb-0 small text-custom">Payment due date</p>
+                            </div>
+                        </div>
+                        {% if invoice.overdue %}
+                        <div class="timeline-item">
+                            <div class="timeline-content">
+                                <div class="d-flex justify-content-between">
+                                    <strong>Overdue</strong>
+                                    <small class="text-custom">{{ invoice.due_date|date:"M d, Y" }}</small>
+                                </div>
+                                <p class="mb-0 small text-danger">Invoice is overdue</p>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Payment History -->
+    <div class="card card-custom mt-4">
+        <div class="detail-card-header">
+            <i class="bi bi-clock-history me-2"></i>Payment History
+        </div>
+        <div class="detail-card-body">
+            {% if payments %}
+            <div class="table-responsive">
+                <table class="table-custom w-100 payment-history-table">
+                    <thead>
+                        <tr>
+                            <th>Payment #</th>
+                            <th>Date</th>
+                            <th>Amount</th>
+                            <th>Mode</th>
+                            <th>Status</th>
+                            <th>Reference</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for payment in payments %}
+                        <tr>
+                            <td>{{ payment.payment_number }}</td>
+                            <td>{{ payment.payment_date }}</td>
+                            <td>₹{{ payment.amount }}</td>
+                            <td>{{ payment.get_payment_mode_display }}</td>
+                            <td>
+                                <span class="badge bg-{% if payment.status == 'completed' %}success{% elif payment.status == 'pending' %}warning{% else %}danger{% endif %}">
+                                    {{ payment.get_status_display }}
+                                </span>
+                            </td>
+                            <td>{{ payment.reference_number|default:"-" }}</td>
+                            <td>
+                                <a href="{% url 'finance:payment_detail_export' payment.id %}" class="btn btn-sm btn-outline-primary">
+                                    <i class="bi bi-download"></i> Receipt
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="empty-state">
+                <i class="bi bi-cash-coin"></i>
+                <h5>No payments recorded</h5>
+                <p class="text-custom">No payments have been made against this invoice yet.</p>
+                <a href="{% url 'finance:payment_create' %}?invoice={{ invoice.id }}" class="btn btn-primary">
+                    <i class="bi bi-cash me-2"></i>Record Payment
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Any additional JavaScript functionality can be added here
+    console.log('Invoice detail page loaded');
+});
+</script>
+{% endblock %}

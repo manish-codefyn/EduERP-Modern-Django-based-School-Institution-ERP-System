@@ -1,0 +1,150 @@
+<!-- templates/hostel/visitor_log/visitor_form.html -->
+{% extends 'base.html' %}
+{% load static %}
+{% load widget_tweaks %}
+{% load crispy_forms_tags %}
+
+{% block title %}{{ title }} - {{ organization.name|default:"ERP System" }}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css">
+<style>
+.select2-container .select2-selection--single {
+    height: 38px;
+    border: 1px solid #ced4da;
+    border-radius: 0.375rem;
+}
+.select2-container--default .select2-selection--single .select2-selection__rendered {
+    line-height: 36px;
+}
+.select2-container--default .select2-selection--single .select2-selection__arrow {
+    height: 36px;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+
+    <!-- Header -->
+    <div class="header-section mb-4">
+        <div class="row align-items-center">
+            <div class="col-12 mb-2">
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb breadcrumb-dark">
+                        <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Dashboard</a></li>
+                        <li class="breadcrumb-item"><a href="{% url 'hostel:hostel_list' %}">Hostel</a></li>
+                        <li class="breadcrumb-item"><a href="{% url 'hostel:visitor_list' %}">Visitor Log</a></li>
+                        <li class="breadcrumb-item active" aria-current="page">{{ title }}</li>
+                    </ol>
+                </nav>
+            </div>
+
+            <div class="col-md-8">
+                <div class="d-flex align-items-center">
+                    <div class="header-icon me-3">
+                        <i class="bi bi-people display-6 text-primary"></i> 
+                    </div>
+                    <div>
+                        <h1 class="h3 fw-bold mb-1">{{ title }}</h1>
+                        <p class="text-custom mb-0">
+                            {% if form.instance.pk %}Update{% else %}Record{% endif %} visitor information
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Form Section -->
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card card-custom">
+                <div class="card-header bg-transparent border-0 pt-4 px-4">
+                    <h5 class="card-title mb-0 fw-bold text-custom">Visitor Details</h5>
+                    <p class="text-custom mb-0">Enter visitor information and purpose</p>
+                </div>
+                <div class="card-body">
+                    <form method="post" novalidate>
+                        {% csrf_token %}
+
+                        {% if form.non_field_errors %}
+                        <div class="alert alert-danger">
+                            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                            {{ form.non_field_errors }}
+                        </div>
+                        {% endif %}
+
+                        <div class="row">
+                            {% for field in form %}
+                                <div class="col-md-6 mb-3">
+                                    {{ field|as_crispy_field }}
+
+                                    {% if field.errors %}
+                                        <div class="text-danger small mt-1">
+                                            {{ field.errors|striptags }}
+                                        </div>
+                                    {% endif %}
+
+                                    {% if field.help_text %}
+                                        <small class="form-text text-muted">{{ field.help_text }}</small>
+                                    {% endif %}
+                                </div>
+                            {% endfor %}
+                        </div>
+
+                        <div class="d-flex gap-2 justify-content-end mt-4 pt-3 border-top">
+                            <a href="{% url 'hostel:visitor_list' %}" class="btn btn-secondary">
+                                <i class="bi bi-arrow-left me-1"></i> Cancel
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-check-circle me-1"></i>
+                                {{ submit_text }}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    $('.select2').select2({
+        placeholder: "Select a student",
+        allowClear: true
+    });
+
+    const entryTimeField = document.getElementById('{{ form.entry_time.id_for_label }}');
+    if (entryTimeField && !entryTimeField.value) {
+        const now = new Date();
+        const localDateTime = now.toISOString().slice(0, 16);
+        entryTimeField.value = localDateTime;
+    }
+
+    const idProofField = document.getElementById('{{ form.id_proof.id_for_label }}');
+    const idNumberField = document.getElementById('{{ form.id_number.id_for_label }}');
+
+    if (idProofField && idNumberField) {
+        idProofField.addEventListener('change', function() {
+            if (this.value === '') {
+                idNumberField.disabled = true;
+                idNumberField.placeholder = 'Select ID proof type first';
+            } else {
+                idNumberField.disabled = false;
+                idNumberField.placeholder = 'Enter ID number';
+            }
+        });
+
+        if (idProofField.value === '') {
+            idNumberField.disabled = true;
+            idNumberField.placeholder = 'Select ID proof type first';
+        }
+    }
+});
+</script>
+{% endblock %}

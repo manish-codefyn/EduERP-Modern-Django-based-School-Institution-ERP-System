@@ -1,0 +1,452 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load widget_tweaks %}
+
+{% block title %}Academic Reports - {{ organization.name|default:"School ERP System" }}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+
+    <!-- Header & Breadcrumb -->
+    <div class="header-section mb-4">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb breadcrumb-dark">
+                        <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Dashboard</a></li>
+                        <li class="breadcrumb-item active" aria-current="page">Academic Reports</li>
+                    </ol>
+                </nav>
+                <h1 class="display-6 fw-bold mb-1">Academic Reports</h1>
+                <p class="lead mb-0 opacity-75">View and analyze academic performance and exam results</p>
+            </div>
+            <div class="col-md-4 text-md-end">
+                <button type="button" class="btn btn-outline-light" data-bs-toggle="modal" data-bs-target="#exportAcademicModal">
+                    <i class="bi bi-download me-2"></i>Export
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="row g-4 mb-4">
+        <div class="col-xl-3 col-md-6">
+            <div class="card stats-card text-white" style="background: linear-gradient(135deg, #0984e3 0%, #74b9ff 100%);">
+                <div class="card-body d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="small opacity-75 mb-1">TOTAL RESULTS</h6>
+                        <h3 class="mb-0 fw-bold">{{ exam_results.count }}</h3>
+                    </div>
+                    <div class="stats-icon"><i class="bi bi-journal-text fs-3"></i></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card stats-card text-white" style="background: linear-gradient(135deg, #00b894 0%, #00a085 100%);">
+                <div class="card-body d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="small opacity-75 mb-1">AVG PASS RATE</h6>
+                        <h3 class="mb-0 fw-bold">
+                            {% if exam_stats %}
+                                {{ exam_stats.0.pass_percentage|default:0|floatformat:1 }}%
+                            {% else %}0%{% endif %}
+                        </h3>
+                    </div>
+                    <div class="stats-icon"><i class="bi bi-graph-up fs-3"></i></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card stats-card text-white" style="background: linear-gradient(135deg, #fdcb6e 0%, #e17055 100%);">
+                <div class="card-body d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="small opacity-75 mb-1">SUBJECTS</h6>
+                        <h3 class="mb-0 fw-bold">{{ subject_performance.count }}</h3>
+                    </div>
+                    <div class="stats-icon"><i class="bi bi-book fs-3"></i></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card stats-card text-white" style="background: linear-gradient(135deg, #e84393 0%, #fd79a8 100%);">
+                <div class="card-body d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="small opacity-75 mb-1">TOP STUDENT AVG</h6>
+                        <h3 class="mb-0 fw-bold">
+                            {% if student_performance %}
+                                {{ student_performance.0.avg_marks|default:0|floatformat:1 }}
+                            {% else %}0{% endif %}
+                        </h3>
+                    </div>
+                    <div class="stats-icon"><i class="bi bi-trophy fs-3"></i></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="card card-custom p-3 mb-4">
+        <form method="get" id="filterForm" class="row g-3">
+            <div class="col-md-3">
+                <label class="form-label">Class</label>
+                {{ filter_form.student_class }}
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Section</label>
+                {{ filter_form.section }}
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Academic Year</label>
+                {{ filter_form.academic_year }}
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Subject</label>
+                {{ filter_form.subject }}
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Exam Type</label>
+                {{ filter_form.exam_type }}
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Min Marks</label>
+                {{ filter_form.min_marks }}
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Max Marks</label>
+                {{ filter_form.max_marks }}
+            </div>
+            <div class="col-md-3 d-grid align-self-end">
+                <button type="submit" class="btn btn-primary btn-sm">Apply Filters</button>
+            </div>
+            <div class="col-md-3 d-grid align-self-end">
+                <a href="{% url 'academic_report' %}" class="btn btn-outline-secondary btn-sm">Clear Filters</a>
+            </div>
+        </form>
+    </div>
+
+    <!-- Exam Statistics -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card card-custom">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Exam Performance Summary</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table-custom w-100 table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Exam</th>
+                                    <th>Subject</th>
+                                    <th>Avg Marks</th>
+                                    <th>Pass %</th>
+                                    <th>Students</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for stat in exam_stats %}
+                                <tr>
+                                    <td>{{ stat.exam_subject__exam__name }}</td>
+                                    <td>{{ stat.exam_subject__subject__name }}</td>
+                                    <td>{{ stat.avg_marks|default:0|floatformat:1 }}</td>
+                                    <td>
+                                        <span class="badge bg-{% if stat.pass_percentage >= 60 %}success{% elif stat.pass_percentage >= 40 %}warning{% else %}danger{% endif %}">
+                                            {{ stat.pass_percentage|default:0|floatformat:1 }}%
+                                        </span>
+                                    </td>
+                                    <td>{{ stat.total_count }}</td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="5" class="text-center text-custom">No exam data available</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card card-custom">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Top Performing Students</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table-custom w-100 table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Student</th>
+                                    <th>Class</th>
+                                    <th>Avg Marks</th>
+                                    <th>Exams</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for student in student_performance %}
+                                <tr>
+                                    <td>{{ student.student__user__first_name }} {{ student.student__user__last_name }}</td>
+                                    <td>{{ student.student__current_class__name }}</td>
+                                    <td>
+                                        <span class="badge bg-success">{{ student.avg_marks|default:0|floatformat:1 }}</span>
+                                    </td>
+                                    <td>{{ student.exam_count }}</td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="4" class="text-center text-custom">No student data available</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Detailed Results Table -->
+    <div class="card card-custom">
+        <div class="card-header">
+            <h5 class="card-title mb-0">Detailed Exam Results</h5>
+        </div>
+        <div class="card-body table-responsive">
+            <table id="academicTable" class="table-custom table-hover table-sm w-100">
+                <thead>
+                    <tr>
+                        <th>Student</th>
+                        <th>Admission No.</th>
+                        <th>Class</th>
+                        <th>Exam</th>
+                        <th>Subject</th>
+                        <th>Marks</th>
+                        <th>Total</th>
+                        <th>Grade</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for result in exam_results %}
+                    <tr>
+                        <td>{{ result.student.user.get_full_name }}</td>
+                        <td>{{ result.student.admission_number }}</td>
+                        <td>{{ result.student.current_class.name|default:"" }}</td>
+                        <td>{{ result.exam_subject.exam.name|default:"" }}</td>
+                        <td>{{ result.exam_subject.subject.name|default:"" }}</td>
+                        <td>
+                            <span class="badge bg-{% if result.marks_obtained >= result.exam_subject.pass_marks %}success{% else %}danger{% endif %}">
+                                {{ result.marks_obtained }}
+                            </span>
+                        </td>
+                        <td>{{ result.exam_subject.total_marks|default:"" }}</td>
+                        <td>
+                            <span class="badge bg-info">{{ result.grade|default:"-" }}</span>
+                        </td>
+                        <td>
+                            <span class="badge bg-{% if result.result_status == 'pass' %}success{% else %}danger{% endif %}">
+                                {{ result.status|title }}
+                            </span>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="9" class="text-center py-4">
+                            <i class="bi bi-journal-x display-4 text-custom d-block mb-2"></i>
+                            <p class="text-custom">No exam results found for the selected criteria.</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+
+<!-- Export Modal -->
+<div class="modal fade" id="exportAcademicModal" tabindex="-1" aria-labelledby="exportAcademicModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <form method="get" action="{% url 'academic_report' %}">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exportAcademicModalLabel">Export Academic Data</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <!-- Export Format -->
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Export Format</label>
+                            <select class="form-select" name="format" required>
+                                <option value="">Select Format</option>
+                                <option value="csv">CSV</option>
+                                <option value="excel">Excel</option>
+                                <option value="pdf">PDF</option>
+                            </select>
+                        </div>
+                    </div>
+                    <hr>
+                    
+                    <!-- Filters -->
+                    <p class="mb-2"><strong>Filter Data to Export</strong> (Optional)</p>
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label" for="export_student_class">Class</label>
+                            <select name="student_class" id="export_student_class" class="form-select">
+                                <option value="">Select Class</option>
+                                {% for cls in filter_form.fields.student_class.queryset %}
+                                    <option value="{{ cls.id }}" {% if filter_form.student_class.value|stringformat:"s" == cls.id|stringformat:"s" %}selected{% endif %}>
+                                        {{ cls.name }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label" for="export_section">Section</label>
+                            <select name="section" id="export_section" class="form-select">
+                                <option value="">Select Section</option>
+                                {% for sec in filter_form.fields.section.queryset %}
+                                    <option value="{{ sec.id }}" {% if filter_form.section.value|stringformat:"s" == sec.id|stringformat:"s" %}selected{% endif %}>
+                                        {{ sec.name }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label" for="export_academic_year">Academic Year</label>
+                            <select name="academic_year" id="export_academic_year" class="form-select">
+                                <option value="">Select Academic Year</option>
+                                {% for ay in filter_form.fields.academic_year.queryset %}
+                                    <option value="{{ ay.id }}" {% if filter_form.academic_year.value|stringformat:"s" == ay.id|stringformat:"s" %}selected{% endif %}>
+                                        {{ ay.name }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label" for="export_subject">Subject</label>
+                            <select name="subject" id="export_subject" class="form-select">
+                                <option value="">Select Subject</option>
+                                {% for subject in filter_form.fields.subject.queryset %}
+                                    <option value="{{ subject.id }}" {% if filter_form.subject.value|stringformat:"s" == subject.id|stringformat:"s" %}selected{% endif %}>
+                                        {{ subject.name }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+
+                    <hr>
+                    
+                    <!-- Columns -->
+                    <div class="mb-3">
+                        <label class="form-label"><strong>Include Columns in Export</strong></label>
+                        <div class="row">
+                            {% for field, label in academic_fields %}
+                            <div class="col-md-4 mb-2">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="include_{{ field }}" name="columns" value="{{ field }}" checked>
+                                    <label class="form-check-label" for="include_{{ field }}">{{ label }}</label>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" data-bs-dismiss="modal" type="button">Cancel</button>
+                    <button class="btn btn-primary" type="submit">Export Data</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+<script>
+
+// 3) Robust modal cleanup handlers
+    // Remove any leftover backdrop BEFORE a modal opens
+    document.querySelectorAll('.modal').forEach(modalEl => {
+        modalEl.addEventListener('show.bs.modal', function () {
+            // if another leftover backdrop exists, remove it
+            document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+        });
+
+        // on hidden, remove backdrops and restore body scrolling
+        modalEl.addEventListener('hidden.bs.modal', function () {
+            document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+            document.body.classList.remove('modal-open');
+            document.body.style.overflow = '';
+            document.body.style.paddingRight = '';
+        });
+    });
+
+    // 4) Safety-net: if a backdrop exists but there is no visible modal, remove it
+    // (handles cases where Bootstrap failed silently)
+    const observer = new MutationObserver(() => {
+        const backdrop = document.querySelector('.modal-backdrop');
+        const anyShown = !!document.querySelector('.modal.show');
+        if (backdrop && !anyShown) {
+            backdrop.remove();
+            document.body.classList.remove('modal-open');
+            document.body.style.overflow = '';
+            document.body.style.paddingRight = '';
+        }
+    });
+    observer.observe(document.body, { childList: true, subtree: true });
+
+    // 5) Allow manual cleanup by pressing Esc (extra safety)
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+            document.body.classList.remove('modal-open');
+            document.body.style.overflow = '';
+            document.body.style.paddingRight = '';
+            document.querySelectorAll('.modal.show').forEach(m => {
+                try { bootstrap.Modal.getInstance(m)?.hide(); } catch(e) {}
+            });
+        }
+    });
+
+    // 6) Final cleanup in case something stuck earlier
+    setTimeout(() => {
+        document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+        document.body.classList.remove('modal-open');
+        document.body.style.overflow = '';
+        document.body.style.paddingRight = '';
+    }, 500);
+
+
+    $(document).ready(function() {
+        $('#academicTable').DataTable({
+            "pageLength": 10,
+            "lengthMenu": [[10, 25, 50, -1], [10, 25, 50, "All"]],
+            "order": [[0, 'asc']],
+            "language": {
+                "search": "<i class='bi bi-search me-2'></i>",
+                "searchPlaceholder": "Search results...",
+                "lengthMenu": "Show _MENU_ entries",
+                "info": "Showing _START_ to _END_ of _TOTAL_ entries",
+                "paginate": {
+                    "previous": "<i class='bi bi-chevron-left'></i>",
+                    "next": "<i class='bi bi-chevron-right'></i>"
+                }
+            }
+        });
+    });
+</script>
+{% endblock %}

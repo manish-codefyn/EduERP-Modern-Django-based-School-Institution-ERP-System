@@ -1,0 +1,253 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ hostel.name }} - {{ organization.name|default:"ERP System" }}{% endblock %}
+
+{% block extra_css %}
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+
+<!-- Header -->
+<div class="header-section">
+    <div class="row align-items-center">
+        <div class="col-12 mb-2">
+            <!-- Breadcrumb -->
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb breadcrumb-dark">
+                    <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'hostel:hostel_list' %}">Hostels</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">{{ hostel.name }}</li>
+                </ol>
+            </nav>
+        </div>
+
+        <div class="col-md-7">
+            <div class="d-flex align-items-center">
+                <div class="header-icon me-3">
+                   <i class="bi bi-building display-6 text-white"></i> 
+                </div>
+                <div>
+                    <h1 class="h3 fw-bold mb-1">{{ hostel.name }}</h1>
+                    <p class="text-custom mb-0">Hostel details and information</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-5">
+            {% if request.user.is_superadmin or request.user.is_institution_admin or request.user.is_principal or request.user.is_staff %}
+            <div class="d-flex gap-2 justify-content-md-end flex-wrap">
+                <a href="{% url 'hostel:hostel_update' hostel.id %}" class="btn btn-primary">
+                    <i class="bi bi-pencil-square me-1"></i> Edit Hostel
+                </a>
+                <a href="{% url 'hostel:hostel_list' %}" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left me-1"></i> Back to List
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Stats Cards -->
+<div class="row g-4 mb-4">
+    <div class="col-xl-3 col-md-6">
+        <div class="card stats-card text-white h-100" style="background: var(--primary-gradient);">
+            <div class="card-body d-flex flex-column justify-content-between">
+                <div class="row align-items-center">
+                    <div class="col-8">
+                        <h6 class="card-title mb-1 small opacity-75">TOTAL CAPACITY</h6>
+                        <h3 class="mb-0 fw-bold">{{ hostel.capacity }}</h3>
+                        <p class="mb-0 small opacity-75">Maximum residents</p>
+                    </div>
+                    <div class="col-4 text-end">
+                        <div class="stats-icon">
+                            <i class="bi bi-people fs-2"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6">
+        <div class="card stats-card text-white h-100" style="background: var(--info-gradient);">
+            <div class="card-body d-flex flex-column justify-content-between">
+                <div class="row align-items-center">
+                    <div class="col-8">
+                        <h6 class="card-title mb-1 small opacity-75">CURRENT RESIDENTS</h6>
+                        <h3 class="mb-0 fw-bold">{{ residents_count|default:"0" }}</h3>
+                        <p class="mb-0 small opacity-75">Currently occupied</p>
+                    </div>
+                    <div class="col-4 text-end">
+                        <div class="stats-icon">
+                            <i class="bi bi-person-check fs-2"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6">
+        <div class="card stats-card text-white h-100" style="background: var(--warning-gradient);">
+            <div class="card-body d-flex flex-column justify-content-between">
+                <div class="row align-items-center">
+                    <div class="col-8">
+                        <h6 class="card-title mb-1 small opacity-75">VACANT BEDS</h6>
+                        <h3 class="mb-0 fw-bold">{{ vacant_beds|default:"0" }}</h3>
+                        <p class="mb-0 small opacity-75">Available for allocation</p>
+                    </div>
+                    <div class="col-4 text-end">
+                        <div class="stats-icon">
+                            <i class="bi bi-door-open fs-2"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-xl-3 col-md-6">
+        <div class="card stats-card h-100 {% if hostel.is_active %}bg-success{% else %}bg-danger{% endif %} text-white">
+            <div class="card-body d-flex flex-column justify-content-between">
+                <div class="row align-items-center">
+                    <div class="col-8">
+                        <h6 class="card-title mb-1 small opacity-75">STATUS</h6>
+                        <h3 class="mb-0 fw-bold">{% if hostel.is_active %}Active{% else %}Inactive{% endif %}</h3>
+                        <p class="mb-0 small opacity-75">Hostel status</p>
+                    </div>
+                    <div class="col-4 text-end">
+                        <div class="stats-icon">
+                            <i class="bi bi-circle-fill fs-2"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Details Section -->
+<div class="row g-4">
+    <!-- Hostel Information -->
+    <div class="col-lg-8">
+        <div class="card card-custom h-100">
+            <div class="card-header bg-transparent border-0 pt-4 px-4">
+                <h5 class="card-title mb-0 fw-bold text-custom">Hostel Information</h5>
+                <p class="text-custom mb-0">Complete details of {{ hostel.name }}</p>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label text-custom small mb-1">Hostel Name</label>
+                            <p class="fw-semibold mb-0">{{ hostel.name }}</p>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label text-custom small mb-1">Capacity</label>
+                            <p class="fw-semibold mb-0">{{ hostel.capacity }} residents</p>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label text-custom small mb-1">Warden</label>
+                            <p class="fw-semibold mb-0">{{ hostel.warden_name|default:"Not assigned" }}</p>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label text-custom small mb-1">Contact Number</label>
+                            <p class="fw-semibold mb-0">{{ hostel.contact_number|default:"Not provided" }}</p>
+                        </div>
+                    </div>
+                    <div class="col-12">
+                        <div class="mb-3">
+                            <label class="form-label text-custom small mb-1">Address</label>
+                            <p class="fw-semibold mb-0">{{ hostel.address|default:"Not provided" }}</p>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label text-custom small mb-1">Status</label>
+                            <p class="mb-0">
+                                {% if hostel.is_active %}
+                                    <span class="badge bg-success">Active</span>
+                                {% else %}
+                                    <span class="badge bg-danger">Inactive</span>
+                                {% endif %}
+                            </p>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label text-custom small mb-1">Establishment Year</label>
+                            <p class="fw-semibold mb-0">{{ hostel.establishment_year|default:"Not specified" }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Quick Actions -->
+    <div class="col-lg-4">
+        <div class="card card-custom h-100">
+            <div class="card-header bg-transparent border-0 pt-4 px-4">
+                <h5 class="card-title mb-0 fw-bold text-custom">Quick Actions</h5>
+                <p class="text-custom mb-0">Manage {{ hostel.name }} operations</p>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a href="{% url 'hostel:room_list'%}" class="btn btn-outline-primary text-start">
+                        <i class="bi bi-door-closed me-2"></i> Manage Rooms
+                    </a>
+                    <a href="{% url 'hostel:allocation_list'%}" class="btn btn-outline-primary text-start">
+                        <i class="bi bi-person-plus me-2"></i> Allocate Students
+                    </a>
+                    <a href="{% url 'hostel:visitor_list' %}" class="btn btn-outline-primary text-start">
+                        <i class="bi bi-people me-2"></i> View Visitor Log
+                    </a>
+                    <a href="{% url 'hostel:hostel_update' hostel.id %}" class="btn btn-outline-secondary text-start">
+                        <i class="bi bi-pencil me-2"></i> Edit Hostel Details
+                    </a>
+                </div>
+                
+                <hr class="my-4">
+                
+                <h6 class="fw-bold text-custom mb-3">Additional Resources</h6>
+                <div class="d-grid gap-2">
+                    <a href="#" class="btn btn-outline-info text-start">
+                        <i class="bi bi-printer me-2"></i> Generate Report
+                    </a>
+                    <a href="#" class="btn btn-outline-info text-start">
+                        <i class="bi bi-download me-2"></i> Export Data
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- jQuery (must load before DataTables) -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<!-- DataTables core + Bootstrap 5 integration -->
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Tooltips
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+    tooltipTriggerList.map(function (el) {
+        return new bootstrap.Tooltip(el)
+    });
+});
+</script>
+{% endblock %}

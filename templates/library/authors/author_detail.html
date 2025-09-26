@@ -1,0 +1,506 @@
+{% extends 'library/base.html' %}
+{% load static custom_filters %}
+
+{% block title %}{{ author.name }} - Authors - Library Management - {{ organization.name|default:"codefyn" }}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
+<style>
+.author-profile-img {
+    width: 200px;
+    height: 200px;
+    object-fit: cover;
+}
+.book-cover {
+    height: 120px;
+    object-fit: cover;
+}
+.stats-number {
+    font-size: 2rem;
+    font-weight: bold;
+}
+.biography-text {
+    line-height: 1.8;
+    text-align: justify;
+}
+.timeline {
+    position: relative;
+    padding-left: 2rem;
+}
+.timeline::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: var(--primary);
+}
+.timeline-item {
+    position: relative;
+    margin-bottom: 2rem;
+}
+.timeline-item::before {
+    content: '';
+    position: absolute;
+    left: -2.3rem;
+    top: 0.5rem;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: var(--primary);
+    border: 3px solid white;
+    box-shadow: 0 0 0 2px var(--primary);
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+
+<!-- Header -->
+<div class="header-section">
+    <div class="row align-items-center">
+        <div class="col-12 mb-2">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb breadcrumb-dark">
+                    <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'library:dashboard' %}">Library</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'library:author_list' %}">Authors</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">{{ author.name }}</li>
+                </ol>
+            </nav>
+        </div>
+
+        <div class="col-md-8">
+            <div class="d-flex align-items-center">
+                <div class="header-icon me-3">
+                    {% if author.photo %}
+                    <img src="{{ author.photo.url }}" alt="{{ author.name }}" class="author-profile-img rounded-circle">
+                    {% else %}
+                    <div class="author-profile-img rounded-circle bg-primary bg-opacity-10 d-flex align-items-center justify-content-center">
+                        <i class="bi bi-person-fill display-4 text-primary"></i>
+                    </div>
+                    {% endif %}
+                </div>
+                <div>
+                    <h1 class="h3 fw-bold mb-1">{{ author.name }}</h1>
+                    <p class="text-custom mb-0">
+                        {% if author.nationality %}
+                        <i class="bi bi-globe me-1"></i>{{ author.nationality }}
+                        {% endif %}
+                        {% if author.date_of_birth %}
+                        • Born {{ author.date_of_birth|date:"F d, Y" }}
+                        {% if author.date_of_death %}
+                        - Died {{ author.date_of_death|date:"F d, Y" }}
+                        {% endif %}
+                        {% endif %}
+                    </p>
+                    <div class="mt-2">
+                        <span class="badge bg-primary bg-opacity-20 text-primary fs-6">
+                            <i class="bi bi-book me-1"></i>{{ author.book_set.count }} Book{{ author.book_set.count|pluralize }}
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="d-flex gap-2 justify-content-md-end flex-wrap">
+                <a href="{% url 'library:author_list' %}" class="btn btn-secondary">
+                    <i class="bi bi-arrow-left me-1"></i> Back to Authors
+                </a>
+                {% if request.user.is_superuser  %}
+                <a href="{% url 'library:author_update' author.id %}" class="btn btn-primary">
+                    <i class="bi bi-pencil me-1"></i> Edit Author
+                </a>
+                {% endif %}
+                {% if request.user.is_superuser  %}
+                <a href="{% url 'library:book_create' %}?author={{ author.id }}" class="btn btn-success">
+                    <i class="bi bi-plus-circle me-1"></i> Add Book
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Author Statistics -->
+<div class="row g-4 mb-4">
+    <div class="col-xl-3 col-md-6">
+        <div class="card stats-card text-white h-100" style="background: var(--primary-gradient);">
+            <div class="card-body text-center">
+                <div class="stats-number">{{ author.book_set.count }}</div>
+                <h6 class="mb-0">Total Books</h6>
+                <p class="small opacity-75 mb-0">In library collection</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6">
+        <div class="card stats-card text-white h-100" style="background: var(--success-gradient);">
+            <div class="card-body text-center">
+                <div class="stats-number">{{ available_books|default:"0" }}</div>
+                <h6 class="mb-0">Available Books</h6>
+                <p class="small opacity-75 mb-0">Ready to borrow</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6">
+        <div class="card stats-card text-white h-100" style="background: var(--info-gradient);">
+            <div class="card-body text-center">
+                <div class="stats-number">{{ total_borrows|default:"0" }}</div>
+                <h6 class="mb-0">Total Borrows</h6>
+                <p class="small opacity-75 mb-0">All-time borrow count</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6">
+        <div class="card stats-card text-white h-100" style="background: var(--warning-gradient);">
+            <div class="card-body text-center">
+                <div class="stats-number">
+                    {% if author.book_set.count > 0 %}
+                    {{ average_rating|default:"0.0" }}/5.0
+                    {% else %}0.0/5.0{% endif %}
+                </div>
+                <h6 class="mb-0">Average Rating</h6>
+                <p class="small opacity-75 mb-0">Reader satisfaction</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Main Content -->
+    <div class="col-lg-8">
+        <!-- Biography Section -->
+        <div class="card card-custom">
+            <div class="card-header bg-transparent border-0 pt-4 px-4">
+                <h5 class="card-title mb-0 fw-bold text-custom">Biography</h5>
+                <p class="text-custom mb-0">Author's life and career</p>
+            </div>
+            <div class="card-body">
+                {% if author.bio %}
+                <div class="biography-text">
+                    {{ author.bio|linebreaks }}
+                </div>
+                {% else %}
+                <div class="text-center py-5">
+                    <i class="bi bi-journal-text display-1 text-custom"></i>
+                    <h5 class="mt-3 text-custom">No Biography Available</h5>
+                    <p class="text-custom">No biography has been added for this author yet.</p>
+                    {% if request.user.is_superuser  %}
+                    <a href="{% url 'library:author_edit' author.id %}" class="btn btn-primary">
+                        <i class="bi bi-pencil me-2"></i>Add Biography
+                    </a>
+                    {% endif %}
+                </div>
+                {% endif %}
+
+                <!-- Author Timeline -->
+                {% if author.date_of_birth or author.date_of_death or author.website %}
+                <div class="mt-5">
+                    <h6 class="fw-bold text-custom mb-3">Author Timeline</h6>
+                    <div class="timeline">
+                        {% if author.date_of_birth %}
+                        <div class="timeline-item">
+                            <h6 class="fw-bold text-primary">Born</h6>
+                            <p class="text-custom mb-1">{{ author.date_of_birth|date:"F d, Y" }}</p>
+                            <small class="text-custom">
+                                {% if author.date_of_birth %}
+                                {{ author.date_of_birth|timesince }} ago
+                                {% endif %}
+                            </small>
+                        </div>
+                        {% endif %}
+
+                        {% if author.date_of_death %}
+                        <div class="timeline-item">
+                            <h6 class="fw-bold text-primary">Died</h6>
+                            <p class="text-custom mb-1">{{ author.date_of_death|date:"F d, Y" }}</p>
+                            <small class="text-custom">
+                                {% if author.date_of_birth and author.date_of_death %}
+                                Lived for {{ author.date_of_birth|timesince:author.date_of_death }}
+                                {% endif %}
+                            </small>
+                        </div>
+                        {% endif %}
+
+                        {% if author.website %}
+                        <div class="timeline-item">
+                            <h6 class="fw-bold text-primary">Website</h6>
+                            <a href="{{ author.website }}" target="_blank" class="text-decoration-none">
+                                <i class="bi bi-globe me-1"></i>Visit Author's Website
+                            </a>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Author's Books -->
+        <div class="card card-custom mt-4">
+            <div class="card-header bg-transparent border-0 pt-4 px-4">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h5 class="card-title mb-0 fw-bold text-custom">Author's Books</h5>
+                        <p class="text-custom mb-0">Complete collection by {{ author.name }}</p>
+                    </div>
+                    <span class="badge bg-primary bg-opacity-20 text-primary fs-6">
+                        {{ author.book_set.count }} Book{{ author.book_set.count|pluralize }}
+                    </span>
+                </div>
+            </div>
+            <div class="card-body">
+                {% if author.book_set.all %}
+                <div class="row g-4">
+                    {% for book in author.book_set.all %}
+                    <div class="col-xl-6">
+                        <div class="card book-card h-100 border-0 shadow-sm">
+                            <div class="card-body">
+                                <div class="row g-3">
+                                    <div class="col-3">
+                                        {% if book.cover_image %}
+                                        <img src="{{ book.cover_image.url }}" alt="{{ book.title }}" 
+                                             class="book-cover rounded w-100">
+                                        {% else %}
+                                        <div class="book-cover rounded bg-light d-flex align-items-center justify-content-center w-100">
+                                            <i class="bi bi-book text-custom fs-1"></i>
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                    <div class="col-9">
+                                        <h6 class="fw-bold mb-1">
+                                            <a href="{% url 'library:book_detail' book.id %}" class="text-decoration-none">
+                                                {{ book.title }}
+                                            </a>
+                                        </h6>
+                                        <p class="text-custom small mb-2">
+                                            <span class="badge bg-light text-dark">{{ book.category.name }}</span>
+                                            {% if book.publication_date %}
+                                            <span class="text-custom">• {{ book.publication_date|date:"Y" }}</span>
+                                            {% endif %}
+                                        </p>
+                                        <div class="d-flex justify-content-between align-items-center mb-2">
+                                            <span class="badge {% if book.status == 'available' %}bg-success{% else %}bg-warning{% endif %} bg-opacity-10 text-{% if book.status == 'available' %}success{% else %}warning{% endif %}">
+                                                {{ book.status|title }}
+                                            </span>
+                                            <small class="text-custom">
+                                                {{ book.available_copies }}/{{ book.total_copies }} available
+                                            </small>
+                                        </div>
+                                        <div class="d-flex gap-2 mt-2">
+                                            <a href="{% url 'library:book_detail' book.id %}" class="btn btn-sm btn-outline-primary flex-fill">
+                                                View Details
+                                            </a>
+                                            {% if book.status == 'available' and book.available_copies > 0 %}
+                                            <a href="{% url 'library:borrow_book' %}?book={{ book.id }}" class="btn btn-sm btn-success" title="Borrow Book">
+                                                <i class="bi bi-arrow-up-circle"></i>
+                                            </a>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="text-center py-5">
+                    <i class="bi bi-book display-1 text-custom"></i>
+                    <h5 class="mt-3 text-custom">No Books Available</h5>
+                    <p class="text-custom">This author doesn't have any books in the library yet.</p>
+                    {% if request.user.is_superuser  %}
+                    <a href="{% url 'library:book_create' %}?author={{ author.id }}" class="btn btn-primary">
+                        <i class="bi bi-plus-circle me-2"></i>Add First Book
+                    </a>
+                    {% endif %}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Sidebar -->
+    <div class="col-lg-4">
+        <!-- Quick Actions -->
+        <div class="card card-custom mb-4">
+            <div class="card-header bg-transparent border-0 pt-4 px-4">
+                <h5 class="card-title mb-0 fw-bold text-custom">Quick Actions</h5>
+                <p class="text-custom mb-0">Manage this author</p>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    {% if request.user.is_superuser  %}
+                    <a href="{% url 'library:book_create' %}?author={{ author.id }}" class="btn btn-success">
+                        <i class="bi bi-plus-circle me-2"></i>Add New Book
+                    </a>
+                    {% endif %}
+                    
+                    {% if request.user.is_superuser  %}
+                    <a href="{% url 'library:author_update' author.id %}" class="btn btn-outline-primary">
+                        <i class="bi bi-pencil me-2"></i>Edit Author Profile
+                    </a>
+                    {% endif %}
+                    
+                    <a href="{% url 'library:author_list' %}" class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-left me-2"></i>Back to Authors
+                    </a>
+                    
+                    {% if request.user.is_superuser  %}
+                    <a href="{% url 'library:author_delete' author.id %}" class="btn btn-outline-danger">
+                        <i class="bi bi-trash me-2"></i>Delete Author
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Author Information -->
+        <div class="card card-custom mb-4">
+            <div class="card-header bg-transparent border-0 pt-4 px-4">
+                <h5 class="card-title mb-0 fw-bold text-custom">Author Information</h5>
+                <p class="text-custom mb-0">Detailed profile information</p>
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    {% if author.nationality %}
+                    <div class="col-12">
+                        <label class="form-label fw-semibold text-custom">Nationality</label>
+                        <div class="d-flex align-items-center">
+                            <i class="bi bi-globe text-primary me-2"></i>
+                            <span class="text-custom">{{ author.nationality }}</span>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    {% if author.date_of_birth %}
+                    <div class="col-12">
+                        <label class="form-label fw-semibold text-custom">Date of Birth</label>
+                        <div class="d-flex align-items-center">
+                            <i class="bi bi-calendar-event text-primary me-2"></i>
+                            <span class="text-custom">{{ author.date_of_birth|date:"F d, Y" }}</span>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    {% if author.date_of_death %}
+                    <div class="col-12">
+                        <label class="form-label fw-semibold text-custom">Date of Death</label>
+                        <div class="d-flex align-items-center">
+                            <i class="bi bi-calendar-x text-primary me-2"></i>
+                            <span class="text-custom">{{ author.date_of_death|date:"F d, Y" }}</span>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    {% if author.website %}
+                    <div class="col-12">
+                        <label class="form-label fw-semibold text-custom">Website</label>
+                        <div>
+                            <a href="{{ author.website }}" target="_blank" class="text-decoration-none">
+                                <i class="bi bi-link-45deg me-1"></i>Visit Website
+                            </a>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <div class="col-12">
+                        <label class="form-label fw-semibold text-custom">Profile Created</label>
+                        <div class="d-flex align-items-center">
+                            <i class="bi bi-clock text-primary me-2"></i>
+                            <span class="text-custom">{{ author.created_at|date:"F d, Y" }}</span>
+                        </div>
+                    </div>
+
+                    <div class="col-12">
+                        <label class="form-label fw-semibold text-custom">Last Updated</label>
+                        <div class="d-flex align-items-center">
+                            <i class="bi bi-arrow-clockwise text-primary me-2"></i>
+                            <span class="text-custom">{{ author.updated_at|date:"F d, Y" }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Popular Books -->
+        {% if popular_books %}
+        <div class="card card-custom">
+            <div class="card-header bg-transparent border-0 pt-4 px-4">
+                <h5 class="card-title mb-0 fw-bold text-custom">Popular Books</h5>
+                <p class="text-custom mb-0">Most borrowed books</p>
+            </div>
+            <div class="card-body">
+                <div class="list-group list-group-flush">
+                    {% for book in popular_books|slice:":3" %}
+                    <div class="list-group-item px-0 border-0">
+                        <div class="d-flex align-items-start">
+                            {% if book.cover_image %}
+                            <img src="{{ book.cover_image.url }}" alt="{{ book.title }}" 
+                                 class="rounded me-3" style="width: 40px; height: 50px; object-fit: cover;">
+                            {% else %}
+                            <div class="rounded bg-light d-flex align-items-center justify-content-center me-3" 
+                                 style="width: 40px; height: 50px;">
+                                <i class="bi bi-book text-custom"></i>
+                            </div>
+                            {% endif %}
+                            <div class="flex-grow-1">
+                                <h6 class="mb-1">
+                                    <a href="{% url 'library:book_detail' book.id %}" class="text-decoration-none">
+                                        {{ book.title }}
+                                    </a>
+                                </h6>
+                                <small class="text-custom">
+                                    {{ book.borrow_records.count }} borrow{{ book.borrow_records.count|pluralize }}
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Add hover effects to book cards
+    $('.book-card').hover(
+        function() {
+            $(this).addClass('shadow-lg').css('transform', 'translateY(-2px)');
+        },
+        function() {
+            $(this).removeClass('shadow-lg').css('transform', 'translateY(0)');
+        }
+    );
+
+    // Initialize tooltips
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl)
+    });
+
+    // Smooth scrolling for anchor links
+    $('a[href^="#"]').on('click', function(event) {
+        var target = $(this.getAttribute('href'));
+        if (target.length) {
+            event.preventDefault();
+            $('html, body').stop().animate({
+                scrollTop: target.offset().top - 80
+            }, 1000);
+        }
+    });
+});
+</script>
+{% endblock %}

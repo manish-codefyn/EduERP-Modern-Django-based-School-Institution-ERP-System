@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <style>
+          @page {
+            size: letter landscape;
+            @frame content_frame { left: 25pt; width: 562pt; top: 25pt; height: 742pt; }
+            }
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .header { text-align: center; margin-bottom: 30px; border-bottom: 2px solid #333; padding-bottom: 20px; }
+        .logo { max-width: 150px; max-height: 80px; }
+        .summary { background: #f8f9fa; padding: 15px; margin: 20px 0; border-radius: 5px; }
+        table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #3b5998; color: white; }
+        .footer { margin-top: 30px; text-align: center; font-size: 12px; color: #666; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        {% if logo %}
+            <img src="{{ logo }}" class="logo" alt="Organization Logo" width="210">
+        {% endif %}
+        <h1>{{ title }}</h1>
+        <h3>{{ organization.name }}</h3>
+        <p>Generated on: {{ export_date|date:"F d, Y H:i" }}</p>
+    </div>
+
+    <div class="summary">
+        <h3>Summary</h3>
+        <p>Total Records: {{ total_count }}</p>
+        <p>Total Hours Worked: {{ total_hours }}</p>
+        <p>Present: {{ present_count }} | Absent: {{ absent_count }}</p>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                {% for column in columns %}
+                <th width="{{ column.width }}">{{ column.name }}</th>
+                {% endfor %}
+            </tr>
+        </thead>
+        <tbody>
+            {% for attendance in attendances %}
+            <tr>
+                <td>{{ attendance.employee_id }}</td>
+                <td>{{ attendance.staff_name }}</td>
+                <td>{{ attendance.date }}</td>
+                <td>{{ attendance.check_in }}</td>
+                <td>{{ attendance.check_out }}</td>
+                <td>{{ attendance.status }}</td>
+                <td>{{ attendance.hours_worked }}</td>
+                <td>{{ attendance.remarks|default:"-" }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <tfoot>
+        <tr>
+            <td>
+                <div class="footer">
+                    Generated on {{ export_date }} | Page <pdf:pagenumber> of <pdf:pagecount>
+                </div>
+            </td>
+        </tr>
+    </tfoot>
+</body>
+</html>

@@ -1,0 +1,16 @@
+[
+  {
+    "institution_code": "main-campus",
+    "academic_year_name": "Academic Year 2023-2024",
+    "class_code": "C1",
+    "section_name": "A",
+    "day": "monday",
+    "period": 1,
+    "subject_code": "MATH101",
+    "teacher_employee_id": "T001",
+    "start_time": "08:00:00",
+    "end_time": "09:00:00",
+    "room": "Room 101",
+    "is_active": true
+  }
+]

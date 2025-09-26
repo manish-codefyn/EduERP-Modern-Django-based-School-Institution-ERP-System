@@ -1,0 +1,198 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load widget_tweaks %}
+
+{% block title %}{% if form.instance.pk %}Edit{% else %}Add{% endif %} Class - {{ organization.name|default:"ERP System" }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-12">
+        <div class="card card-custom">
+            <div class="card-header">
+                <h4 class="card-title mb-0">{% if form.instance.pk %}Edit{% else %}Add New{% endif %} Class</h4>
+            </div>
+            <div class="card-body">
+                <form method="post" id="classForm">
+                    {% csrf_token %}
+                    
+                    {% if form.non_field_errors %}
+                    <div class="alert alert-danger">
+                        {% for error in form.non_field_errors %}
+                            {{ error }}
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group mb-3">
+                                <label for="{{ form.name.id_for_label }}" class="form-label">
+                                    {{ form.name.label }}
+                                    {% if form.name.field.required %}<span class="text-danger">*</span>{% endif %}
+                                </label>
+                                {% render_field form.name class="form-control" %}
+                                {% if form.name.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.name.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                                <small class="text-custom">Enter the class name (e.g., Grade 10, Form 4).</small>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="form-group mb-3">
+                                <label for="{{ form.code.id_for_label }}" class="form-label">
+                                    {{ form.code.label }}
+                                    {% if form.code.field.required %}<span class="text-danger">*</span>{% endif %}
+                                </label>
+                                {% render_field form.code class="form-control" %}
+                                {% if form.code.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.code.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                                <small class="text-custom">Unique class code (e.g., G10, F4).</small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group mb-3">
+                                <label for="{{ form.capacity.id_for_label }}" class="form-label">
+                                    {{ form.capacity.label }}
+                                    {% if form.capacity.field.required %}<span class="text-danger">*</span>{% endif %}
+                                </label>
+                                {% render_field form.capacity class="form-control" type="number" min="1" %}
+                                {% if form.capacity.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.capacity.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                                <small class="text-custom">Maximum number of students in this class.</small>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="form-group mb-3">
+                                <label for="{{ form.room_number.id_for_label }}" class="form-label">
+                                    {{ form.room_number.label }}
+                                </label>
+                                {% render_field form.room_number class="form-control" %}
+                                {% if form.room_number.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.room_number.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                                <small class="text-custom">Room number where this class is held.</small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group mb-3">
+                        <div class="form-check form-switch">
+                            {% render_field form.is_active class="form-check-input" %}
+                            <label class="form-check-label" for="{{ form.is_active.id_for_label }}">
+                                {{ form.is_active.label }}
+                            </label>
+                        </div>
+                        {% if form.is_active.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.is_active.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                        <small class="text-custom">Deactivate to hide this class from selection lists.</small>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between mt-4">
+                        <a href="{% url 'academics:class_list' %}" class="btn btn-secondary">
+                            <i class="bi bi-arrow-left me-1"></i> Cancel
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-circle me-1"></i> {% if form.instance.pk %}Update{% else %}Create{% endif %} Class
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Form validation
+        const form = document.getElementById('classForm');
+        
+        form.addEventListener('submit', function(event) {
+            let isValid = true;
+            
+            // Validate required fields
+            const nameField = document.getElementById('{{ form.name.id_for_label }}');
+            if (!nameField.value.trim()) {
+                isValid = false;
+                highlightFieldError(nameField, 'Class name is required.');
+            }
+            
+            const codeField = document.getElementById('{{ form.code.id_for_label }}');
+            if (!codeField.value.trim()) {
+                isValid = false;
+                highlightFieldError(codeField, 'Class code is required.');
+            }
+            
+            const capacityField = document.getElementById('{{ form.capacity.id_for_label }}');
+            if (!capacityField.value || parseInt(capacityField.value) < 1) {
+                isValid = false;
+                highlightFieldError(capacityField, 'Please enter a valid capacity (minimum 1).');
+            }
+            
+            if (!isValid) {
+                event.preventDefault();
+                // Scroll to first error
+                const firstError = form.querySelector('.is-invalid');
+                if (firstError) {
+                    firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            }
+        });
+        
+        function highlightFieldError(field, message) {
+            field.classList.add('is-invalid');
+            
+            // Check if error message already exists
+            let errorDiv = field.nextElementSibling;
+            if (!errorDiv || !errorDiv.classList.contains('invalid-feedback')) {
+                errorDiv = document.createElement('div');
+                errorDiv.className = 'invalid-feedback d-block';
+                field.parentNode.insertBefore(errorDiv, field.nextSibling);
+            }
+            
+            errorDiv.textContent = message;
+        }
+        
+        // Remove validation styles on input
+        const inputs = form.querySelectorAll('input, select, textarea');
+        inputs.forEach(input => {
+            input.addEventListener('input', function() {
+                this.classList.remove('is-invalid');
+                const errorDiv = this.nextElementSibling;
+                if (errorDiv && errorDiv.classList.contains('invalid-feedback')) {
+                    errorDiv.textContent = '';
+                }
+            });
+        });
+    });
+</script>
+{% endblock %}

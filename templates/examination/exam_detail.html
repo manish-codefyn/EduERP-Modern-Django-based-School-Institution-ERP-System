@@ -1,0 +1,516 @@
+{% extends 'examination/base.html' %}
+{% load static %}
+
+{% block title %}{{ exam.name }} - Examination Management{% endblock %}
+
+{% block page_title %}
+<div class="d-flex align-items-center">
+    <i class="bi bi-journal-text text-primary me-3 fs-2"></i>
+    <div>
+        <h1 class="h3 mb-0">{{ exam.name }}</h1>
+        <small class="text-custom">Exam Details & Subjects</small>
+    </div>
+</div>
+{% endblock %}
+
+{% block page_actions %}
+<div class="btn-group">
+    <a href="{% url 'examination:exam_subject_create' %}?exam={{ exam.id }}" class="btn btn-success">
+        <i class="bi bi-plus-circle me-2"></i>Add Subject
+    </a>
+    <a href="{% url 'examination:exam_update' exam.pk %}" class="btn btn-warning">
+        <i class="bi bi-pencil-square me-2"></i>Edit Exam
+    </a>
+    <div class="btn-group">
+        <button type="button" class="btn btn-outline-primary dropdown-toggle" data-bs-toggle="dropdown">
+            <i class="bi bi-download me-2"></i>Export
+        </button>
+        <ul class="dropdown-menu">
+            <li><a class="dropdown-item" href="#"><i class="bi bi-file-text me-2"></i>Results Report</a></li>
+            <li><a class="dropdown-item" href="#"><i class="bi bi-list-check me-2"></i>Subject List</a></li>
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item" href="#"><i class="bi bi-printer me-2"></i>Print Details</a></li>
+        </ul>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<!-- Statistics Cards -->
+<div class="row mb-4">
+    <div class="col-xl-3 col-md-6">
+        <div class="card bg-primary text-white mb-4">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h3 class="card-title">{{ subjects.count }}</h3>
+                        <p class="card-text">Total Subjects</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="bi bi-journal-bookmark display-6 opacity-75"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6">
+        <div class="card bg-success text-white mb-4">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h3 class="card-title">{{ result_count }}</h3>
+                        <p class="card-text">Results Recorded</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="bi bi-clipboard-data display-6 opacity-75"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6">
+        <div class="card bg-info text-white mb-4">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h3 class="card-title">{{ avg_marks }}</h3>
+                        <p class="card-text">Average Marks</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="bi bi-graph-up display-6 opacity-75"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6">
+        <div class="card bg-warning text-white mb-4">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h3 class="card-title">{{ exam.get_status_display }}</h3>
+                        <p class="card-text">Current Status</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="bi bi-activity display-6 opacity-75"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Exam Information Card -->
+    <div class="col-lg-4 mb-4">
+        <div class="card card-custom">
+            <div class="card-header detail-card-header">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-info-circle text-primary me-2"></i>
+                    Exam Information
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <label class="form-label text-custom small mb-1">Exam Type</label>
+                    <div class="d-flex align-items-center">
+                        <i class="bi bi-tag text-primary me-2"></i>
+                        <span class="fw-semibold">{{ exam.exam_type.name }}</span>
+                    </div>
+                </div>
+                
+                <div class="mb-3">
+                    <label class="form-label text-custom small mb-1">Institution</label>
+                    <div class="d-flex align-items-center">
+                        <i class="bi bi-building text-primary me-2"></i>
+                        <span class="fw-semibold">{{ exam.institution.name }}</span>
+                    </div>
+                </div>
+                
+                <div class="mb-3">
+                    <label class="form-label text-custom small mb-1">Academic Year</label>
+                    <div class="d-flex align-items-center">
+                        <i class="bi bi-calendar-range text-primary me-2"></i>
+                        <span class="fw-semibold">{{ exam.academic_year.name }}</span>
+                    </div>
+                </div>
+                
+                <div class="mb-3">
+                    <label class="form-label text-custom small mb-1">Duration</label>
+                    <div class="d-flex align-items-center">
+                        <i class="bi bi-calendar-event text-primary me-2"></i>
+                        <span class="fw-semibold">{{ exam.start_date|date:"M d, Y" }} - {{ exam.end_date|date:"M d, Y" }}</span>
+                    </div>
+                </div>
+                
+                <div class="mb-3">
+                    <label class="form-label text-custom small mb-1">Status</label>
+                    <div>
+                        <span class="badge bg-{% if exam.status == 'completed' %}success{% elif exam.status == 'ongoing' %}warning{% elif exam.status == 'upcoming' %}info{% else %}secondary{% endif %} py-2 px-3">
+                            <i class="bi bi-{% if exam.status == 'completed' %}check-circle{% elif exam.status == 'ongoing' %}play-circle{% elif exam.status == 'upcoming' %}clock{% else %}pause-circle{% endif %} me-1"></i>
+                            {{ exam.get_status_display }}
+                        </span>
+                    </div>
+                </div>
+                
+                {% if exam.description %}
+                <div class="mt-4">
+                    <label class="form-label text-custom small mb-1">Description</label>
+                    <p class="text-custom mb-0">{{ exam.description }}</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Quick Actions Card -->
+        <div class="card  card-custom mt-4">
+            <div class="card-header detail-card-header">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-lightning-charge text-warning me-2"></i>
+                    Quick Actions
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a href="{% url 'examination:exam_result_create' %}?exam={{ exam.id }}" class="btn btn-outline-primary btn-sm">
+                        <i class="bi bi-plus-circle me-2"></i>Add Results
+                    </a>
+                    <a href="{% url 'examination:exam_subject_create' %}?exam={{ exam.id }}" class="btn btn-outline-success btn-sm">
+                        <i class="bi bi-journal-plus me-2"></i>Add Subject
+                    </a>
+                    <a href="#" class="btn btn-outline-info btn-sm">
+                        <i class="bi bi-eye me-2"></i>View Results
+                    </a>
+                    <a href="{% url 'examination:exam_update' exam.pk %}" class="btn btn-outline-warning btn-sm">
+                        <i class="bi bi-pencil-square me-2"></i>Edit Exam
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Subjects Table Card -->
+    <div class="col-lg-8">
+        <div class="card card-custom">
+            <div class="card-header  d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-journal-bookmark text-primary me-2"></i>
+                    Exam Subjects ({{ subjects.count }})
+                </h5>
+                <div class="btn-group">
+                    <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#filterModal">
+                        <i class="bi bi-funnel"></i>
+                    </button>
+                    <a href="#" class="btn btn-sm btn-outline-secondary">
+                        <i class="bi bi-arrow-clockwise"></i>
+                    </a>
+                </div>
+            </div>
+            
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table-custom  w-100 table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th class="ps-4">
+                                    <i class="bi bi-book me-2"></i>Subject
+                                </th>
+                                <th class="text-center">
+                                    <i class="bi bi-bar-chart me-2"></i>Marks
+                                </th>
+                                <th class="text-center">
+                                    <i class="bi bi-calendar-event me-2"></i>Exam Date
+                                </th>
+                                <th class="text-center">
+                                    <i class="bi bi-clock me-2"></i>Time
+                                </th>
+                                <th class="text-center">
+                                    <i class="bi bi-people me-2"></i>Results
+                                </th>
+                                <th class="text-center pe-4">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for subject in subjects %}
+                            <tr class="{% if subject.exam_date < today %}table-secondary{% elif subject.exam_date == today %}table-warning{% endif %}">
+                                <td class="ps-4">
+                                    <div class="d-flex align-items-center">
+                                        <div class="flex-shrink-0">
+                                            <i class="bi bi-journal-text text-primary fs-5"></i>
+                                        </div>
+                                        <div class="flex-grow-1 ms-3">
+                                            <h6 class="mb-0">{{ subject.subject.name }}</h6>
+                                            <small class="text-custom">{{ subject.subject.code|default:"No code" }}</small>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="text-center">
+                                    <div class="d-flex justify-content-center gap-2">
+                                        <span class="badge bg-light text-dark">
+                                            Max: {{ subject.max_marks }}
+                                        </span>
+                                        <span class="badge bg-light text-dark">
+                                            Pass: {{ subject.pass_marks }}
+                                        </span>
+                                    </div>
+                                </td>
+                                <td class="text-center">
+                                    <div class="d-flex flex-column align-items-center">
+                                        <span class="fw-semibold">{{ subject.exam_date|date:"M d, Y" }}</span>
+                                        <small class="text-custom">{{ subject.exam_date|date:"l" }}</small>
+                                    </div>
+                                </td>
+                                <td class="text-center">
+                                    <span class="badge bg-primary">
+                                        {{ subject.start_time|time:"H:i" }} - {{ subject.end_time|time:"H:i" }}
+                                    </span>
+                                </td>
+                                <td class="text-center">
+                                    <div class="d-flex justify-content-center align-items-center gap-2">
+                                        <span class="badge bg-{% if subject.results.count > 0 %}success{% else %}secondary{% endif %}">
+                                            {{ subject.results.count }}
+                                        </span>
+                                        {% if subject.results.count > 0 %}
+                                        <small class="text-custom">
+                                            {% widthratio subject.results.count 10 1 %}% complete
+                                        </small>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                                <td class="text-center pe-4">
+                                    <div class="btn-group btn-group-sm">
+                                        <a href="{% url 'examination:exam_subject_detail' subject.pk %}" 
+                                           class="btn btn-outline-info" 
+                                           data-bs-toggle="tooltip" 
+                                           title="View Details">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                        <a href="{% url 'examination:exam_subject_update' subject.pk %}" 
+                                           class="btn btn-outline-primary" 
+                                           data-bs-toggle="tooltip" 
+                                           title="Edit Subject">
+                                            <i class="bi bi-pencil"></i>
+                                        </a>
+                                        <a href="{% url 'examination:exam_subject_delete' subject.pk %}" 
+                                           class="btn btn-outline-danger" 
+                                           data-bs-toggle="tooltip" 
+                                           title="Delete Subject">
+                                            <i class="bi bi-trash"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="6" class="text-center py-5">
+                                    <div class="py-4">
+                                        <i class="bi bi-journal-x display-1 text-custom"></i>
+                                        <h5 class="text-custom mt-3">No subjects added yet</h5>
+                                        <p class="text-custom">Start by adding subjects to this exam.</p>
+                                        <a href="{% url 'examination:exam_subject_create' %}?exam={{ exam.id }}" class="btn btn-primary">
+                                            <i class="bi bi-plus-circle me-2"></i>Add First Subject
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            {% if subjects.count > 10 %}
+            <div class="card-footer bg-light">
+                <div class="d-flex justify-content-between align-items-center">
+                    <small class="text-custom">Showing {{ subjects.count }} subjects</small>
+                    <nav>
+                        <ul class="pagination pagination-sm mb-0">
+                            <li class="page-item disabled">
+                                <a class="page-link" href="#">Previous</a>
+                            </li>
+                            <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                            <li class="page-item"><a class="page-link" href="#">2</a></li>
+                            <li class="page-item"><a class="page-link" href="#">3</a></li>
+                            <li class="page-item">
+                                <a class="page-link" href="#">Next</a>
+                            </li>
+                        </ul>
+                    </nav>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Progress Summary Card -->
+        {% if subjects.count > 0 %}
+        <div class="card card-custom mt-4">
+            <div class="card-header detail-card-header">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-graph-up text-success me-2"></i>
+                    Progress Summary
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-md-3">
+                        <div class="border-end">
+                            <h4 class="text-primary">{{ subjects.count }}</h4>
+                            <small class="text-custom">Total Subjects</small>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="border-end">
+                            <h4 class="text-success">{{ completed_subjects }}</h4>
+                            <small class="text-custom">Completed</small>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="border-end">
+                            <h4 class="text-warning">{{ upcoming_subjects }}</h4>
+                            <small class="text-custom">Upcoming</small>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div>
+                            <h4 class="text-info">{{ result_count }}</h4>
+                            <small class="text-custom">Results Recorded</small>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Progress Bar -->
+                <div class="mt-3">
+                    <div class="d-flex justify-content-between mb-1">
+                        <small class="text-custom">Overall Progress</small>
+                        <small class="text-custom">{{ progress_percentage }}%</small>
+                    </div>
+                    <div class="progress" style="height: 8px;">
+                        <div class="progress-bar bg-success" role="progressbar" style="width: {{ progress_percentage }}%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Filter Modal -->
+<div class="modal fade" id="filterModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="bi bi-funnel me-2"></i>Filter Subjects
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form method="get">
+                    <div class="mb-3">
+                        <label class="form-label">Subject Status</label>
+                        <select class="form-select">
+                            <option value="">All Subjects</option>
+                            <option value="completed">Completed</option>
+                            <option value="upcoming">Upcoming</option>
+                            <option value="today">Today</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Results Status</label>
+                        <select class="form-select">
+                            <option value="">All</option>
+                            <option value="with_results">With Results</option>
+                            <option value="without_results">Without Results</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary">Apply Filters</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize tooltips
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl)
+    });
+    
+    // Add row hover effects
+    const tableRows = document.querySelectorAll('table tbody tr');
+    tableRows.forEach(row => {
+        row.addEventListener('mouseenter', function() {
+            this.style.backgroundColor = 'rgba(0, 123, 255, 0.04)';
+        });
+        row.addEventListener('mouseleave', function() {
+            this.style.backgroundColor = '';
+        });
+    });
+    
+    // Add today's date for comparison
+    const today = new Date().toISOString().split('T')[0];
+    console.log('Today:', today);
+
+
+         // 3) Robust modal cleanup handlers
+    // Remove any leftover backdrop BEFORE a modal opens
+    document.querySelectorAll('.modal').forEach(modalEl => {
+        modalEl.addEventListener('show.bs.modal', function () {
+            // if another leftover backdrop exists, remove it
+            document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+        });
+
+        // on hidden, remove backdrops and restore body scrolling
+        modalEl.addEventListener('hidden.bs.modal', function () {
+            document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+            document.body.classList.remove('modal-open');
+            document.body.style.overflow = '';
+            document.body.style.paddingRight = '';
+        });
+    });
+
+    // 4) Safety-net: if a backdrop exists but there is no visible modal, remove it
+    // (handles cases where Bootstrap failed silently)
+    const observer = new MutationObserver(() => {
+        const backdrop = document.querySelector('.modal-backdrop');
+        const anyShown = !!document.querySelector('.modal.show');
+        if (backdrop && !anyShown) {
+            backdrop.remove();
+            document.body.classList.remove('modal-open');
+            document.body.style.overflow = '';
+            document.body.style.paddingRight = '';
+        }
+    });
+    observer.observe(document.body, { childList: true, subtree: true });
+
+    // 5) Allow manual cleanup by pressing Esc (extra safety)
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+            document.body.classList.remove('modal-open');
+            document.body.style.overflow = '';
+            document.body.style.paddingRight = '';
+            document.querySelectorAll('.modal.show').forEach(m => {
+                try { bootstrap.Modal.getInstance(m)?.hide(); } catch(e) {}
+            });
+        }
+    });
+
+    // 6) Final cleanup in case something stuck earlier
+    setTimeout(() => {
+        document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+        document.body.classList.remove('modal-open');
+        document.body.style.overflow = '';
+        document.body.style.paddingRight = '';
+    }, 500);
+});
+</script>
+
+{% endblock %}

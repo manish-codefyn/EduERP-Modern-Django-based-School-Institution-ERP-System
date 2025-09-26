@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>{{ title }}</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; color: #333; font-size: 14px; }
+        .header, .footer { text-align: center; margin-bottom: 20px; }
+        .organization-logo { max-height: 70px; margin-bottom: 10px; }
+        .organization-name { font-size: 20px; font-weight: bold; }
+        .report-title { font-size: 16px; margin: 5px 0 10px; }
+        .detail-section { margin-bottom: 25px; }
+        .detail-section h3 {
+            font-size: 15px;
+            margin: 0 0 10px 0;
+            padding-bottom: 5px;
+            border-bottom: 1px solid #ccc;
+        }
+        .detail-row {
+            padding: 4px 0;
+            overflow: auto; /* Clearfix for floated elements */
+        }
+        .detail-label {
+            font-weight: bold;
+            float: left;
+            width: 180px;
+        }
+        .qr-code { text-align: center; margin: 20px 0; }
+        .qr-code img { max-width: 130px; }
+        .footer { margin-top: 30px; font-size: 12px; color: #666; border-top: 1px solid #ccc; padding-top: 10px; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        {% if logo %}
+            <img src="{{ logo }}" class="organization-logo" alt="Organization Logo">
+        {% endif %}
+        <div class="organization-name">{{ organization.name }}</div>
+        <div class="report-title">{{ title }}</div>
+        <div>Export Date: {{ export_date|date:"M d, Y H:i" }}</div>
+    </div>
+
+    <div class="qr-code">
+        {% if qr_code %}
+            <img src="{{ qr_code }}" alt="QR Code">
+        {% endif %}
+    </div>
+
+    <div class="detail-section">
+        <h3>Staff Information</h3>
+        <div class="detail-row">
+            <div class="detail-label">Employee ID:</div>
+            <div class="detail-value">{{ application.employee_id }}</div>
+        </div>
+        <div class="detail-row">
+            <div class="detail-label">Staff Name:</div>
+            <div class="detail-value">{{ application.staff_name }}</div>
+        </div>
+        <div class="detail-row">
+            <div class="detail-label">Department:</div>
+            <div class="detail-value">{{ application.staff_department }}</div>
+        </div>
+        <div class="detail-row">
+            <div class="detail-label">Designation:</div>
+            <div class="detail-value">{{ application.staff_designation }}</div>
+        </div>
+    </div>
+
+    <div class="detail-section">
+        <h3>Leave Details</h3>
+        <div class="detail-row">
+            <div class="detail-label">Leave Type:</div>
+            <div class="detail-value">{{ application.leave_type }} ({{ application.leave_code }})</div>
+        </div>
+        <div class="detail-row">
+            <div class="detail-label">Max Days Allowed:</div>
+            <div class="detail-value">{{ application.max_days_allowed }}</div>
+        </div>
+        <div class="detail-row">
+            <div class="detail-label">Carry Forward:</div>
+            <div class="detail-value">{{ application.carry_forward }}</div>
+        </div>
+        <div class="detail-row">
+            <div class="detail-label">Requires Approval:</div>
+            <div class="detail-value">{{ application.requires_approval }}</div>
+        </div>
+    </div>
+
+    <div class="detail-section">
+        <h3>Application Period</h3>
+        <div class="detail-row">
+            <div class="detail-label">Start Date:</div>
+            <div class="detail-value">{{ application.start_date }}</div>
+        </div>
+        <div class="detail-row">
+            <div class="detail-label">End Date:</div>
+            <div class="detail-value">{{ application.end_date }}</div>
+        </div>
+        <div class="detail-row">
+            <div class="detail-label">Total Days:</div>
+            <div class="detail-value">{{ application.total_days }}</div>
+        </div>
+    </div>
+
+    <div class="detail-section">
+        <h3>Reason & Status</h3>
+        <div class="detail-row">
+            <div class="detail-label">Reason:</div>
+            <div class="detail-value">{{ application.reason }}</div>
+        </div>
+        <div class="detail-row">
+            <div class="detail-label">Status:</div>
+            <div class="detail-value">{{ application.status }}</div>
+        </div>
+        <div class="detail-row">
+            <div class="detail-label">Applied Date:</div>
+            <div class="detail-value">{{ application.applied_date }}</div>
+        </div>
+        {% if application.approved_by != 'N/A' %}
+        <div class="detail-row">
+            <div class="detail-label">Approved By:</div>
+            <div class="detail-value">{{ application.approved_by }}</div>
+        </div>
+        <div class="detail-row">
+            <div class="detail-label">Approved Date:</div>
+            <div class="detail-value">{{ application.approved_date }}</div>
+        </div>
+        <div class="detail-row">
+            <div class="detail-label">Remarks:</div>
+            <div class="detail-value">{{ application.remarks }}</div>
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="detail-section">
+        <h3>Supporting Documents</h3>
+        <div class="detail-row">
+            <div class="detail-label">Has Supporting Document:</div>
+            <div class="detail-value">{{ application.has_supporting_document }}</div>
+        </div>
+        {% if application.has_supporting_document == 'Yes' and supporting_document_url %}
+        <div class="detail-row">
+            <div class="detail-label">Document:</div>
+            <div class="detail-value">{{ application.document_name }}</div>
+        </div>
+        {% endif %}
+    </div>
+
+    {% if stamp %}
+    <div style="text-align: center; margin-top: 50px;">
+        <img src="{{ stamp }}" style="max-width: 150px; opacity: 0.7;" alt="Official Stamp">
+    </div>
+    {% endif %}
+
+    <div class="footer">
+        <div>Generated by {{ organization.name }}.</div>
+        <div>This is an auto-generated document. Current Time: {{ export_date|date:"Y-m-d H:i:s" }}</div>
+        <div>Page <pdf:pagenumber> of <pdf:pagecount></div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,86 @@
+{% extends "hr/base.html" %}
+{% load crispy_forms_tags %}
+{% load static %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="fw-bold">
+            {% if object %}
+                <i class="bi bi-pencil-square me-2"></i> Update Staff
+            {% else %}
+                <i class="bi bi-person-plus me-2"></i> Add New Staff
+            {% endif %}
+        </h2>
+        <a href="{% url 'hr:staff_list' %}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-1"></i> Back to List
+        </a>
+    </div>
+
+    <!-- Staff Form Card -->
+    <div class="card shadow-lg border-0 rounded-3">
+        <div class="card-body">
+            <form method="post" enctype="multipart/form-data" novalidate>
+                {% csrf_token %}
+
+                <div class="row g-3">
+                    <!-- First column -->
+                    <div class="col-md-6">
+                        {{ form.user|as_crispy_field }}
+                        {{ form.employee_id|as_crispy_field }}
+                        {{ form.staff_type|as_crispy_field }}
+                        {{ form.department|as_crispy_field }}
+                        {{ form.designation|as_crispy_field }}
+                        {{ form.reporting_manager|as_crispy_field }}
+                        {{ form.date_of_birth|as_crispy_field }}
+                        {{ form.gender|as_crispy_field }}
+                        {{ form.blood_group|as_crispy_field }}
+                        {{ form.marital_status|as_crispy_field }}
+                        {{ form.personal_email|as_crispy_field }}
+                        {{ form.personal_phone|as_crispy_field }}
+                    </div>
+
+                    <!-- Second column -->
+                    <div class="col-md-6">
+                        {{ form.emergency_contact_name|as_crispy_field }}
+                        {{ form.emergency_contact_phone|as_crispy_field }}
+                        {{ form.emergency_contact_relation|as_crispy_field }}
+                        {{ form.employment_type|as_crispy_field }}
+                        {{ form.joining_date|as_crispy_field }}
+                        {{ form.contract_end_date|as_crispy_field }}
+                        {{ form.probation_end_date|as_crispy_field }}
+                        {{ form.resignation_date|as_crispy_field }}
+                        {{ form.resignation_reason|as_crispy_field }}
+                        {{ form.salary|as_crispy_field }}
+                        {{ form.bank_account|as_crispy_field }}
+                        {{ form.bank_name|as_crispy_field }}
+                        {{ form.ifsc_code|as_crispy_field }}
+                        {{ form.pan_number|as_crispy_field }}
+                        {{ form.aadhaar_number|as_crispy_field }}
+                        {{ form.is_active|as_crispy_field }}
+                    </div>
+                </div>
+
+                <!-- File Uploads -->
+                <h5 class="mt-4 mb-3"><i class="bi bi-folder me-2"></i> Documents</h5>
+                <div class="row g-3">
+                    <div class="col-md-4">{{ form.photo|as_crispy_field }}</div>
+                    <div class="col-md-4">{{ form.resume|as_crispy_field }}</div>
+                    <div class="col-md-4">{{ form.id_proof|as_crispy_field }}</div>
+                    <div class="col-md-6">{{ form.address_proof|as_crispy_field }}</div>
+                    <div class="col-md-6">{{ form.qualification_proof|as_crispy_field }}</div>
+                </div>
+
+                <!-- Submit -->
+                <div class="d-flex justify-content-end mt-4">
+                    <button type="submit" class="btn btn-success px-4">
+                        <i class="bi bi-check-circle me-1"></i>
+                        {% if object %} Update {% else %} Save {% endif %}
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

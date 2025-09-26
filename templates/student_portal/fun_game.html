@@ -1,0 +1,500 @@
+{% extends "student_portal/base.html" %}
+
+{% block title %}Student Portal - {{ organization.name|default:"Codefyn" }}{% endblock %}
+
+{% block header_name %}{{ student.first_name }} {{ student.last_name}}{% endblock %}
+{% block header_avatar %}{{ student.avatar_url|default:"https://i.pravatar.cc/60?img=32" }}{% endblock %}
+
+{% block content %}
+
+    <main class="main-content">
+        <div class="container-fluid">
+          
+            <!-- Games Arcade -->
+            <div class="dashboard-card game-arcade">
+                <h3 class="text-center mb-3">Games Arcade</h3>
+                <!-- Game selection tabs -->
+                <ul class="nav nav-pills justify-content-center mb-4" id="gameTabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="math-tab" data-bs-toggle="pill" data-bs-target="#math-game" type="button" role="tab">Math Challenge</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="word-tab" data-bs-toggle="pill" data-bs-target="#word-game" type="button" role="tab">Word Scramble</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="memory-tab" data-bs-toggle="pill" data-bs-target="#memory-game" type="button" role="tab">Memory Match</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="quiz-tab" data-bs-toggle="pill" data-bs-target="#quiz-game" type="button" role="tab">Capital Quiz</button>
+                    </li>
+                </ul>
+
+                <!-- Game content -->
+                <div class="tab-content" id="gameTabsContent">
+                    <!-- Math Challenge Game -->
+                    <div class="tab-pane fade show active" id="math-game" role="tabpanel">
+                        <!-- Start Screen -->
+                        <div class="game-start-screen">
+                             <div class="game-header">
+                                <div class="icon"><i class="bi bi-calculator"></i></div>
+                                <h4 class="mt-2">Math Challenge</h4>
+                                <p class="text-muted small">Solve as many problems as you can in 30 seconds!</p>
+                                <button class="btn game-btn start-game-btn">Start</button>
+                            </div>
+                        </div>
+                        <!-- Main Screen -->
+                        <div class="game-main-screen d-none">
+                            <div class="game-stats">
+                                <div class="game-timer"><i class="bi bi-clock"></i> 30s</div>
+                                <div class="game-score">Score: 0</div>
+                            </div>
+                            <div class="game-problem">12 + 5 = ?</div>
+                            <form class="game-form">
+                                <input type="number" class="form-control form-control-lg game-answer-input" required autocomplete="off">
+                                <div class="game-feedback mt-2"></div>
+                            </form>
+                        </div>
+                        <!-- End Screen -->
+                        <div class="game-end-screen d-none text-center">
+                            <h4>Challenge Over!</h4>
+                            <p>Your final score is:</p>
+                            <div class="final-score">0</div>
+                            <button class="btn game-btn play-again-btn mt-3">Play Again</button>
+                        </div>
+                    </div>
+                    
+                    <!-- Word Scramble Game -->
+                    <div class="tab-pane fade" id="word-game" role="tabpanel">
+                        <!-- Start Screen -->
+                        <div class="game-start-screen">
+                             <div class="game-header">
+                                <div class="icon"><i class="bi bi-fonts"></i></div>
+                                <h4 class="mt-2">Word Scramble</h4>
+                                <p class="text-muted small">Unscramble the letters to find the hidden word.</p>
+                                <button class="btn game-btn start-game-btn">Start</button>
+                            </div>
+                        </div>
+                        <!-- Main Screen -->
+                        <div class="game-main-screen d-none">
+                            <div class="game-stats">
+                                <div class="game-timer"><i class="bi bi-clock"></i> 60s</div>
+                                <div class="game-score">Score: 0</div>
+                            </div>
+                            <div id="scrambled-word"></div>
+                            <form class="game-form">
+                                <input type="text" class="form-control form-control-lg game-answer-input" required autocomplete="off">
+                                <div class="game-feedback mt-2"></div>
+                            </form>
+                        </div>
+                        <!-- End Screen -->
+                        <div class="game-end-screen d-none text-center">
+                             <h4>Challenge Over!</h4>
+                            <p>Your final score is:</p>
+                            <div class="final-score">0</div>
+                            <button class="btn game-btn play-again-btn mt-3">Play Again</button>
+                        </div>
+                    </div>
+
+                    <!-- Memory Match Game -->
+                    <div class="tab-pane fade" id="memory-game" role="tabpanel">
+                        <div class="game-start-screen">
+                            <div class="game-header">
+                                <div class="icon"><i class="bi bi-grid-3x3-gap"></i></div>
+                                <h4 class="mt-2">Memory Match</h4>
+                                <p class="text-muted small">Flip cards and find all the matching pairs.</p>
+                                <button class="btn game-btn start-game-btn">Start</button>
+                            </div>
+                        </div>
+                        <div class="game-main-screen d-none">
+                            <div class="game-stats">
+                                <div class="game-timer">Time: 0s</div>
+                                <div class="game-score">Moves: 0</div>
+                            </div>
+                             <div class="memory-grid mt-3"></div>
+                        </div>
+                        <div class="game-end-screen d-none text-center">
+                             <h4>You Won!</h4>
+                            <p>Your stats:</p>
+                            <div class="final-score"></div>
+                            <button class="btn game-btn play-again-btn mt-3">Play Again</button>
+                        </div>
+                    </div>
+
+                    <!-- Capital Quiz Game -->
+                     <div class="tab-pane fade" id="quiz-game" role="tabpanel">
+                        <div class="game-start-screen">
+                            <div class="game-header">
+                                <div class="icon"><i class="bi bi-globe-americas"></i></div>
+                                <h4 class="mt-2">Capital Quiz</h4>
+                                <p class="text-muted small">Test your geography knowledge!</p>
+                                <button class="btn game-btn start-game-btn">Start</button>
+                            </div>
+                        </div>
+                        <div class="game-main-screen d-none">
+                            <div class="game-stats">
+                                <div class="game-score">Score: 0</div>
+                                <div>Question <span class="quiz-question-count">1/10</span></div>
+                            </div>
+                            <h5 class="text-center my-3 quiz-question"></h5>
+                            <div class="quiz-options"></div>
+                             <div class="game-feedback mt-2"></div>
+                        </div>
+                        <div class="game-end-screen d-none text-center">
+                             <h4>Quiz Complete!</h4>
+                            <p>Your final score is:</p>
+                            <div class="final-score">0 / 10</div>
+                            <button class="btn game-btn play-again-btn mt-3">Play Again</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+    
+   
+{% endblock %}
+ {% block extra_js %}
+    <!-- Bootstrap JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Set dynamic greeting
+            const greetingEl = document.getElementById('greeting');
+            const hours = new Date().getHours();
+            if (hours < 12) greetingEl.textContent = 'Good Morning,';
+            else if (hours < 18) greetingEl.textContent = 'Good Afternoon,';
+            else greetingEl.textContent = 'Good Evening,';
+
+            // --- UNIVERSAL GAME SETUP ---
+            const allGameTabs = document.querySelectorAll('.tab-pane');
+            allGameTabs.forEach(tab => {
+                const startScreen = tab.querySelector('.game-start-screen');
+                const mainScreen = tab.querySelector('.game-main-screen');
+                const endScreen = tab.querySelector('.game-end-screen');
+                const startBtn = tab.querySelector('.start-game-btn');
+                const playAgainBtn = tab.querySelector('.play-again-btn');
+
+                // Universal start and play again button logic
+                const showStartScreen = () => {
+                    mainScreen.classList.add('d-none');
+                    endScreen.classList.add('d-none');
+                    startScreen.classList.remove('d-none');
+                };
+
+                if (startBtn) startBtn.addEventListener('click', () => {
+                     startScreen.classList.add('d-none');
+                     mainScreen.classList.remove('d-none');
+                });
+                if (playAgainBtn) playAgainBtn.addEventListener('click', showStartScreen);
+            });
+
+            // --- MATH GAME LOGIC ---
+            initMathGame();
+            
+            // --- WORD SCRAMBLE LOGIC ---
+            initWordScrambleGame();
+
+            // --- MEMORY MATCH LOGIC ---
+            initMemoryMatchGame();
+
+            // --- CAPITAL QUIZ LOGIC ---
+            initCapitalQuizGame();
+
+        });
+
+        function initMathGame() {
+            const gameContainer = document.getElementById('math-game');
+            if (!gameContainer) return;
+            const startBtn = gameContainer.querySelector('.start-game-btn');
+            const playAgainBtn = gameContainer.querySelector('.play-again-btn');
+            const mainScreen = gameContainer.querySelector('.game-main-screen');
+            const timerEl = mainScreen.querySelector('.game-timer');
+            const scoreEl = mainScreen.querySelector('.game-score');
+            const problemEl = mainScreen.querySelector('.game-problem');
+            const form = mainScreen.querySelector('.game-form');
+            const answerInput = mainScreen.querySelector('.game-answer-input');
+            const feedbackEl = mainScreen.querySelector('.game-feedback');
+            const finalScoreEl = gameContainer.querySelector('.final-score');
+            
+            let score, timer, timeLeft, currentProblem;
+
+            const startGame = () => {
+                score = 0;
+                timeLeft = 30;
+                scoreEl.textContent = `Score: ${score}`;
+                timerEl.innerHTML = `<i class="bi bi-clock"></i> ${timeLeft}s`;
+                answerInput.value = '';
+                answerInput.focus();
+                generateProblem();
+                
+                timer = setInterval(() => {
+                    timeLeft--;
+                    timerEl.innerHTML = `<i class="bi bi-clock"></i> ${timeLeft}s`;
+                    if (timeLeft <= 0) endGame();
+                }, 1000);
+            };
+
+            const endGame = () => {
+                clearInterval(timer);
+                mainScreen.classList.add('d-none');
+                gameContainer.querySelector('.game-end-screen').classList.remove('d-none');
+                finalScoreEl.textContent = score;
+            };
+
+            const generateProblem = () => {
+                const num1 = Math.floor(Math.random() * 10) + 1;
+                const num2 = Math.floor(Math.random() * 10) + 1;
+                const operators = ['+', '-', '*'];
+                const op = operators[Math.floor(Math.random() * operators.length)];
+                let q, a;
+                if (op === '+') { q = `${num1} + ${num2}`; a = num1 + num2; }
+                else if (op === '-') { 
+                    if (num1 < num2) { q = `${num2} - ${num1}`; a = num2 - num1; }
+                    else { q = `${num1} - ${num2}`; a = num1 - num2; }
+                } else { q = `${num1} × ${num2}`; a = num1 * num2; }
+                problemEl.textContent = `${q} = ?`;
+                currentProblem = { answer: a };
+            };
+            
+            form.addEventListener('submit', (e) => {
+                e.preventDefault();
+                if (parseInt(answerInput.value, 10) === currentProblem.answer) {
+                    score++;
+                    scoreEl.textContent = `Score: ${score}`;
+                    feedbackEl.textContent = 'Correct!';
+                    feedbackEl.className = 'game-feedback feedback-correct';
+                } else {
+                    feedbackEl.textContent = 'Try again!';
+                    feedbackEl.className = 'game-feedback feedback-incorrect';
+                }
+                answerInput.value = '';
+                generateProblem();
+                setTimeout(() => { feedbackEl.textContent = ''; }, 1000);
+            });
+
+            startBtn.addEventListener('click', startGame);
+            playAgainBtn.addEventListener('click', startGame);
+        }
+
+        function initWordScrambleGame() {
+            const gameContainer = document.getElementById('word-game');
+            if (!gameContainer) return;
+            // ... (Get all elements like in Math Game)
+             const startBtn = gameContainer.querySelector('.start-game-btn');
+            const playAgainBtn = gameContainer.querySelector('.play-again-btn');
+            const mainScreen = gameContainer.querySelector('.game-main-screen');
+            const timerEl = mainScreen.querySelector('.game-timer');
+            const scoreEl = mainScreen.querySelector('.game-score');
+            const problemEl = mainScreen.querySelector('#scrambled-word');
+            const form = mainScreen.querySelector('.game-form');
+            const answerInput = mainScreen.querySelector('.game-answer-input');
+            const feedbackEl = mainScreen.querySelector('.game-feedback');
+            const finalScoreEl = gameContainer.querySelector('.final-score');
+
+            const words = ['SYSTEM', 'GITHUB', 'PYTHON', 'CODING', 'WIDGET', 'SERVER', 'CLIENT', 'JQUERY'];
+            let score, timer, timeLeft, currentWord;
+
+            const startGame = () => {
+                score = 0; timeLeft = 60;
+                scoreEl.textContent = `Score: ${score}`;
+                timerEl.innerHTML = `<i class="bi bi-clock"></i> ${timeLeft}s`;
+                answerInput.value = ''; answerInput.focus();
+                generateProblem();
+                timer = setInterval(() => {
+                    timeLeft--;
+                    timerEl.innerHTML = `<i class="bi bi-clock"></i> ${timeLeft}s`;
+                    if (timeLeft <= 0) endGame();
+                }, 1000);
+            };
+            const endGame = () => {
+                clearInterval(timer);
+                mainScreen.classList.add('d-none');
+                gameContainer.querySelector('.game-end-screen').classList.remove('d-none');
+                finalScoreEl.textContent = score;
+            };
+            const generateProblem = () => {
+                currentWord = words[Math.floor(Math.random() * words.length)];
+                let scrambled = currentWord.split('').sort(() => 0.5 - Math.random()).join('');
+                if (scrambled === currentWord) generateProblem(); // Reshuffle if same
+                else problemEl.textContent = scrambled;
+            };
+
+            form.addEventListener('submit', e => {
+                e.preventDefault();
+                if (answerInput.value.toUpperCase() === currentWord) {
+                    score++;
+                    scoreEl.textContent = `Score: ${score}`;
+                    feedbackEl.textContent = 'Correct!'; feedbackEl.className = 'game-feedback feedback-correct';
+                    generateProblem();
+                } else {
+                    feedbackEl.textContent = 'Incorrect!'; feedbackEl.className = 'game-feedback feedback-incorrect';
+                }
+                answerInput.value = '';
+                setTimeout(() => { feedbackEl.textContent = ''; }, 1000);
+            });
+            startBtn.addEventListener('click', startGame);
+            playAgainBtn.addEventListener('click', startGame);
+        }
+
+        function initMemoryMatchGame() {
+            const gameContainer = document.getElementById('memory-game');
+            if (!gameContainer) return;
+            const startBtn = gameContainer.querySelector('.start-game-btn');
+            const playAgainBtn = gameContainer.querySelector('.play-again-btn');
+            const mainScreen = gameContainer.querySelector('.game-main-screen');
+            const grid = mainScreen.querySelector('.memory-grid');
+            const timerEl = mainScreen.querySelector('.game-timer');
+            const scoreEl = mainScreen.querySelector('.game-score');
+            const finalScoreEl = gameContainer.querySelector('.final-score');
+            
+            const icons = ['gem', 'heart', 'star', 'key', 'bell', 'shield'];
+            let timer, time, moves, firstCard, secondCard, lockBoard, matchedPairs;
+
+            const startGame = () => {
+                time = 0; moves = 0; matchedPairs = 0;
+                firstCard = null; secondCard = null; lockBoard = false;
+                timerEl.textContent = 'Time: 0s'; scoreEl.textContent = 'Moves: 0';
+                
+                let cards = [...icons, ...icons];
+                cards.sort(() => 0.5 - Math.random());
+                grid.innerHTML = '';
+                cards.forEach(icon => {
+                    const card = document.createElement('div');
+                    card.classList.add('memory-card');
+                    card.dataset.icon = icon;
+                    card.innerHTML = `<div class="card-face card-back"></div><div class="card-face card-front"><i class="bi bi-${icon}-fill"></i></div>`;
+                    card.addEventListener('click', flipCard);
+                    grid.appendChild(card);
+                });
+
+                timer = setInterval(() => {
+                    time++;
+                    timerEl.textContent = `Time: ${time}s`;
+                }, 1000);
+            };
+
+            function flipCard() {
+                if (lockBoard || this === firstCard) return;
+                this.classList.add('is-flipped');
+                if (!firstCard) { firstCard = this; return; }
+                secondCard = this;
+                moves++; scoreEl.textContent = `Moves: ${moves}`;
+                checkForMatch();
+            }
+
+            function checkForMatch() {
+                let isMatch = firstCard.dataset.icon === secondCard.dataset.icon;
+                isMatch ? disableCards() : unflipCards();
+            }
+
+            function disableCards() {
+                firstCard.removeEventListener('click', flipCard);
+                secondCard.removeEventListener('click', flipCard);
+                matchedPairs++;
+                if (matchedPairs === icons.length) endGame();
+                resetBoard();
+            }
+
+            function unflipCards() {
+                lockBoard = true;
+                setTimeout(() => {
+                    firstCard.classList.remove('is-flipped');
+                    secondCard.classList.remove('is-flipped');
+                    resetBoard();
+                }, 1000);
+            }
+            
+            function resetBoard() { [firstCard, secondCard, lockBoard] = [null, null, false]; }
+            
+            const endGame = () => {
+                clearInterval(timer);
+                mainScreen.classList.add('d-none');
+                gameContainer.querySelector('.game-end-screen').classList.remove('d-none');
+                finalScoreEl.innerHTML = `Time: ${time}s<br>Moves: ${moves}`;
+            };
+            
+            startBtn.addEventListener('click', startGame);
+            playAgainBtn.addEventListener('click', startGame);
+        }
+
+        function initCapitalQuizGame() {
+            const gameContainer = document.getElementById('quiz-game');
+            if (!gameContainer) return;
+            const startBtn = gameContainer.querySelector('.start-game-btn');
+            const playAgainBtn = gameContainer.querySelector('.play-again-btn');
+            const mainScreen = gameContainer.querySelector('.game-main-screen');
+            const scoreEl = mainScreen.querySelector('.game-score');
+            const questionCountEl = mainScreen.querySelector('.quiz-question-count');
+            const questionEl = mainScreen.querySelector('.quiz-question');
+            const optionsContainer = mainScreen.querySelector('.quiz-options');
+            const feedbackEl = mainScreen.querySelector('.game-feedback');
+            const finalScoreEl = gameContainer.querySelector('.final-score');
+            
+            const quizData = [
+                { country: 'Japan', capital: 'Tokyo' }, { country: 'Brazil', capital: 'Brasília' },
+                { country: 'Canada', capital: 'Ottawa' }, { country: 'Australia', capital: 'Canberra' },
+                { country: 'Egypt', capital: 'Cairo' }, { country: 'India', capital: 'New Delhi' },
+                { country: 'France', capital: 'Paris' }, { country: 'Germany', capital: 'Berlin' },
+                { country: 'Italy', capital: 'Rome' }, { country: 'Nigeria', capital: 'Abuja' }
+            ];
+            let score, currentQuestionIndex, questions;
+
+            const startGame = () => {
+                score = 0; currentQuestionIndex = 0;
+                questions = [...quizData].sort(() => 0.5 - Math.random());
+                scoreEl.textContent = `Score: ${score}`;
+                displayQuestion();
+            };
+
+            const displayQuestion = () => {
+                if (currentQuestionIndex >= questions.length) { endGame(); return; }
+                questionCountEl.textContent = `${currentQuestionIndex + 1}/${questions.length}`;
+                const currentQuestion = questions[currentQuestionIndex];
+                questionEl.textContent = `What is the capital of ${currentQuestion.country}?`;
+                
+                const capitals = quizData.map(q => q.capital);
+                const correctAnswer = currentQuestion.capital;
+                let options = [correctAnswer];
+                while(options.length < 4) {
+                    const randomCapital = capitals[Math.floor(Math.random() * capitals.length)];
+                    if (!options.includes(randomCapital)) options.push(randomCapital);
+                }
+                options.sort(() => 0.5 - Math.random());
+                
+                optionsContainer.innerHTML = '';
+                options.forEach(option => {
+                    const button = document.createElement('button');
+                    button.textContent = option;
+                    button.className = 'btn quiz-option';
+                    button.onclick = () => checkAnswer(option, correctAnswer);
+                    optionsContainer.appendChild(button);
+                });
+            };
+
+            const checkAnswer = (selected, correct) => {
+                if (selected === correct) {
+                    score++;
+                    scoreEl.textContent = `Score: ${score}`;
+                    feedbackEl.textContent = 'Correct!'; feedbackEl.className = 'game-feedback feedback-correct';
+                } else {
+                    feedbackEl.textContent = `Wrong! It's ${correct}.`; feedbackEl.className = 'game-feedback feedback-incorrect';
+                }
+                currentQuestionIndex++;
+                setTimeout(() => {
+                    feedbackEl.textContent = '';
+                    displayQuestion();
+                }, 1200);
+            };
+
+            const endGame = () => {
+                mainScreen.classList.add('d-none');
+                gameContainer.querySelector('.game-end-screen').classList.remove('d-none');
+                finalScoreEl.textContent = `${score} / ${questions.length}`;
+            };
+
+            startBtn.addEventListener('click', startGame);
+            playAgainBtn.addEventListener('click', startGame);
+        }
+
+    </script>
+{% endblock %}

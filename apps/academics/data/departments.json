@@ -1,0 +1,26 @@
+[
+  {
+    "institution_code": "main-campus",
+    "name": "Mathematics",
+    "code": "MATH",
+    "short_name": "Math",
+    "department_type": "academic",
+    "description": "Mathematics Department",
+    "email": "math@maincampus.edu",
+    "phone": "+1234567890",
+    "office_location": "Building A, Room 101",
+    "is_active": true
+  },
+  {
+    "institution_code": "main-campus",
+    "name": "Computer Science",
+    "code": "CS",
+    "short_name": "CS",
+    "department_type": "academic",
+    "description": "Computer Science Department",
+    "email": "cs@maincampus.edu",
+    "phone": "+1234567891",
+    "office_location": "Building B, Room 201",
+    "is_active": true
+  }
+]

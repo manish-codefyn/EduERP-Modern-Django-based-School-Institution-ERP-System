@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Reservation Details - {{ reservation.book.title }}</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 1.5cm;
+        }
+        body {
+            font-family: 'DejaVu Sans', Arial, sans-serif;
+            font-size: 12px;
+            line-height: 1.4;
+            color: #333;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #2c3e50;
+            padding-bottom: 15px;
+        }
+        .header h1 {
+            color: #2c3e50;
+            margin: 0;
+            font-size: 20px;
+        }
+        .info-section {
+            margin-bottom: 20px;
+        }
+        .info-section h2 {
+            background: #2c3e50;
+            color: white;
+            padding: 8px;
+            margin: 0 0 10px 0;
+            font-size: 14px;
+        }
+        .info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+        .info-item {
+            margin-bottom: 8px;
+        }
+        .info-item strong {
+            display: inline-block;
+            width: 120px;
+            color: #2c3e50;
+        }
+        .status-badge {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+        .status-pending { background-color: #fff3cd; color: #856404; }
+        .status-fulfilled { background-color: #d4edda; color: #155724; }
+        .status-cancelled { background-color: #f8d7da; color: #721c24; }
+        .status-expired { background-color: #e2e3e5; color: #383d41; }
+        .notes {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 5px;
+            border-left: 4px solid #2c3e50;
+        }
+        .footer {
+            margin-top: 30px;
+            padding-top: 10px;
+            border-top: 1px solid #ddd;
+            text-align: center;
+            font-size: 10px;
+            color: #666;
+        }
+        .logo {
+            max-height: 50px;
+            margin-bottom: 10px;
+        }
+        .alert {
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        .alert-warning {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            color: #856404;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        {% if logo %}
+            <img src="{{ logo }}" alt="{{ organization.name }} Logo" class="logo" width="210">
+        {% endif %}
+        <h1>Reservation Details</h1>
+        <div>{{ organization.name }} - Library Management System</div>
+    </div>
+
+    {% if is_expired %}
+    <div class="alert alert-warning">
+        <strong>⚠️ This reservation has expired!</strong> The expiry date has passed.
+    </div>
+    {% endif %}
+
+    <div class="info-grid">
+        <div class="info-section">
+            <h2>Reservation Information</h2>
+            <div class="info-item"><strong>Reservation ID:</strong> {{ reservation.id }}</div>
+            <div class="info-item"><strong>Status:</strong> 
+                <span class="status-badge status-{{ reservation.status }}">
+                    {{ reservation.get_status_display }}
+                </span>
+            </div>
+            <div class="info-item"><strong>Reservation Date:</strong> {{ reservation.reservation_date|date:"F j, Y H:i" }}</div>
+            <div class="info-item"><strong>Expiry Date:</strong> {{ reservation.expiry_date|date:"F j, Y H:i" }}</div>
+            <div class="info-item"><strong>Days Remaining:</strong> 
+                {% if reservation.status == 'pending' %}
+                    {% if days_remaining > 0 %}
+                        {{ days_remaining }} day{{ days_remaining|pluralize }}
+                    {% else %}
+                        <span style="color: #dc3545;">Expired</span>
+                    {% endif %}
+                {% else %}
+                    N/A
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="info-section">
+            <h2>Book Information</h2>
+            <div class="info-item"><strong>Title:</strong> {{ reservation.book.title }}</div>
+            <div class="info-item"><strong>Author:</strong> {{ reservation.book.author.name|default:"N/A" }}</div>
+            <div class="info-item"><strong>ISBN:</strong> {{ reservation.book.isbn|default:"N/A" }}</div>
+            <div class="info-item"><strong>Category:</strong> {{ reservation.book.category.name|default:"N/A" }}</div>
+            <div class="info-item"><strong>Available Copies:</strong> {{ reservation.book.available_copies }}/{{ reservation.book.quantity }}</div>
+        </div>
+
+        <div class="info-section">
+            <h2>User Information</h2>
+            <div class="info-item"><strong>Name:</strong> {{ reservation.user.get_full_name|default:reservation.user.username }}</div>
+            <div class="info-item"><strong>Username:</strong> {{ reservation.user.username }}</div>
+            <div class="info-item"><strong>Email:</strong> {{ reservation.user.email|default:"N/A" }}</div>
+            <div class="info-item"><strong>Member Since:</strong> {{ reservation.user.date_joined|date:"M j, Y" }}</div>
+        </div>
+
+        <div class="info-section">
+            <h2>System Information</h2>
+            <div class="info-item"><strong>Institution:</strong> {{ organization.name }}</div>
+            <div class="info-item"><strong>Report Generated:</strong> {{ export_date|date:"F j, Y H:i" }}</div>
+            <div class="info-item"><strong>Generated By:</strong> Library Management System</div>
+        </div>
+    </div>
+
+    {% if reservation.notes %}
+    <div class="info-section">
+        <h2>Notes</h2>
+        <div class="notes">{{ reservation.notes|linebreaks }}</div>
+    </div>
+    {% endif %}
+
+    <div class="footer">
+        Confidential Document - {{ organization.name }}<br>
+        Generated on {{ export_date|date:"F j, Y \a\t g:i A" }}
+    </div>
+</body>
+</html>

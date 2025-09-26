@@ -1,0 +1,426 @@
+{% extends 'hr/base.html' %}
+{% load static %}
+
+{% block title %}Faculty Details - {{ faculty.staff.user.get_full_name }} - {{ organization.name|default:"ERP System" }}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+<style>
+    .profile-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 15px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        position: relative;
+        /* overflow: hidden; */
+    }
+    .profile-picture {
+        width: 150px;
+        height: 150px;
+        border-radius: 50%;
+        border: 5px solid white;
+        object-fit: cover;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    }
+    .detail-card {
+        border: none;
+        border-radius: 15px;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        transition: transform 0.3s ease;
+    }
+    .detail-card:hover {
+        transform: translateY(-5px);
+    }
+    .info-label {
+        font-weight: 600;
+        color: #6c757d;
+        font-size: 0.9rem;
+    }
+    .info-value {
+        font-size: 1.1rem;
+        color: #2c3e50;
+    }
+    .section-title {
+        border-left: 4px solid #667eea;
+        padding-left: 1rem;
+        margin-bottom: 1.5rem;
+        color: #2c3e50;
+    }
+    .badge-custom {
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        font-weight: 500;
+    }
+    .action-btn {
+        border-radius: 10px;
+        padding: 0.5rem 1.5rem;
+        font-weight: 500;
+        transition: all 0.3s ease;
+    }
+    .action-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+
+    <!-- Header Section -->
+    <div class="profile-header">
+        <div class="row align-items-center">
+            <div class="col-md-7">
+                <div class="d-flex align-items-center">
+                    {% if faculty.staff.photo %}
+                    <img src="{{ faculty.staff.photo.url }}" class="profile-picture me-4" alt="Profile Picture">
+                    {% else %}
+                    <div class="profile-picture me-4 bg-white d-flex align-items-center justify-content-center">
+                        <i class="bi bi-person-circle display-4 text-primary"></i>
+                    </div>
+                    {% endif %}
+                    <div>
+                        <h1 class="h2 fw-bold mb-1">Prof. {{ faculty.staff.user.get_full_name }}</h1>
+                        <p class="mb-2 opacity-75">{{ faculty.current_designation }}</p>
+                        <div class="d-flex flex-wrap gap-2">
+                            <span class="badge bg-light text-dark badge-custom">
+                                <i class="bi bi-mortarboard me-1"></i>{{ faculty.get_qualification_display }}
+                            </span>
+                            <span class="badge bg-light text-dark badge-custom">
+                                <i class="bi bi-book me-1"></i>{{ faculty.get_specialization_display }}
+                            </span>
+                            <span class="badge bg-light text-dark badge-custom">
+                                <i class="bi bi-clock-history me-1"></i>{{ faculty.total_experience }} years experience
+                            </span>
+                            {% if faculty.is_class_teacher %}
+                            <span class="badge bg-warning text-dark badge-custom">
+                                <i class="bi bi-people-fill me-1"></i>Class Teacher
+                            </span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+          <div class="col-md-5 text-md-end">
+            <div class="d-flex flex-column flex-md-row gap-2 justify-content-md-end align-items-center">
+
+                <!-- Back Button -->
+                <a href="{% url 'hr:faculty_list' %}" class="btn btn-light action-btn">
+                    <i class="bi bi-arrow-left me-1"></i> Back 
+                </a>
+
+                {% if request.user.is_superadmin or request.user.is_institution_admin or request.user.is_principal %}
+
+                <!-- Edit Button -->
+                <a href="{% url 'hr:faculty_update' faculty.pk %}" class="btn btn-primary action-btn">
+                    <i class="bi bi-pencil me-1"></i> Edit
+                </a>
+
+                <!-- Export Dropdown -->
+                <div class="dropdown">
+                    <button class="btn btn-success dropdown-toggle d-flex align-items-center action-btn" type="button" 
+                            id="exportDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="bi bi-download me-2"></i> Export
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end shadow" aria-labelledby="exportDropdown">
+                        <li class="dropdown-header text-custom small">Export Staff Data</li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li>
+                            <a class="dropdown-item d-flex align-items-center py-2" 
+                            href="{% url 'hr:faculty_detail_export' faculty.pk %}?{{ request.GET.urlencode }}&format=csv">
+                                <i class="bi bi-file-earmark-text me-2 text-primary"></i> CSV Format
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item d-flex align-items-center py-2" 
+                            href="{% url 'hr:faculty_detail_export' faculty.pk %}?{{ request.GET.urlencode }}&format=excel">
+                                <i class="bi bi-file-earmark-spreadsheet me-2 text-success"></i> Excel Format
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item d-flex align-items-center py-2" 
+                            href="{% url 'hr:faculty_detail_export' faculty.pk %}?{{ request.GET.urlencode }}&format=pdf">
+                                <i class="bi bi-file-earmark-pdf me-2 text-danger"></i> PDF Format
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item d-flex align-items-center py-2" 
+                            href="{% url 'hr:faculty_idcard' faculty.pk %}" class="btn btn-sm btn-outline-success me-1" title="I-card">
+                                 <i class="bi bi-person-badge me-2"></i> I-card 
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+
+                {% endif %}
+            </div>
+        </div>
+
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="row g-4">
+        <!-- Academic Information -->
+        <div class="col-xl-6">
+            <div class="card detail-card h-100">
+                <div class="card-header bg-transparent">
+                    <h4 class="section-title mb-0">Academic Information</h4>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <p class="info-label">Highest Qualification</p>
+                            <p class="info-value">{{ faculty.get_qualification_display }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p class="info-label">Degree</p>
+                            <p class="info-value">{{ faculty.degree }}</p>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <p class="info-label">Specialization</p>
+                            <p class="info-value">{{ faculty.get_specialization_display }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p class="info-label">Year of Graduation</p>
+                            <p class="info-value">{{ faculty.year_of_graduation }}</p>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-12">
+                            <p class="info-label">University</p>
+                            <p class="info-value">{{ faculty.university }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Teaching Information -->
+        <div class="col-xl-6">
+            <div class="card detail-card h-100">
+                <div class="card-header bg-transparent">
+                    <h4 class="section-title mb-0">Teaching Information</h4>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <p class="info-label">Total Experience</p>
+                            <p class="info-value">{{ faculty.total_experience }} years</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p class="info-label">Research Publications</p>
+                            <p class="info-value">{{ faculty.research_publications }}</p>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <p class="info-label">Class Teacher</p>
+                            <p class="info-value">
+                                {% if faculty.is_class_teacher %}
+                                <span class="badge bg-success">Yes</span>
+                                {% else %}
+                                <span class="badge bg-secondary">No</span>
+                                {% endif %}
+                            </p>
+                        </div>
+                        {% if faculty.is_class_teacher %}
+                        <div class="col-md-6">
+                            <p class="info-label">Class Teacher Of</p>
+                            <p class="info-value">{{ faculty.class_teacher_of }}</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                    <div class="row">
+                        <div class="col-12">
+                            <p class="info-label">Subjects</p>
+                            <div class="d-flex flex-wrap gap-2">
+                                {% for subject in faculty.subjects.all %}
+                                <span class="badge bg-primary bg-opacity-10 text-primary">{{ subject.name }}</span>
+                                {% empty %}
+                                <span class="text-custom">No subjects assigned</span>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Professional Development -->
+        <div class="col-xl-6">
+            <div class="card detail-card h-100">
+                <div class="card-header bg-transparent">
+                    <h4 class="section-title mb-0">Professional Development</h4>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-12">
+                            <p class="info-label">Training Courses</p>
+                            <p class="info-value">
+                                {% if faculty.training_courses %}
+                                {{ faculty.training_courses|linebreaks }}
+                                {% else %}
+                                <span class="text-custom">No training courses recorded</span>
+                                {% endif %}
+                            </p>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-12">
+                            <p class="info-label">Conferences Attended</p>
+                            <p class="info-value">
+                                {% if faculty.conferences_attended %}
+                                {{ faculty.conferences_attended|linebreaks }}
+                                {% else %}
+                                <span class="text-custom">No conferences recorded</span>
+                                {% endif %}
+                            </p>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-12">
+                            <p class="info-label">Awards & Achievements</p>
+                            <p class="info-value">
+                                {% if faculty.awards %}
+                                {{ faculty.awards|linebreaks }}
+                                {% else %}
+                                <span class="text-custom">No awards recorded</span>
+                                {% endif %}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Contact & Availability -->
+        <div class="col-xl-6">
+            <div class="card detail-card h-100">
+                <div class="card-header bg-transparent">
+                    <h4 class="section-title mb-0">Contact & Availability</h4>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <p class="info-label">Email</p>
+                            <p class="info-value">
+                                <a href="mailto:{{ faculty.staff.user.email }}" class="text-decoration-none">
+                                    <i class="bi bi-envelope me-1"></i>{{ faculty.staff.user.email }}
+                                </a>
+                            </p>
+                        </div>
+                        <div class="col-md-6">
+                            <p class="info-label">Phone</p>
+                            <p class="info-value">
+                                {% if faculty.staff.personal_phone %}
+                                <a href="tel:{{ faculty.staff.personal_phone }}" class="text-decoration-none">
+                                    <i class="bi bi-telephone me-1"></i>{{ faculty.staff.personal_phone }}
+                                </a>
+                                {% else %}
+                                <span class="text-custom">Not provided</span>
+                                {% endif %}
+                            </p>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <p class="info-label">Office Hours</p>
+                            <p class="info-value">
+                                {% if faculty.office_hours %}
+                                {{ faculty.office_hours }}
+                                {% else %}
+                                <span class="text-custom">Not specified</span>
+                                {% endif %}
+                            </p>
+                        </div>
+                        <div class="col-md-6">
+                            <p class="info-label">Office Location</p>
+                            <p class="info-value">
+                                {% if faculty.office_location %}
+                                {{ faculty.office_location }}
+                                {% else %}
+                                <span class="text-custom">Not specified</span>
+                                {% endif %}
+                            </p>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-12">
+                            <p class="info-label">Emergency Contact</p>
+                            <p class="info-value">
+                                {% if faculty.staff.emergency_contact_name %}
+                                {{ faculty.staff.emergency_contact_name }} ({{ faculty.staff.emergency_contact_relation }})<br>
+                                <small class="text-custom">{{ faculty.staff.emergency_contact_phone }}</small>
+                                {% else %}
+                                <span class="text-custom">Not provided</span>
+                                {% endif %}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Additional Information -->
+        <div class="col-12">
+            <div class="card detail-card">
+                <div class="card-header bg-transparent">
+                    <h4 class="section-title mb-0">Additional Information</h4>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3">
+                            <p class="info-label">Employee ID</p>
+                            <p class="info-value">{{ faculty.staff.employee_id }}</p>
+                        </div>
+                        <div class="col-md-3">
+                            <p class="info-label">Date of Birth</p>
+                            <p class="info-value">
+                                {% if faculty.staff.date_of_birth %}
+                                {{ faculty.staff.date_of_birth }}
+                                {% else %}
+                                <span class="text-custom">Not provided</span>
+                                {% endif %}
+                            </p>
+                        </div>
+                        <div class="col-md-3">
+                            <p class="info-label">Gender</p>
+                            <p class="info-value">
+                                {% if faculty.staff.gender %}
+                                {{ faculty.staff.get_gender_display }}
+                                {% else %}
+                                <span class="text-custom">Not provided</span>
+                                {% endif %}
+                            </p>
+                        </div>
+                        <div class="col-md-3">
+                            <p class="info-label">Joining Date</p>
+                            <p class="info-value">
+                                {% if faculty.staff.joining_date %}
+                                {{ faculty.staff.joining_date }}
+                                {% else %}
+                                <span class="text-custom">Not provided</span>
+                                {% endif %}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Add any JavaScript functionality needed for the detail page
+    console.log('Faculty detail page loaded');
+});
+</script>
+{% endblock %}

@@ -1,0 +1,101 @@
+{% extends 'organization/base.html' %}
+{% load static %}
+
+{% block title %}
+{% if form.instance.pk %}Edit Compliance{% else %}New Compliance{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="header-section mb-4">
+    <div class="row align-items-center">
+        <div class="col-md-7 d-flex align-items-center">
+            <div class="header-icon me-3">
+                <i class="bi bi-file-earmark-text display-6 text-primary"></i>
+            </div>
+            <div>
+                <h1 class="h3 fw-bold mb-1">
+                    {% if form.instance.pk %}Edit Compliance{% else %}New Compliance{% endif %}
+                </h1>
+                <p class="text-custom mb-0">Manage legal and regulatory compliance for institutions</p>
+            </div>
+        </div>
+        <div class="col-md-5 text-end">
+            <a href="{% url 'organization:compliance_list' %}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left-circle me-1"></i> Back to List
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="card card-custom p-4">
+    <form method="post">
+        {% csrf_token %}
+        <div class="row g-3">
+            <div class="col-md-6">
+                <label class="form-label">Institution</label>
+                {{ form.institution }}
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">GST Number</label>
+                {{ form.gst_number }}
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">PAN Number</label>
+                {{ form.pan_number }}
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">TAN Number</label>
+                {{ form.tan_number }}
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">Registration No</label>
+                {{ form.registration_no }}
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">Registration Authority</label>
+                {{ form.registration_authority }}
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">Registration Date</label>
+                {{ form.registration_date }}
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">PF Registration No</label>
+                {{ form.pf_registration_no }}
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">ESI Registration No</label>
+                {{ form.esi_registration_no }}
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">UDISE Code</label>
+                {{ form.udise_code }}
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">AICTE Code</label>
+                {{ form.aicte_code }}
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">UGC Code</label>
+                {{ form.ugc_code }}
+            </div>
+        </div>
+        <div class="mt-4 d-flex gap-2">
+            <button type="submit" class="btn btn-primary">
+                <i class="bi bi-save me-1"></i> Save
+            </button>
+            <a href="{% url 'organization:compliance_list' %}" class="btn btn-outline-secondary">
+                <i class="bi bi-x-circle me-1"></i> Cancel
+            </a>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    $('select').select2({ theme: 'bootstrap-5', width: '100%' });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,122 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load widget_tweaks %}
+
+{% block title %}{% if student %}Edit{% else %}Upload{% endif %} Student Documents - School ERP{% endblock %}
+
+{% block extra_css %}
+<style>
+.card-custom {
+    border-radius: 0.5rem;
+    border: 1px solid #dee2e6;
+    margin-bottom: 2rem;
+}
+.section-header {
+    border-left: 4px solid #0d6efd;
+    padding-left: 1rem;
+    margin-bottom: 1.5rem;
+}
+.upload-preview {
+    width: 150px;
+    height: 150px;
+    border: 2px dashed #dee2e6;
+    border-radius: 0.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    background: #f8f9fa;
+    margin-bottom: 0.5rem;
+}
+.upload-preview img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: cover;
+}
+.file-label {
+    display: block;
+    font-weight: 500;
+    margin-bottom: 0.25rem;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom card-custom px-2">
+    <h1 class="h2">{% if student %}Edit{% else %}Upload{% endif %} Student Documents</h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <a href="{% url 'student_list' %}" class="btn btn-sm btn-secondary">
+            <i class="bi bi-arrow-left me-1"></i>Back to List
+        </a>
+    </div>
+</div>
+
+<form method="post" enctype="multipart/form-data" novalidate>
+    {% csrf_token %}
+
+    <div class="card card-custom p-3">
+        <h4 class="section-header text-primary">Student Documents</h4>
+        <div class="row">
+            {% for field in form %}
+                {% if field.name != "csrfmiddlewaretoken" %}
+                <div class="col-md-6 mb-3">
+                    <label for="{{ field.id_for_label }}" class="file-label">{{ field.label }}</label>
+                    <div class="upload-preview" id="{{ field.id_for_label }}_preview">
+                        {% if student %}
+                            {% if field.value %}
+                                {% if field.name == "photo" %}
+                                    <img src="{{ field.value.url }}" alt="Preview">
+                                {% else %}
+                                    <span>{{ field.value.name|slice:":30" }}{% if field.value.name|length > 30 %}...{% endif %}</span>
+                                {% endif %}
+                            {% else %}
+                                <span>Drop file here or click to upload</span>
+                            {% endif %}
+                        {% else %}
+                            <span>Drop file here or click to upload</span>
+                        {% endif %}
+                    </div>
+                    {% render_field field class="form-control" %}
+                    {% if field.errors %}
+                        <div class="text-danger small">{{ field.errors }}</div>
+                    {% endif %}
+                </div>
+                {% endif %}
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="d-flex justify-content-between">
+        <div>
+            <button type="submit" class="btn btn-primary btn-lg">
+                <i class="bi bi-upload me-2"></i>Upload Documents
+            </button>
+            <a href="{% url 'student_list' %}" class="btn btn-secondary btn-lg">Cancel</a>
+        </div>
+    </div>
+</form>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const fileInputs = document.querySelectorAll('input[type="file"]');
+    fileInputs.forEach(input => {
+        const previewContainer = document.getElementById(input.id + '_preview');
+        input.addEventListener('change', function(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            previewContainer.innerHTML = '';
+            if(file.type.startsWith('image/')){
+                const img = document.createElement('img');
+                img.src = URL.createObjectURL(file);
+                previewContainer.appendChild(img);
+            } else {
+                const span = document.createElement('span');
+                span.textContent = file.name;
+                previewContainer.appendChild(span);
+            }
+        });
+    });
+});
+</script>
+{% endblock %}

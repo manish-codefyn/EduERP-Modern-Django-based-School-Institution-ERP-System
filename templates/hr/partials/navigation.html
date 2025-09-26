@@ -1,0 +1,101 @@
+<ul class="sidebar-nav nav flex-column">
+
+    <!-- Dashboard -->
+    <li class="nav-item">
+        <a class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}" href="{% url 'dashboard' %}">
+            <i class="bi bi-speedometer2 me-2"></i>
+            <span class="nav-text">Dashboard</span>
+        </a>
+    </li>
+
+    {% if user.is_hr or user.is_staff %}
+
+        <!-- Departments -->
+    <li class="nav-item">
+        <a class="nav-link {% if request.resolver_match.url_name == 'department_list' %}active{% endif %}" href="{% url 'hr:department_list' %}">
+            <i class="bi bi-diagram-3-fill me-2"></i>
+            <span class="nav-text">Departments</span>
+        </a>
+    </li>
+        <!-- Designations -->
+    <li class="nav-item">
+        <a class="nav-link {% if request.resolver_match.url_name == 'designation_list' %}active{% endif %}" href="{% url 'hr:designation_list' %}">
+        <i class="bi bi-person-badge me-2"></i>
+        <span class="nav-text">Designation</span>
+
+        </a>
+    </li>
+    <!-- Employees -->
+    <li class="nav-item">
+        <a class="nav-link {% if request.resolver_match.url_name == 'staff_list' %}active{% endif %}" href="{% url 'hr:staff_list' %}">
+            <i class="bi bi-people-fill me-2"></i>
+            <span class="nav-text">Employees</span>
+        </a>
+    </li>
+    <!-- Leave Type -->
+    <li class="nav-item ">
+      <a   class="nav-link  {% if request.resolver_match.url_name == 'leave_type_list' %}active{% endif %}" href="{% url 'hr:leave_type_list' %}">
+        <i class="bi bi-person-bounding-box me-2" aria-hidden="true"></i>
+        <span class="nav-text">Leave Type</span>
+        </a>
+    </li>
+    <!-- Employees -->
+    <li class="nav-item">
+        <a class="nav-link {% if request.resolver_match.url_name == 'faculty_list' %}active{% endif %}" href="{% url 'hr:faculty_list' %}">
+            <i class="bi bi-people-fill me-2"></i>
+            <span class="nav-text">Faculty</span>
+        </a>
+    </li>
+    <!-- Attendance & Leave -->
+    <li class="nav-item">
+        <a class="nav-link {% if request.resolver_match.url_name == 'attendance_list' %}active{% endif %}" href="{% url 'hr:attendance_list' %}">
+            <i class="bi bi-calendar-check me-2"></i>
+            <span class="nav-text">Attendance</span>
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link{% if request.resolver_match.url_name == 'leave_application_list' %}active{% endif %}" href="{% url 'hr:leave_application_list' %}">
+            <i class="bi bi-journal-check me-2"></i>
+            <span class="nav-text">Leave Application</span>
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link {% if request.resolver_match.url_name == 'leave_balance_list' %}active{% endif %}" href="{% url 'hr:leave_balance_list' %}">
+         <i class="bi bi-calendar-minus me-2"></i>
+            <span class="nav-text">Leave Balance</span>
+        </a>
+    </li>
+    <!-- Payroll -->
+    <li class="nav-item">
+        <a class="nav-link {% if request.resolver_match.url_name == 'payroll_list' %}active{% endif %}" href="{% url 'hr:payroll_list' %}">
+            <i class="bi bi-cash-stack me-2"></i>
+            <span class="nav-text">Payroll</span>
+        </a>
+    </li>
+
+    <!-- HR Reports -->
+    <!-- <li class="nav-item">
+        <a class="nav-link {% if request.resolver_match.url_name == 'exam_list' %}active{% endif %}" href="">
+            <i class="bi bi-bar-chart-line me-2"></i>
+            <span class="nav-text">Reports</span>
+        </a>
+    </li> -->
+
+    <!-- Admin/Settings (HR Admin only) -->
+    {% if user.is_superuser %}
+    <!-- <li class="nav-item">
+        <a class="nav-link {% if request.resolver_match.url_name == 'exam_list' %}active{% endif %}" href="">
+            <i class="bi bi-gear-fill me-2"></i>
+            <span class="nav-text">Settings</span>
+        </a>
+    </li> -->
+    {% endif %}
+
+    {% endif %}
+
+    <!-- Footer -->
+    <div class="sidebar-footer mt-5 p-3 bg-light text-center">
+        <small class="text-muted">HR Module v1.0.0</small>
+    </div>
+
+</ul>

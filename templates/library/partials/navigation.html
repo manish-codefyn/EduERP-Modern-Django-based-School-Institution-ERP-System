@@ -1,0 +1,51 @@
+<ul class="sidebar-nav nav flex-column">
+
+    <!-- Dashboard -->
+    <li class="nav-item">
+        <a class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}" href="{% url 'dashboard' %}">
+            <i class="bi bi-speedometer2 me-2"></i>
+            <span class="nav-text">Dashboard</span>
+        </a>
+    </li>
+
+    {% if user.is_staff or user.is_super %}
+      <li class="nav-item">
+        <a class="nav-link {% if request.resolver_match.url_name == 'category_list' %}active{% endif %}" href="{% url 'library:category_list' %}">
+           <i class="bi bi-collection me-2"></i>
+            <span class="nav-text">Categories</span>
+        </a>
+    </li>
+
+  <li class="nav-item">
+        <a class="nav-link {% if request.resolver_match.url_name == 'author_list' %}active{% endif %}" href="{% url 'library:author_list' %}">
+           <i class="bi bi-person me-2"></i>
+            <span class="nav-text">Authors</span>
+        </a>
+    </li>
+ 
+   <li class="nav-item">
+        <a class="nav-link {% if request.resolver_match.url_name == 'book_list' %}active{% endif %}" href="{% url 'library:book_list' %}">
+           <i class="bi bi-book  me-2"></i>
+            <span class="nav-text">Books</span>
+        </a>
+    </li>
+   <li class="nav-item">
+        <a class="nav-link {% if request.resolver_match.url_name == 'borrowrecord_list' %}active{% endif %}" href="{% url 'library:borrowrecord_list' %}">
+           <i class="bi bi-journal-text me-2"></i>
+            <span class="nav-text">Borrowrecord</span>
+        </a>
+    </li>
+   <li class="nav-item">
+        <a class="nav-link {% if request.resolver_match.url_name == 'reservation_list' %}active{% endif %}" href="{% url 'library:reservation_list' %}">
+           <i class="bi bi-journal-check  me-2"></i>
+            <span class="nav-text">Reservations</span>
+        </a>
+    </li>
+  
+    {% endif %}
+    <!-- Footer -->
+    <div class="sidebar-footer mt-5 p-3 bg-light text-center">
+        <small class="text-muted">Library Module v1.0.0</small>
+    </div>
+
+</ul>

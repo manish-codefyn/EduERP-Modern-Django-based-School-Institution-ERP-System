@@ -1,0 +1,77 @@
+<ul class="sidebar-nav nav flex-column">
+
+    <!-- Dashboard -->
+    <li class="nav-item">
+        <a class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}" href="{% url 'dashboard' %}">
+            <i class="bi bi-speedometer2 me-2"></i>
+            <span class="nav-text">Dashboard</span>
+        </a>
+    </li>
+
+    {% if user.is_staff or user.is_super %}
+   <li class="nav-item">
+        <a class="nav-link {% if request.resolver_match.url_name == 'notice_list' %}active{% endif %}" href="{% url 'communications:notice_list' %}">
+           <i class="bi bi-exclamation-triangle me-2"></i>
+            <span class="nav-text">Notices</span>
+        </a>
+    </li>
+  
+   <li class="nav-item">
+        <a class="nav-link {% if request.resolver_match.url_name == 'broadcast_list' %}active{% endif %}" href="{% url 'communications:broadcast_list' %}">
+           <i class="bi bi-broadcast me-2"></i>
+            <span class="nav-text">Broadcast</span>
+        </a>
+    </li>
+  
+   <li class="nav-item">
+        <a class="nav-link {% if request.resolver_match.url_name == 'template_list' %}active{% endif %}" href="{% url 'communications:template_list' %}">
+           <i class="bi bi-journal-text me-2"></i>
+            <span class="nav-text">Templates</span>
+        </a>
+    </li>
+   <li class="nav-item">
+        <a class="nav-link {% if request.resolver_match.url_name == 'audience_list' %}active{% endif %}" href="{% url 'communications:audience_list' %}">
+           <i class="bi bi-person-lines-fill me-2"></i>
+            <span class="nav-text">Audiences</span>
+        </a>
+    </li>
+   <li class="nav-item">
+        <a class="nav-link {% if request.resolver_match.url_name == 'sms_log_list' %}active{% endif %}" href="{% url 'communications:sms_log_list' %}">
+           <i class="bi bi-chat-dots me-2"></i>
+            <span class="nav-text">SMS Logs</span>
+        </a>
+    </li>
+   <li class="nav-item">
+        <a class="nav-link {% if request.resolver_match.url_name == 'email_log_list' %}active{% endif %}" href="{% url 'communications:email_log_list' %}">
+           <i class="bi bi-envelope-open me-2"></i>
+            <span class="nav-text">Email Logs</span>
+        </a>
+    </li>
+   <li class="nav-item">
+        <a class="nav-link {% if request.resolver_match.url_name == 'push_notification_list' %}active{% endif %}" href="{% url 'communications:push_notification_list' %}">
+           <i class="bi bi-bell-fill me-2"></i>
+            <span class="nav-text">Push Notification</span>
+        </a>
+    </li>
+  
+    <!--  -->
+   
+
+    {% if user.is_superuser %}
+    <!-- Settings (for admins only) -->
+    <!-- <li class="nav-item">
+        <a class="nav-link" href="#">
+            <i class="bi bi-gear-fill me-2"></i>
+            <span class="nav-text">Settings</span>
+        </a>
+    </li> -->
+    {% endif %}
+
+    {% endif %}
+
+    <!-- Footer -->
+    <div class="sidebar-footer mt-5 p-3 bg-light text-center">
+        <small class="text-muted">Examination Module v1.0.0</small>
+    </div>
+
+</ul>

@@ -1,0 +1,205 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}
+    {% if form.instance.pk %}Edit{% else %}Add{% endif %} Book - Library Management - {{ organization.name|default:"codefyn" }}
+{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css">
+<style>
+.select2-container .select2-selection--single {
+    height: 38px;
+    border: 1px solid #dee2e6;
+}
+.select2-container--default .select2-selection--single .select2-selection__rendered {
+    line-height: 36px;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="header-section mb-4">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb breadcrumb-dark">
+                <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Dashboard</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'library:dashboard' %}">Library</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'library:book_list' %}">Books</a></li>
+                <li class="breadcrumb-item active" aria-current="page">
+                    {% if form.instance.pk %}Edit{% else %}Add{% endif %} Book
+                </li>
+            </ol>
+        </nav>
+
+        <h3 class="fw-bold">
+            {% if form.instance.pk %}Edit Book{% else %}Add New Book{% endif %}
+        </h3>
+        <p class="text-muted">
+            {% if form.instance.pk %}Update book information{% else %}Add a new book to the library collection{% endif %}
+        </p>
+    </div>
+
+    <!-- Form Card -->
+    <div class="card card-custom">
+        <div class="card-body">
+            <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+
+                {% if form.non_field_errors %}
+                <div class="alert alert-danger">
+                    {% for error in form.non_field_errors %}
+                        <div><i class="bi bi-exclamation-triangle-fill me-1"></i>{{ error }}</div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+
+                <div class="row g-4">
+                    <!-- Left Column -->
+                    <div class="col-md-8">
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Title <span class="text-danger">*</span></label>
+                            {{ form.title }}
+                            {% for error in form.title.errors %}
+                                <div class="invalid-feedback d-block">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Author <span class="text-danger">*</span></label>
+                            {{ form.author }}
+                            {% for error in form.author.errors %}
+                                <div class="invalid-feedback d-block">{{ error }}</div>
+                            {% endfor %}
+                            <small><a href="{% url 'library:author_create' %}"><i class="bi bi-plus-circle me-1"></i>Add new author</a></small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Category <span class="text-danger">*</span></label>
+                            {{ form.category }}
+                            {% for error in form.category.errors %}
+                                <div class="invalid-feedback d-block">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">ISBN</label>
+                            {{ form.isbn }}
+                            {% for error in form.isbn.errors %}
+                                <div class="invalid-feedback d-block">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Publisher</label>
+                            {{ form.publisher }}
+                            {% for error in form.publisher.errors %}
+                                <div class="invalid-feedback d-block">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Publication Date</label>
+                            {{ form.publication_date }}
+                            {% for error in form.publication_date.errors %}
+                                <div class="invalid-feedback d-block">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Language</label>
+                            {{ form.language }}
+                            {% for error in form.language.errors %}
+                                <div class="invalid-feedback d-block">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Description</label>
+                            {{ form.description }}
+                            {% for error in form.description.errors %}
+                                <div class="invalid-feedback d-block">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <!-- Right Column -->
+                    <div class="col-md-4">
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Total Copies</label>
+                            {{ form.quantity }}
+                            {% for error in form.quantity.errors %}
+                                <div class="invalid-feedback d-block">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Location</label>
+                            {{ form.location }}
+                            {% for error in form.location.errors %}
+                                <div class="invalid-feedback d-block">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Cover Image</label>
+                            {{ form.cover_image }}
+                            {% if form.instance.cover_image %}
+                                <img src="{{ form.instance.cover_image.url }}" class="img-thumbnail mt-2" style="max-height: 150px;">
+                            {% endif %}
+                            {% for error in form.cover_image.errors %}
+                                <div class="invalid-feedback d-block">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Edition</label>
+                            {{ form.edition }}
+                            {% for error in form.edition.errors %}
+                                <div class="invalid-feedback d-block">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Pages</label>
+                            {{ form.pages }}
+                            {% for error in form.pages.errors %}
+                                <div class="invalid-feedback d-block">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+
+                        <div class="form-check form-switch mt-2">
+                            {{ form.is_featured }}
+                            <label class="form-check-label">Featured Book</label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Actions -->
+                <div class="mt-4 text-end">
+                    <a href="{% url 'library:book_list' %}" class="btn btn-secondary"><i class="bi bi-x-circle me-1"></i> Cancel</a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-check-circle me-1"></i>
+                        {% if form.instance.pk %}Update Book{% else %}Add Book{% endif %}
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
+<script>
+$(document).ready(function() {
+    $('#id_author, #id_category, #id_language').select2({
+        theme: 'bootstrap-5',
+        placeholder: 'Select an option',
+        allowClear: true
+    });
+});
+</script>
+{% endblock %}

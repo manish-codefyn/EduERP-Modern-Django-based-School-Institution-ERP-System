@@ -1,0 +1,178 @@
+{% extends 'organization/base.html' %}
+{% load static %}
+
+{% block title %}{{ form.instance.pk|yesno:"Edit Branch,New Branch" }} - {{ organization.name|default:"ERP System" }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row justify-content-center">
+        <div class="col-md-12 col-lg-10">
+            <!-- Header -->
+            <div class="header-section mb-4">
+                <div class="d-flex align-items-center">
+                    <div class="header-icon me-3">
+                        <i class="bi bi-diagram-3 display-6 text-primary"></i>
+                    </div>
+                    <div>
+                        <h1 class="h3 fw-bold mb-1">
+                            {% if form.instance.pk %}Edit Branch{% else %}New Branch{% endif %}
+                        </h1>
+                        <p class="text-custom mb-0">Manage branch details, contact info, and status</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Branch Form Card -->
+            <div class="card card-custom">
+                <div class="card-body">
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        <div class="row g-3">
+
+                            <!-- Institution -->
+                            <div class="col-md-6">
+                                <label for="{{ form.institution.id_for_label }}" class="form-label fw-semibold">Institution</label>
+                                {{ form.institution }}
+                                {% if form.institution.errors %}
+                                    <div class="text-danger small">{{ form.institution.errors }}</div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Branch Name -->
+                            <div class="col-md-6">
+                                <label for="{{ form.name.id_for_label }}" class="form-label fw-semibold">Branch Name</label>
+                                {{ form.name }}
+                                {% if form.name.errors %}
+                                    <div class="text-danger small">{{ form.name.errors }}</div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Branch Code -->
+                            <div class="col-md-6">
+                                <label for="{{ form.code.id_for_label }}" class="form-label fw-semibold">Branch Code</label>
+                                {{ form.code }}
+                                {% if form.code.errors %}
+                                    <div class="text-danger small">{{ form.code.errors }}</div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Main Campus -->
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Main Campus</label><br>
+                                <div class="form-check form-switch">
+                                    {{ form.is_main_campus }}
+                                    {% if form.is_main_campus.errors %}
+                                        <div class="text-danger small">{{ form.is_main_campus.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <!-- Address -->
+                            <div class="col-12">
+                                <label for="{{ form.address.id_for_label }}" class="form-label fw-semibold">Address</label>
+                                {{ form.address }}
+                                {% if form.address.errors %}
+                                    <div class="text-danger small">{{ form.address.errors }}</div>
+                                {% endif %}
+                            </div>
+
+                            <!-- City, State, Country -->
+                            <div class="col-md-4">
+                                <label for="{{ form.city.id_for_label }}" class="form-label fw-semibold">City</label>
+                                {{ form.city }}
+                                {% if form.city.errors %}
+                                    <div class="text-danger small">{{ form.city.errors }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-4">
+                                <label for="{{ form.state.id_for_label }}" class="form-label fw-semibold">State</label>
+                                {{ form.state }}
+                                {% if form.state.errors %}
+                                    <div class="text-danger small">{{ form.state.errors }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-4">
+                                <label for="{{ form.country.id_for_label }}" class="form-label fw-semibold">Country</label>
+                                {{ form.country }}
+                                {% if form.country.errors %}
+                                    <div class="text-danger small">{{ form.country.errors }}</div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Pincode -->
+                            <div class="col-md-4">
+                                <label for="{{ form.pincode.id_for_label }}" class="form-label fw-semibold">Pincode</label>
+                                {{ form.pincode }}
+                                {% if form.pincode.errors %}
+                                    <div class="text-danger small">{{ form.pincode.errors }}</div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Contact Email & Phone -->
+                            <div class="col-md-4">
+                                <label for="{{ form.contact_email.id_for_label }}" class="form-label fw-semibold">Contact Email</label>
+                                {{ form.contact_email }}
+                                {% if form.contact_email.errors %}
+                                    <div class="text-danger small">{{ form.contact_email.errors }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-4">
+                                <label for="{{ form.contact_phone.id_for_label }}" class="form-label fw-semibold">Contact Phone</label>
+                                {{ form.contact_phone }}
+                                {% if form.contact_phone.errors %}
+                                    <div class="text-danger small">{{ form.contact_phone.errors }}</div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Website & Branch Manager -->
+                            <div class="col-md-6">
+                                <label for="{{ form.website.id_for_label }}" class="form-label fw-semibold">Website</label>
+                                {{ form.website }}
+                                {% if form.website.errors %}
+                                    <div class="text-danger small">{{ form.website.errors }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6">
+                                <label for="{{ form.branch_manager.id_for_label }}" class="form-label fw-semibold">Branch Manager</label>
+                                {{ form.branch_manager }}
+                                {% if form.branch_manager.errors %}
+                                    <div class="text-danger small">{{ form.branch_manager.errors }}</div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Status & Established Date -->
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Status</label><br>
+                                <div class="form-check form-switch">
+                                    {{ form.is_active }}
+                                    {% if form.is_active.errors %}
+                                        <div class="text-danger small">{{ form.is_active.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="{{ form.established_date.id_for_label }}" class="form-label fw-semibold">Established Date</label>
+                                {{ form.established_date }}
+                                {% if form.established_date.errors %}
+                                    <div class="text-danger small">{{ form.established_date.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Form Actions -->
+                        <div class="d-flex justify-content-end gap-2 mt-4">
+                            <a href="{% url 'organization:branch_list' %}" class="btn btn-secondary">
+                                <i class="bi bi-arrow-left me-1"></i> Cancel
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-save me-1"></i> {% if form.instance.pk %}Update Branch{% else %}Create Branch{% endif %}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+{% endblock %}

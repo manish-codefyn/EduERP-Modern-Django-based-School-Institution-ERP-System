@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>{{ title|default:"SMS Logs Export" }}</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 1.5cm;
+        }
+
+        body {
+            font-family: 'Helvetica', 'Arial', sans-serif;
+            font-size: 11px;
+            color: #333;
+            margin: 0;
+            padding: 0;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #28a745;
+            padding-bottom: 10px;
+        }
+
+        .header h1 {
+            color: #28a745;
+            font-size: 20px;
+            margin: 0;
+        }
+
+        .summary-cards {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .summary-card {
+            flex: 1;
+            min-width: 120px;
+            margin: 5px;
+            padding: 10px;
+            background-color: #f8f9fa;
+            border-left: 4px solid #28a745;
+            border-radius: 4px;
+        }
+
+        .summary-card h3 {
+            margin: 0;
+            font-size: 15px;
+            color: #28a745;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+
+        .stat-item {
+            padding: 8px;
+            text-align: center;
+            background-color: #f8f9fa;
+            border-radius: 4px;
+        }
+
+        .stat-value {
+            font-size: 13px;
+            font-weight: bold;
+            color: #28a745;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+
+        th {
+            background-color: #28a745;
+            color: white;
+            font-weight: bold;
+            padding: 6px;
+            text-align: left;
+            font-size: 10px;
+        }
+
+        td {
+            padding: 5px;
+            border: 1px solid #ddd;
+            font-size: 9px;
+        }
+
+        .badge {
+            padding: 2px 5px;
+            border-radius: 3px;
+            font-size: 8px;
+            font-weight: bold;
+        }
+
+        .status-sent { background-color: #d4edda; color: #155724; }
+        .status-delivered { background-color: #cce7ff; color: #004085; }
+        .status-failed { background-color: #f8d7da; color: #721c24; }
+        .status-pending { background-color: #fff3cd; color: #856404; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>SMS Logs Export</h1>
+        <p>SMS Communication History Report</p>
+    </div>
+
+    <div class="summary-cards">
+        <div class="summary-card">
+            <h3>{{ total_count }}</h3>
+            <p>Total SMS Messages</p>
+        </div>
+        <div class="summary-card">
+            <h3>₹{{ total_cost|floatformat:4 }}</h3>
+            <p>Total Cost</p>
+        </div>
+        <div class="summary-card">
+            <h3>{{ export_date|date:"M d, Y" }}</h3>
+            <p>Export Date</p>
+        </div>
+    </div>
+
+    <div class="stats-grid">
+        {% for status_count in status_counts %}
+        <div class="stat-item">
+            <div class="stat-value">{{ status_count.count }}</div>
+            <div class="stat-label">{{ status_count.status|title }}</div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <h3>SMS Messages Details</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>Recipient</th>
+                <th>Message</th>
+                <th>Status</th>
+                <th>Cost</th>
+                <th>Sent At</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for sms in sms_logs %}
+            <tr>
+                <td>{{ sms.recipient_number }}</td>
+                <td>{{ sms.message|truncatewords:10 }}</td>
+                <td>
+                    <span class="badge status-{{ sms.status_raw }}">{{ sms.status }}</span>
+                </td>
+                <td>{{ sms.cost }}</td>
+                <td>{{ sms.sent_at }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</body>
+</html>

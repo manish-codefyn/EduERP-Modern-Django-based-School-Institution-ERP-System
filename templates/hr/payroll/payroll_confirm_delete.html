@@ -1,0 +1,114 @@
+{% extends 'hr/base.html' %}
+{% load static %}
+
+{% block title %}Delete Payroll - {{ organization.name|default:"ERP System" }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row justify-content-center">
+        <div class="col-md-6 col-lg-6">
+
+            <!-- Header -->
+            <div class="header-section text-center mb-4">
+                <div class="d-flex align-items-center justify-content-center">
+                    <div class="header-icon me-3">
+                        <i class="bi bi-exclamation-triangle display-6 text-danger"></i>
+                    </div>
+                    <div>
+                        <h1 class="h3 fw-bold mb-1">Delete Payroll Record</h1>
+                        <p class="text-custom mb-0">Confirm deletion of payroll record</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Warning Alert -->
+            <div class="alert alert-danger">
+                <div class="d-flex">
+                    <div class="flex-shrink-0">
+                        <i class="bi bi-exclamation-octagon-fill me-2"></i>
+                    </div>
+                    <div class="flex-grow-1">
+                        <h6 class="alert-heading">Warning!</h6>
+                        You are about to delete a payroll record. This action cannot be undone.
+                    </div>
+                </div>
+            </div>
+
+            <!-- Payroll Details -->
+            <div class="card border rounded p-3 mb-4">
+                <h6 class="fw-semibold mb-3">Payroll Details</h6>
+                <div class="row">
+                    <div class="col-12 mb-2">
+                        <small class="text-custom">Staff:</small>
+                        <p class="fw-semibold mb-0">{{ payroll.staff.user.get_full_name|default:"N/A" }}</p>
+                    </div>
+                    <div class="col-6 mb-2">
+                        <small class="text-custom">Month:</small>
+                        <p class="fw-semibold mb-0">{{ payroll.get_month_display }}</p>
+                    </div>
+                    <div class="col-6 mb-2">
+                        <small class="text-custom">Year:</small>
+                        <p class="fw-semibold mb-0">{{ payroll.year }}</p>
+                    </div>
+                    <div class="col-6 mb-2">
+                        <small class="text-custom">Net Salary:</small>
+                        <p class="fw-semibold mb-0">{{ payroll.net_salary }}</p>
+                    </div>
+                    <div class="col-6 mb-2">
+                        <small class="text-custom">Payment Status:</small>
+                        <p class="fw-semibold mb-0">{{ payroll.get_payment_status_display }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Delete Form -->
+            <form method="post">
+                {% csrf_token %}
+                <div class="mb-3">
+                    <label for="confirmationText" class="form-label fw-semibold">
+                        Type "DELETE" to confirm
+                    </label>
+                    <input type="text" class="form-control" id="confirmationText" 
+                           placeholder="Enter DELETE to confirm" required
+                           oninput="toggleDeleteButton()">
+                    <div class="form-text">This action is permanent and cannot be undone.</div>
+                </div>
+
+                <div class="d-flex gap-2 justify-content-end">
+                    <a href="{% url 'hr:payroll_list' %}" class="btn btn-secondary">
+                        <i class="bi bi-arrow-left me-1"></i> Cancel
+                    </a>
+                    <button type="submit" id="deleteButton" class="btn btn-danger" disabled>
+                        <i class="bi bi-trash me-1"></i> Delete Payroll
+                    </button>
+                </div>
+            </form>
+
+            <div class="mt-3 text-muted small">
+                Organization: {{ organization.name|default:"N/A" }} | Deleting this action is irreversible.
+            </div>
+
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function toggleDeleteButton() {
+    const confirmationText = document.getElementById('confirmationText').value;
+    const deleteButton = document.getElementById('deleteButton');
+    deleteButton.disabled = confirmationText.toUpperCase() !== 'DELETE';
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    document.getElementById('confirmationText').focus();
+    window.addEventListener('beforeunload', function(e) {
+        if (document.getElementById('confirmationText').value !== '') {
+            e.preventDefault();
+            e.returnValue = 'You have unsaved changes. Are you sure you want to leave?';
+        }
+    });
+});
+</script>
+{% endblock %}

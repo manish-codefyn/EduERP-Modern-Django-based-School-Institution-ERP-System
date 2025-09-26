@@ -1,0 +1,119 @@
+{% extends 'organization/base.html' %}
+{% load static %}
+
+{% block title %}
+{% if form.instance.pk %}Edit Accreditation{% else %}New Accreditation{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="header-section mb-4">
+    <div class="row align-items-center">
+        <div class="col-md-7 d-flex align-items-center">
+            <div class="header-icon me-3">
+                <i class="bi bi-award display-6 text-primary"></i>
+            </div>
+            <div>
+                <h1 class="h3 fw-bold mb-1">
+                    {% if form.instance.pk %}Edit Accreditation{% else %}New Accreditation{% endif %}
+                </h1>
+                <p class="text-custom mb-0">Manage institutional accreditations and certifications</p>
+            </div>
+        </div>
+        <div class="col-md-5 text-end">
+            <a href="{% url 'organization:accreditation_list' %}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left-circle me-1"></i> Back to List
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="card card-custom p-4">
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+
+        <!-- Name -->
+        <div class="mb-3">
+            <label class="form-label fw-semibold">Accreditation Name</label>
+            {{ form.name }}
+            {% if form.name.errors %}
+                <div class="text-danger small">{{ form.name.errors }}</div>
+            {% endif %}
+        </div>
+
+        <!-- Grade or Level -->
+        <div class="mb-3">
+            <label class="form-label fw-semibold">Grade / Level</label>
+            {{ form.grade_or_level }}
+            {% if form.grade_or_level.errors %}
+                <div class="text-danger small">{{ form.grade_or_level.errors }}</div>
+            {% endif %}
+        </div>
+
+        <!-- Awarded By -->
+        <div class="mb-3">
+            <label class="form-label fw-semibold">Awarded By</label>
+            {{ form.awarded_by }}
+            {% if form.awarded_by.errors %}
+                <div class="text-danger small">{{ form.awarded_by.errors }}</div>
+            {% endif %}
+        </div>
+
+        <!-- Valid From & Valid To -->
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <label class="form-label fw-semibold">Valid From</label>
+                {{ form.valid_from }}
+                {% if form.valid_from.errors %}
+                    <div class="text-danger small">{{ form.valid_from.errors }}</div>
+                {% endif %}
+            </div>
+            <div class="col-md-6 mb-3">
+                <label class="form-label fw-semibold">Valid To</label>
+                {{ form.valid_to }}
+                {% if form.valid_to.errors %}
+                    <div class="text-danger small">{{ form.valid_to.errors }}</div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Certificate Upload -->
+        <div class="mb-3">
+            <label class="form-label fw-semibold">Certificate</label>
+            {{ form.certificate }}
+            {% if form.certificate.errors %}
+                <div class="text-danger small">{{ form.certificate.errors }}</div>
+            {% endif %}
+        </div>
+
+        <!-- Status & Renewal Required -->
+        <div class="form-check form-check-inline mb-3">
+            {{ form.is_active }}
+            <label class="form-check-label ms-2 fw-semibold">Active</label>
+        </div>
+        <div class="form-check form-check-inline mb-3">
+            {{ form.renewal_required }}
+            <label class="form-check-label ms-2 fw-semibold">Renewal Required</label>
+        </div>
+
+        <!-- Buttons -->
+        <div class="mt-4 d-flex gap-2">
+            <button type="submit" class="btn btn-primary">
+                <i class="bi bi-save me-1"></i> Save
+            </button>
+            <a href="{% url 'organization:accreditation_list' %}" class="btn btn-outline-secondary">
+                <i class="bi bi-x-circle me-1"></i> Cancel
+            </a>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Optional: add any JS enhancements, e.g., datepicker
+    document.addEventListener('DOMContentLoaded', function() {
+        // Example: focus first input
+        document.querySelector('#id_name').focus();
+    });
+</script>
+{% endblock %}

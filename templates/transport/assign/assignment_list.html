@@ -1,0 +1,261 @@
+{% extends 'transport/base.html' %}
+{% load static %}
+
+{% block title %}Transport Assignments - {{ organization.name|default:"ERP System" }}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css">
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+
+    <!-- Header -->
+    <div class="header-section mb-4">
+        <div class="row align-items-center">
+            <div class="col-md-7 d-flex align-items-center">
+                <div class="header-icon me-3">
+                    <i class="bi bi-truck display-6 text-primary"></i>
+                </div>
+                <div>
+                    <h1 class="h3 fw-bold mb-1">Transport Assignments</h1>
+                    <p class="text-custom mb-0">Manage vehicle-driver-route assignments</p>
+                </div>
+            </div>
+            <div class="col-md-5">
+                {% if request.user.is_superadmin or request.user.is_institution_admin %}
+                <div class="d-flex justify-content-end align-items-center gap-2">
+                    <a href="{% url 'transport:assignment_create' %}" class="btn btn-primary">
+                        <i class="bi bi-plus-circle me-1"></i> New Assignment
+                    </a>
+                    <div class="dropdown">
+                        <button class="btn btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                            <i class="bi bi-download me-1"></i> Export
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item" href="{% url 'transport:assignment_export' %}?{{ request.GET.urlencode }}&format=csv">
+                                <i class="bi bi-filetype-csv me-2"></i> CSV</a></li>
+                            <li><a class="dropdown-item" href="{% url 'transport:assignment_export' %}?{{ request.GET.urlencode }}&format=excel">
+                                <i class="bi bi-file-earmark-excel me-2"></i> Excel</a></li>
+                            <li><a class="dropdown-item" href="{% url 'transport:assignment_export' %}?{{ request.GET.urlencode }}&format=pdf">
+                                <i class="bi bi-file-earmark-pdf me-2"></i> PDF</a></li>
+                        </ul>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Filter Form -->
+    <div class="card card-custom p-3 mb-4">
+        <form method="get" class="row g-3">
+            <div class="col-md-3">
+                <input type="text" name="search" class="form-control" placeholder="Search assignments..." value="{{ request.GET.search }}">
+            </div>
+            <div class="col-md-2">
+                <select name="vehicle" class="form-select">
+                    <option value="">All Vehicles</option>
+                    {% for vehicle in filter_form.fields.vehicle.queryset %}
+                    <option value="{{ vehicle.pk }}" {% if request.GET.vehicle == vehicle.pk|stringformat:"s" %}selected{% endif %}>
+                        {{ vehicle.vehicle_number }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <select name="driver" class="form-select">
+                    <option value="">All Drivers</option>
+                    {% for driver in filter_form.fields.driver.queryset %}
+                    <option value="{{ driver.pk }}" {% if request.GET.driver == driver.pk|stringformat:"s" %}selected{% endif %}>
+                        {{ driver.name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <select name="route" class="form-select">
+                    <option value="">All Routes</option>
+                    {% for route in filter_form.fields.route.queryset %}
+                    <option value="{{ route.pk }}" {% if request.GET.route == route.pk|stringformat:"s" %}selected{% endif %}>
+                        {{ route.name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <select name="status" class="form-select">
+                    <option value="">All Status</option>
+                    {% for code, name in filter_form.fields.status.choices %}
+                    {% if code %}<option value="{{ code }}" {% if request.GET.status == code %}selected{% endif %}>{{ name }}</option>{% endif %}
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3 d-flex gap-2">
+                <button type="submit" class="btn btn-primary w-50">
+                    <i class="bi bi-search me-1"></i> Filter
+                </button>
+                <a href="{% url 'transport:assignment_list' %}" class="btn btn-outline-secondary w-50">
+                    <i class="bi bi-x me-1"></i> Clear
+                </a>
+            </div>
+        </form>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="row g-4 mb-4">
+        <div class="col-xl-3 col-md-6">
+            <div class="card stats-card text-white h-100" style="background: var(--primary-gradient);">
+                <div class="card-body">
+                    <h6 class="card-title mb-1 small opacity-75">TOTAL ASSIGNMENTS</h6>
+                    <h3 class="mb-0 fw-bold">{{ total_assignments|default:"0" }}</h3>
+                    <p class="mb-0 small opacity-75"><i class="bi bi-list-task me-1"></i>All assignments</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card stats-card text-white h-100" style="background: var(--success-gradient);">
+                <div class="card-body">
+                    <h6 class="card-title mb-1 small opacity-75">ACTIVE ASSIGNMENTS</h6>
+                    <h3 class="mb-0 fw-bold">{{ active_assignments|default:"0" }}</h3>
+                    <p class="mb-0 small opacity-75"><i class="bi bi-check-circle me-1"></i>Currently active</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card stats-card text-white h-100" style="background: var(--warning-gradient);">
+                <div class="card-body">
+                    <h6 class="card-title mb-1 small opacity-75">SCHEDULED</h6>
+                    <h3 class="mb-0 fw-bold">{{ scheduled_assignments|default:"0" }}</h3>
+                    <p class="mb-0 small opacity-75"><i class="bi bi-clock me-1"></i>Future assignments</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card stats-card text-white h-100" style="background: var(--danger-gradient);">
+                <div class="card-body">
+                    <h6 class="card-title mb-1 small opacity-75">EXPIRED</h6>
+                    <h3 class="mb-0 fw-bold">{{ expired_assignments|default:"0" }}</h3>
+                    <p class="mb-0 small opacity-75"><i class="bi bi-exclamation-triangle me-1"></i>Past assignments</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Assignments Table -->
+    <div class="card card-custom">
+        <div class="card-header bg-transparent border-0 pt-4 px-4">
+            <h5 class="card-title mb-0 fw-bold text-custom">All Assignments</h5>
+            <p class="text-custom mb-0">Manage vehicle-driver-route allocations</p>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                {% if assignments %}
+                <table id="assignmentTable" class="w-100 table-custom table-hover align-middle">
+                    <thead>
+                        <tr>
+                            <th>Vehicle</th>
+                            <th>Driver</th>
+                            <th>Route</th>
+                            <th>Start Date</th>
+                            <th>End Date</th>
+                            <th>Status</th>
+                            {% if request.user.is_superadmin or request.user.is_institution_admin %}
+                            <th class="text-center">Actions</th>
+                            {% endif %}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for assignment in assignments %}
+                        <tr>
+                            <td>
+                                <strong>{{ assignment.vehicle.vehicle_number }}</strong>
+                                <br><small class="text-custom">{{ assignment.vehicle.get_vehicle_type_display }}</small>
+                            </td>
+                            <td>
+                                {{ assignment.driver.name }}
+                                <br><small class="text-custom">{{ assignment.driver.license_number }}</small>
+                            </td>
+                            <td>
+                                {{ assignment.route.name }}
+                                <br><small class="text-custom">{{ assignment.route.start_point }} to {{ assignment.route.end_point }}</small>
+                            </td>
+                            <td>{{ assignment.start_date }}</td>
+                            <td>{{ assignment.end_date|default:"Not set" }}</td>
+                            <td>
+                                {% if assignment.current_status == 'active' %}
+                                <span class="badge bg-success bg-opacity-10 text-success">
+                                    <i class="bi bi-check-circle me-1"></i>Active
+                                </span>
+                                {% elif assignment.current_status == 'scheduled' %}
+                                <span class="badge bg-warning bg-opacity-10 text-warning">
+                                    <i class="bi bi-clock me-1"></i>Scheduled
+                                </span>
+                                {% elif assignment.current_status == 'expired' %}
+                                <span class="badge bg-danger bg-opacity-10 text-danger">
+                                    <i class="bi bi-exclamation-triangle me-1"></i>Expired
+                                </span>
+                                {% else %}
+                                <span class="badge bg-secondary bg-opacity-10 text-secondary">
+                                    <i class="bi bi-x-circle me-1"></i>Inactive
+                                </span>
+                                {% endif %}
+                            </td>
+                            {% if request.user.is_superadmin or request.user.is_institution_admin %}
+                            <td class="text-center">
+                                <a href="{% url 'transport:assignment_detail' assignment.pk %}" class="btn btn-sm btn-outline-primary me-1" title="View">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                                <a href="{% url 'transport:assignment_update' assignment.pk %}" class="btn btn-sm btn-outline-secondary me-1" title="Edit">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                <a href="{% url 'transport:assignment_delete' assignment.pk %}" class="btn btn-sm btn-outline-danger" title="Delete">
+                                    <i class="bi bi-trash"></i>
+                                </a>
+                            </td>
+                            {% endif %}
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% else %}
+                <div class="empty-state text-center py-5">
+                    <i class="bi bi-truck fs-1 text-custom"></i>
+                    <h4 class="mt-3 mb-2">No Assignments Found</h4>
+                    <p class="text-custom mb-4">Start by creating your first assignment</p>
+                    {% if request.user.is_superadmin or request.user.is_institution_admin %}
+                    <a href="{% url 'transport:assignment_create' %}" class="btn btn-primary">
+                        <i class="bi bi-plus-circle me-2"></i> Create Assignment
+                    </a>
+                    {% endif %}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    $('#assignmentTable').DataTable({
+        "pageLength": 10,
+        "order": [[3, 'desc']], // Sort by start date descending
+        "language": {
+            "search": "<i class='bi bi-search me-2'></i>Search:",
+            "lengthMenu": "Show _MENU_ entries",
+            "info": "Showing _START_ to _END_ of _TOTAL_ entries"
+        }
+    });
+
+    // Initialize Select2
+    $('select').select2({ theme: 'bootstrap-5', width: '100%' });
+});
+</script>
+{% endblock %}

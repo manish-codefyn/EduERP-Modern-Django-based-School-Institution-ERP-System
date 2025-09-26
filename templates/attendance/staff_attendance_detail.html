@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Staff Attendance Detail" %}{% endblock %}
+
+{% block content %}
+<div class="card shadow-sm">
+    <div class="card-header">
+        <h5 class="mb-0"><i class="bi bi-people-fill me-2"></i>{% trans "Staff Attendance Detail" %}</h5>
+    </div>
+    <div class="card-body">
+        <dl class="row">
+            <dt class="col-sm-3">{% trans "Staff" %}</dt>
+            <dd class="col-sm-9">{{ object.staff.get_full_name }} ({{ object.staff.staff_id }})</dd>
+
+            <dt class="col-sm-3">{% trans "Date" %}</dt>
+            <dd class="col-sm-9">{{ object.date }}</dd>
+
+            <dt class="col-sm-3">{% trans "Status" %}</dt>
+            <dd class="col-sm-9">
+                <span class="badge bg-{{ object.status|lower }}">
+                    {{ object.get_status_display }}
+                </span>
+            </dd>
+
+            <dt class="col-sm-3">{% trans "Remarks" %}</dt>
+            <dd class="col-sm-9">{{ object.remarks|default:_("None") }}</dd>
+
+            <dt class="col-sm-3">{% trans "Marked By" %}</dt>
+            <dd class="col-sm-9">{{ object.marked_by.get_full_name }}</dd>
+
+            <dt class="col-sm-3">{% trans "Institution" %}</dt>
+            <dd class="col-sm-9">{{ object.institution.name }}</dd>
+        </dl>
+    </div>
+    <div class="card-footer text-end">
+        <a href="{% url 'attendance:staff_attendance_list' %}" class="btn btn-secondary">
+            <i class="bi bi-arrow-left"></i> {% trans "Back to List" %}
+        </a>
+    </div>
+</div>
+{% endblock %}

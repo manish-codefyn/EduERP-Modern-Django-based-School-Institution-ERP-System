@@ -1,0 +1,274 @@
+{% extends 'communications/base.html' %}
+{% load static %}
+
+{% block title %}SMS Log Details - {{ organization.name|default:"codefyn" }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="header-section mb-4">
+        <div class="row align-items-center">
+            <div class="col-md-8 d-flex flex-column">
+                <nav aria-label="breadcrumb" class="mb-2">
+                    <ol class="breadcrumb mb-0">
+                        <li class="breadcrumb-item">
+                            <a href="{% url 'communications:dashboard' %}">
+                                <i class="bi bi-house-door me-1"></i> Dashboard
+                            </a>
+                        </li>
+                        <li class="breadcrumb-item">
+                            <a href="{% url 'communications:sms_log_list' %}">SMS Logs</a>
+                        </li>
+                        <li class="breadcrumb-item active" aria-current="page">Details</li>
+                    </ol>
+                </nav>
+
+                <div class="d-flex align-items-center">
+                    <div class="header-icon me-3">
+                        <i class="bi bi-chat-dots display-6 text-success"></i>
+                    </div>
+                    <div>
+                        <h1 class="h3 fw-bold mb-1">SMS Log Details</h1>
+                        <p class="text-custom mb-0">Complete SMS message information and delivery status</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="d-flex justify-content-end align-items-center gap-2">
+                    <a href="{% url 'communications:sms_log_list' %}" class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-left me-1"></i> Back to List
+                    </a>
+                    <a href="{% url 'communications:sms_log_delete' sms_log.pk %}" class="btn btn-outline-danger">
+                        <i class="bi bi-trash me-1"></i> Delete
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- SMS Information -->
+        <div class="col-lg-8">
+            <div class="card card-custom mb-4">
+                <div class="card-header bg-transparent border-0">
+                    <h5 class="card-title mb-0 fw-bold text-custom">SMS Message Details</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <table class="table table-borderless">
+                                <tr>
+                                    <td width="40%"><strong>Recipient Number:</strong></td>
+                                    <td>
+                                        <i class="bi bi-phone text-success me-2"></i>
+                                        {{ sms_log.recipient_number }}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Status:</strong></td>
+                                    <td>
+                                        {% if sms_log.status == 'delivered' %}
+                                            <span class="badge bg-success">Delivered</span>
+                                        {% elif sms_log.status == 'sent' %}
+                                            <span class="badge bg-info">Sent</span>
+                                        {% elif sms_log.status == 'failed' %}
+                                            <span class="badge bg-danger">Failed</span>
+                                        {% else %}
+                                            <span class="badge bg-warning">Pending</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Cost:</strong></td>
+                                    <td>
+                                        {% if sms_log.cost %}
+                                            <span class="text-success">${{ sms_log.cost|floatformat:4 }}</span>
+                                        {% else %}
+                                            <span class="text-muted">N/A</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Message ID:</strong></td>
+                                    <td><code>{{ sms_log.message_id|default:"Not available" }}</code></td>
+                                </tr>
+                            </table>
+                        </div>
+                        <div class="col-md-6">
+                            <table class="table table-borderless">
+                                <tr>
+                                    <td width="40%"><strong>Template:</strong></td>
+                                    <td>
+                                        {% if sms_log.template %}
+                                            <span class="badge bg-light text-dark">{{ sms_log.template.name }}</span>
+                                        {% else %}
+                                            <span class="text-muted">No Template</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Scheduled For:</strong></td>
+                                    <td>
+                                        {% if sms_log.scheduled_for %}
+                                            {{ sms_log.scheduled_for|date:"M d, Y H:i" }}
+                                        {% else %}
+                                            <span class="text-muted">Immediate</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Sent At:</strong></td>
+                                    <td>
+                                        {% if sms_log.sent_at %}
+                                            {{ sms_log.sent_at|date:"M d, Y H:i" }}
+                                        {% else %}
+                                            <span class="text-muted">Not sent</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Created:</strong></td>
+                                    <td>{{ sms_log.created_at|date:"M d, Y H:i" }}</td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Message Content -->
+                    <div class="mb-4">
+                        <h6 class="fw-bold mb-3">Message Content</h6>
+                        <div class="card bg-light">
+                            <div class="card-body">
+                                <pre class="mb-0" style="white-space: pre-wrap; font-family: inherit;">{{ sms_log.message }}</pre>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Template Variables -->
+                    {% if sms_log.template_variables %}
+                    <div class="mb-4">
+                        <h6 class="fw-bold mb-3">Template Variables</h6>
+                        <div class="card">
+                            <div class="card-body">
+                                <pre class="mb-0"><code>{{ sms_log.template_variables|pprint }}</code></pre>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Provider Response -->
+                    {% if sms_log.provider_response %}
+                    <div>
+                        <h6 class="fw-bold mb-3">Provider Response</h6>
+                        <div class="card">
+                            <div class="card-body">
+                                <pre class="mb-0"><code>{{ sms_log.provider_response|pprint }}</code></pre>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Timeline & Status -->
+        <div class="col-lg-4">
+            <!-- Status Card -->
+            <div class="card card-custom mb-4">
+                <div class="card-header bg-transparent border-0">
+                    <h5 class="card-title mb-0 fw-bold text-custom">Delivery Timeline</h5>
+                </div>
+                <div class="card-body">
+                    <div class="timeline">
+                        <div class="timeline-item {% if sms_log.created_at %}completed{% endif %}">
+                            <div class="timeline-marker bg-primary"></div>
+                            <div class="timeline-content">
+                                <h6>Message Created</h6>
+                                <p class="text-muted mb-0">{{ sms_log.created_at|date:"M d, Y H:i" }}</p>
+                            </div>
+                        </div>
+                        
+                        {% if sms_log.scheduled_for %}
+                        <div class="timeline-item {% if sms_log.sent_at %}completed{% endif %}">
+                            <div class="timeline-marker bg-warning"></div>
+                            <div class="timeline-content">
+                                <h6>Scheduled</h6>
+                                <p class="text-muted mb-0">{{ sms_log.scheduled_for|date:"M d, Y H:i" }}</p>
+                            </div>
+                        </div>
+                        {% endif %}
+                        
+                        <div class="timeline-item {% if sms_log.sent_at %}completed{% endif %}">
+                            <div class="timeline-marker bg-info"></div>
+                            <div class="timeline-content">
+                                <h6>Sent to Provider</h6>
+                                <p class="text-muted mb-0">
+                                    {% if sms_log.sent_at %}
+                                        {{ sms_log.sent_at|date:"M d, Y H:i" }}
+                                    {% else %}
+                                        Pending
+                                    {% endif %}
+                                </p>
+                            </div>
+                        </div>
+                        
+                        <div class="timeline-item {% if sms_log.status == 'delivered' %}completed{% endif %}">
+                            <div class="timeline-marker bg-success"></div>
+                            <div class="timeline-content">
+                                <h6>Delivered to Recipient</h6>
+                                <p class="text-muted mb-0">
+                                    {% if sms_log.status == 'delivered' %}
+                                        Successfully delivered
+                                    {% else %}
+                                        Pending delivery
+                                    {% endif %}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="card card-custom">
+                <div class="card-header bg-transparent border-0">
+                    <h5 class="card-title mb-0 fw-bold text-custom">Quick Actions</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a href="tel:{{ sms_log.recipient_number }}" class="btn btn-outline-primary">
+                            <i class="bi bi-telephone me-2"></i>Call Recipient
+                        </a>
+                        {% if sms_log.template %}
+                        <a href="{% url 'communications:template_detail' sms_log.template.pk %}" class="btn btn-outline-info">
+                            <i class="bi bi-file-earmark-text me-2"></i>View Template
+                        </a>
+                        {% endif %}
+                        <button class="btn btn-outline-secondary" onclick="navigator.clipboard.writeText('{{ sms_log.message }}')">
+                            <i class="bi bi-clipboard me-2"></i>Copy Message
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Add copy feedback
+    const copyButton = document.querySelector('button[onclick*="clipboard.writeText"]');
+    if (copyButton) {
+        copyButton.addEventListener('click', function() {
+            const originalText = this.innerHTML;
+            this.innerHTML = '<i class="bi bi-check me-2"></i>Copied!';
+            setTimeout(() => {
+                this.innerHTML = originalText;
+            }, 2000);
+        });
+    }
+});
+</script>
+{% endblock %}

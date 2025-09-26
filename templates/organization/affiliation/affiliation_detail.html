@@ -1,0 +1,298 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Affiliation Details - {{ affiliation.name }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header Section -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <div>
+            <h1 class="h3 mb-0 text-gray-800">
+                <i class="fas fa-university me-2"></i>Affiliation Details
+            </h1>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'organization:affiliation_list' %}">Affiliations</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">{{ affiliation.name }}</li>
+                </ol>
+            </nav>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{% url 'organization:affiliation_list' %}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left me-1"></i> Back to List
+            </a>
+            <a href="{% url 'organization:affiliation_update' affiliation.pk %}" class="btn btn-primary">
+                <i class="fas fa-edit me-1"></i> Edit
+            </a>
+            <a href="{% url 'organization:affiliation_delete' affiliation.pk %}" class="btn btn-danger">
+                <i class="fas fa-trash me-1"></i> Delete
+            </a>
+        </div>
+    </div>
+
+    <!-- Status Alert -->
+    {% if not affiliation.is_active %}
+    <div class="alert alert-warning" role="alert">
+        <i class="fas fa-exclamation-triangle me-2"></i>
+        This affiliation is currently inactive.
+    </div>
+    {% elif affiliation.is_expiring_soon %}
+    <div class="alert alert-danger" role="alert">
+        <i class="fas fa-clock me-2"></i>
+        This affiliation expires in {{ affiliation.days_until_expiry }} days.
+    </div>
+    {% endif %}
+
+    <div class="row">
+        <!-- Main Information Card -->
+        <div class="col-lg-8">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="fas fa-info-circle me-2"></i>Basic Information
+                    </h6>
+                    <span class="badge bg-{% if affiliation.is_active %}success{% else %}secondary{% endif %}">
+                        {% if affiliation.is_active %}Active{% else %}Inactive{% endif %}
+                    </span>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <table class="table table-borderless">
+                                <tr>
+                                    <th class="w-40">Affiliation Name:</th>
+                                    <td>{{ affiliation.name }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Code:</th>
+                                    <td>
+                                        {% if affiliation.code %}
+                                            <span class="badge bg-info text-dark">{{ affiliation.code }}</span>
+                                        {% else %}
+                                            <span class="text-muted">Not specified</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th>Institution:</th>
+                                    <td>{{ affiliation.institution.name }}</td>
+                                </tr>
+                            </table>
+                        </div>
+                        <div class="col-md-6">
+                            <table class="table table-borderless">
+                                <tr>
+                                    <th class="w-40">Renewal Required:</th>
+                                    <td>
+                                        {% if affiliation.renewal_required %}
+                                            <span class="badge bg-warning text-dark">Yes</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary">No</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th>Renewal Notice:</th>
+                                    <td>{{ affiliation.renewal_notice_period }} days before expiry</td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Validity Period Card -->
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="fas fa-calendar-alt me-2"></i>Validity Period
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="d-flex align-items-center mb-3">
+                                <div class="flex-shrink-0">
+                                    <i class="fas fa-play-circle text-success fa-2x"></i>
+                                </div>
+                                <div class="flex-grow-1 ms-3">
+                                    <h6 class="mb-0">Valid From</h6>
+                                    <p class="mb-0">
+                                        {% if affiliation.valid_from %}
+                                            {{ affiliation.valid_from|date:"M d, Y" }}
+                                        {% else %}
+                                            <span class="text-muted">Not specified</span>
+                                        {% endif %}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="d-flex align-items-center mb-3">
+                                <div class="flex-shrink-0">
+                                    <i class="fas fa-stop-circle text-danger fa-2x"></i>
+                                </div>
+                                <div class="flex-grow-1 ms-3">
+                                    <h6 class="mb-0">Valid To</h6>
+                                    <p class="mb-0">
+                                        {% if affiliation.valid_to %}
+                                            {{ affiliation.valid_to|date:"M d, Y" }}
+                                            {% if affiliation.days_until_expiry %}
+                                                <br>
+                                                <small class="{% if affiliation.days_until_expiry < 30 %}text-danger{% elif affiliation.days_until_expiry < 90 %}text-warning{% else %}text-success{% endif %}">
+                                                    {{ affiliation.days_until_expiry }} days remaining
+                                                </small>
+                                            {% endif %}
+                                        {% else %}
+                                            <span class="text-muted">Not specified</span>
+                                        {% endif %}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Progress Bar for Validity -->
+                    {% if affiliation.valid_from and affiliation.valid_to %}
+                    <div class="mt-4">
+                        <div class="d-flex justify-content-between mb-1">
+                            <small>Validity Progress</small>
+                            <small>{{ affiliation.validity_percentage }}%</small>
+                        </div>
+                        <div class="progress" style="height: 8px;">
+                            <div class="progress-bar 
+                                {% if affiliation.validity_percentage > 75 %}bg-success
+                                {% elif affiliation.validity_percentage > 25 %}bg-warning
+                                {% else %}bg-danger{% endif %}" 
+                                role="progressbar" 
+                                style="width: {{ affiliation.validity_percentage }}%">
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar Cards -->
+        <div class="col-lg-4">
+            <!-- Document Card -->
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="fas fa-file me-2"></i>Document
+                    </h6>
+                </div>
+                <div class="card-body text-center">
+                    {% if affiliation.document %}
+                        <div class="mb-3">
+                            <i class="fas fa-file-pdf fa-3x text-danger"></i>
+                        </div>
+                        <p class="mb-2">
+                            <strong>{{ affiliation.document.name|cut:"affiliation_docs/" }}</strong>
+                        </p>
+                        <p class="text-muted small mb-3">
+                            Uploaded on {{ affiliation.document.uploaded_at|date:"M d, Y" }}
+                        </p>
+                        <a href="{{ affiliation.document.url }}" target="_blank" class="btn btn-outline-primary btn-sm">
+                            <i class="fas fa-download me-1"></i> Download
+                        </a>
+                    {% else %}
+                        <div class="mb-3">
+                            <i class="fas fa-file-upload fa-3x text-muted"></i>
+                        </div>
+                        <p class="text-muted">No document uploaded</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Quick Actions Card -->
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="fas fa-bolt me-2"></i>Quick Actions
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'organization:affiliation_update' affiliation.pk %}" class="btn btn-outline-primary">
+                            <i class="fas fa-edit me-1"></i> Edit Details
+                        </a>
+                        {% if affiliation.document %}
+                        <a href="{{ affiliation.document.url }}" target="_blank" class="btn btn-outline-success">
+                            <i class="fas fa-eye me-1"></i> View Document
+                        </a>
+                        {% endif %}
+                        <a href="{% url 'organization:affiliation_delete' affiliation.pk %}" class="btn btn-outline-danger">
+                            <i class="fas fa-trash me-1"></i> Delete
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Status Card -->
+            <div class="card shadow">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="fas fa-chart-bar me-2"></i>Status Overview
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <small class="text-muted">Current Status</small>
+                        <div>
+                            <span class="badge bg-{% if affiliation.is_active %}success{% else %}secondary{% endif %} fs-6">
+                                {% if affiliation.is_active %}Active{% else %}Inactive{% endif %}
+                            </span>
+                        </div>
+                    </div>
+                    
+                    {% if affiliation.valid_to %}
+                    <div class="mb-3">
+                        <small class="text-muted">Expiry Status</small>
+                        <div>
+                            {% if affiliation.is_expired %}
+                                <span class="badge bg-danger fs-6">Expired</span>
+                            {% elif affiliation.is_expiring_soon %}
+                                <span class="badge bg-warning text-dark fs-6">Expiring Soon</span>
+                            {% else %}
+                                <span class="badge bg-success fs-6">Valid</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <div>
+                        <small class="text-muted">Renewal</small>
+                        <div>
+                            {% if affiliation.renewal_required %}
+                                <span class="badge bg-warning text-dark fs-6">Required</span>
+                            {% else %}
+                                <span class="badge bg-secondary fs-6">Not Required</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Add confirmation for delete action
+document.addEventListener('DOMContentLoaded', function() {
+    const deleteBtn = document.querySelector('a[href*="delete"]');
+    if (deleteBtn) {
+        deleteBtn.addEventListener('click', function(e) {
+            if (!confirm('Are you sure you want to delete this affiliation record? This action cannot be undone.')) {
+                e.preventDefault();
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Attendance Report - {{ organization.name }}</title>
+    <style>
+        body { font-family: Arial, sans-serif; font-size: 12px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #000; padding: 5px; text-align: left; }
+        th { background: #f0f0f0; }
+        h2 { text-align: center; margin-bottom: 10px; }
+    </style>
+</head>
+<body>
+    <h2>Attendance Report</h2>
+    <p><strong>Generated on:</strong> {{ export_date|date:"d M, Y, h:i A" }}</p>
+    <table>
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th>Student</th>
+                <th>Hostel</th>
+                <th>Room</th>
+                <th>Status</th>
+                <th>Marked By</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for record in attendance_records %}
+            <tr>
+                <td>{{ record.date|date:"d M, Y" }}</td>
+                <td>{{ record.student.full_name }}</td>
+                <td>{{ record.student.hostel.name }}</td>
+                <td>{{ record.student.room.name }}</td>
+                <td>{{ record.get_status_display }}</td>
+                <td>{{ record.marked_by.get_full_name }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</body>
+</html>
