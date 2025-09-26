@@ -50,8 +50,8 @@ EduERP is a **robust, open-source School & Institution Management System** built
 #### Method 1: Traditional Setup
 ```bash
 # Clone repository
-git clone https://github.com/codefyn/django-student-portal.git
-cd django-student-portal
+https://github.com/manish-codefyn/EduERP-Modern-Django-based-School-Institution-ERP-System.git
+cd EduERP-Modern-Django-based-School-Institution-ERP-System
 
 # Create virtual environment
 python -m venv venv
