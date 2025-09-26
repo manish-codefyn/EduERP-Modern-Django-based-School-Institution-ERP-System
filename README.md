@@ -1,26 +1,15 @@
-# Django Institutions management system 🎓
+# EduERP - Modern Django-based School & Institution ERP System 🎓
 
+EduERP is a **robust, open-source School & Institution Management System** built with Django. It is designed to help schools, colleges, and educational institutions manage **students, teachers, academics, finance, HR, communication, and more**, all from a centralized platform.
 
-## ⚠️ IMPORTANT LICENSE NOTICE
+---
 
-**PROPRIETARY SOFTWARE** - This is **NOT** open source software.  
-Unauthorized commercial use, distribution, or modification is strictly prohibited.
-
-### 📋 Quick License Summary:
-- ✅ **Allowed**: Personal learning, academic projects (non-commercial)
-- ❌ **Prohibited**: Commercial use, organizational deployment, resale
-- 🔒 **Required**: Commercial license for business/organizational use
-
-**For commercial licensing, contact: sales@codefyn.com**
-
-
-A comprehensive Institutions management system built with Django, developed by **Codefyn Software Solutions**.
-
-![Django](https://img.shields.io/badge/Django-4.2-green)
-![Python](https://img.shields.io/badge/Python-3.11-blue)
-![PostgreSQL](https://img.shields.io/badge/PostgreSQL-13-blue)
+![Django](https://img.shields.io/badge/Django-4.2-green) 
+![Python](https://img.shields.io/badge/Python-3.11-blue) 
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-13-blue) 
 ![License](https://img.shields.io/badge/License-MIT-yellow)
 
+---
 ## 🌟 Features
 
 ### Student Features
